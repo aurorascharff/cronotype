@@ -1,6 +1,5 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { cache } from 'react';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { syntheticStatsFor } from '@/lib/synthetic';
 import type { Archetype, ArchetypeId, HourStats, ProfileSummary } from '@/types/cronotype';
@@ -9,7 +8,7 @@ export type LeaderboardEntry = {
   profile: ProfileSummary;
   archetype: Archetype;
   stats: HourStats;
-  /** Score for the bucket this entry is in. Higher = more emblematic. */
+  /** Score for the bucket this entry is in. */
   score: number;
   /** ISO timestamp this entry was last classified. */
   classifiedAt: string;
@@ -58,6 +57,7 @@ function seed(s: Store) {
       profile: {
         avatarUrl: `https://avatars.githubusercontent.com/${login}`,
         bio: null,
+        createdAt: '2014-01-01T00:00:00Z',
         followers: 1000 + login.length * 137,
         login,
         name,
@@ -87,11 +87,12 @@ function scoreFor(bucket: Bucket, stats: HourStats, id: ArchetypeId, followers =
   }
 }
 
+/** Mutates the module-scoped store. NEVER call this from inside a `'use cache'` function. */
 export function recordEntry(entry: LeaderboardEntry) {
   store().entries.set(entry.profile.login.toLowerCase(), entry);
 }
 
-export const getLeaderboard = cache(async (bucket: Bucket, limit = 10): Promise<LeaderboardEntry[]> => {
+export async function getLeaderboard(bucket: Bucket, limit = 10): Promise<LeaderboardEntry[]> {
   'use cache';
   cacheTag(`leaderboard-${bucket}`);
   cacheLife('minutes');
@@ -102,9 +103,9 @@ export const getLeaderboard = cache(async (bucket: Bucket, limit = 10): Promise<
     .filter(e => (bucket === 'recent' || bucket === 'popular' ? true : e.score > 0));
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, limit);
-});
+}
 
-export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardEntry[]> => {
+export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {
   'use cache';
   cacheTag('leaderboard-recent');
   cacheLife('minutes');
@@ -112,4 +113,4 @@ export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardE
   const all = Array.from(store().entries.values());
   all.sort((a, b) => +new Date(b.classifiedAt) - +new Date(a.classifiedAt));
   return all.slice(0, limit);
-});
+}

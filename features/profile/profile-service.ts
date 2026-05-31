@@ -1,39 +1,23 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { cache } from 'react';
-import { recordEntry } from '@/features/leaderboard/leaderboard-queries';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify, percentileFor } from '@/lib/archetypes';
 import type { CronotypeResult, Window } from '@/types/cronotype';
 
 /**
- * The main "compute a cronotype" pipeline. Fetches profile + commits, classifies,
- * computes percentile, and records the entry for the leaderboard.
+ * Fetch profile + 90-day stats, classify, compute percentile. Pure — the
+ * leaderboard recording happens outside this cached function (see
+ * `recordCronotype` in the service).
  */
-export const computeCronotype = cache(async (
-  login: string,
-  window: Window = '90d',
-  tzHours: number | null = null,
-): Promise<CronotypeResult> => {
+export async function computeCronotype(login: string, window: Window = '90d'): Promise<CronotypeResult> {
   'use cache';
-  cacheTag(`cronotype-${login.toLowerCase()}-${window}-${tzHours ?? 'utc'}`);
+  cacheTag(`cronotype-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 
-  const [profile, stats] = await Promise.all([
-    getProfile(login),
-    getStatsFor(login, window, tzHours),
-  ]);
+  const [profile, stats] = await Promise.all([getProfile(login), getStatsFor(login, window)]);
 
   const archetype = classify(stats);
   const percentile = percentileFor(archetype, stats);
 
-  recordEntry({
-    archetype,
-    classifiedAt: new Date().toISOString(),
-    profile,
-    score: 0,
-    stats,
-  });
-
   return { archetype, percentile, profile, stats, window };
-});
+}

@@ -1,44 +1,27 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Cronotype palette — paper-white by day, deep ink by night */
-  --color-paper: #fafaf7;
-  --color-paper-2: #f3f2ec;
-  --color-ink: #0a0a0a;
-  --color-ink-2: #131313;
-  --color-ink-3: #1c1c1c;
-  --color-border: #e7e5dc;
-  --color-border-dark: #232323;
-  --color-muted: #6b6b6b;
-  --color-muted-dark: #8a8a8a;
+  /* Cool neutrals — light mode is icy white, dark mode is deep slate. */
+  --color-paper: #fafafb;
+  --color-paper-2: #f0f0f4;
+  --color-ink: #0b0c14; /* deep cool near-black */
+  --color-ink-2: #11131e;
+  --color-ink-3: #181a2a;
+  --color-border: #ececef;
+  --color-border-dark: #1f2233;
+  --color-muted: #6e7080;
+  --color-muted-dark: #8b8ea3;
 
-  /* Archetype accent colors — used for the verdict word */
-  --color-vampire: #a855f7; /* night purple */
-  --color-vampire-glow: #c084fc;
-  --color-sunrise: #f59e0b; /* dawn amber */
-  --color-sunrise-glow: #fbbf24;
-  --color-bandit: #ef4444; /* lunch red */
-  --color-bandit-glow: #f87171;
-  --color-warrior: #10b981; /* weekend green */
-  --color-warrior-glow: #34d399;
-  --color-nineto5: #3b82f6; /* disciplined blue */
-  --color-nineto5-glow: #60a5fa;
-  --color-insomniac: #ec4899; /* bimodal pink */
-  --color-insomniac-glow: #f472b6;
-  --color-drifter: #94a3b8; /* no shape */
-  --color-drifter-glow: #cbd5e1;
-  --color-touchgrass: #84cc16; /* low volume */
-  --color-touchgrass-glow: #a3e635;
+  /* The single vibrant accent — true blue. */
+  --color-brand: #3b82f6;
+  --color-brand-2: #60a5fa;
 
   --font-mono: var(--font-geist-mono);
   --font-sans: var(--font-geist-sans);
 
   --tracking-tightest: -0.04em;
   --tracking-tight: -0.02em;
-  --tracking-wide: 0.04em;
-  --tracking-widest: 0.18em;
 
-  --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -56,69 +39,34 @@
   }
 
   body {
-    @apply bg-paper text-ink dark:bg-ink dark:text-paper font-sans antialiased;
-    background-image:
-      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--color-vampire) 6%, transparent), transparent 40%),
-      radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--color-sunrise) 5%, transparent), transparent 45%);
+    @apply text-ink dark:text-paper font-sans antialiased;
+    background-color: var(--color-paper);
+    background-image: radial-gradient(
+      ellipse 90% 60% at 50% -10%,
+      color-mix(in oklab, var(--color-brand) 18%, transparent),
+      transparent 70%
+    );
     background-attachment: fixed;
   }
 
   .dark body {
+    background-color: var(--color-ink);
     background-image:
-      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--color-vampire) 10%, transparent), transparent 40%),
-      radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--color-sunrise) 8%, transparent), transparent 50%);
+      radial-gradient(ellipse 80% 50% at 20% -10%, color-mix(in oklab, var(--color-brand) 22%, transparent), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 110%, color-mix(in oklab, var(--color-brand-2) 14%, transparent), transparent 60%);
   }
 
-  h1 {
-    @apply font-sans font-semibold tracking-tight;
-  }
-  h2 {
-    @apply font-sans text-lg font-semibold tracking-tight;
-  }
+  h1,
+  h2,
   h3 {
-    @apply font-sans text-base font-semibold tracking-tight;
+    @apply font-sans font-semibold tracking-tight;
   }
 
   input {
-    @apply border-border dark:border-border-dark dark:bg-ink-2 placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-md border bg-white px-3 py-2 text-sm transition-colors outline-none focus:ring-2 focus:ring-current/20;
+    @apply border-border dark:border-border-dark dark:bg-white/5 placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:ring-2 focus:ring-current/20;
   }
 }
 
-/* The verdict word — animated gradient sweep that subtly breathes */
-@keyframes verdict-sweep {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.verdict-text {
-  background-size: 200% 200%;
-  animation: verdict-sweep 8s ease-in-out infinite;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Waveform reveal — bars rise from baseline */
-@keyframes bar-rise {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
-
-.bar-rise {
-  transform-origin: bottom;
-  animation: bar-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* Skeleton shimmer */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -131,40 +79,31 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    color-mix(in oklab, currentColor 8%, transparent) 0%,
-    color-mix(in oklab, currentColor 16%, transparent) 50%,
-    color-mix(in oklab, currentColor 8%, transparent) 100%
+    color-mix(in oklab, currentColor 6%, transparent) 0%,
+    color-mix(in oklab, currentColor 14%, transparent) 50%,
+    color-mix(in oklab, currentColor 6%, transparent) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
   border-radius: var(--radius-sm);
 }
 
-/* Subtle grain texture overlay for the hero card */
-.grain::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.4;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
-}
-
-/* Tick marks on the waveform — fade in with a slight delay */
-.tick-fade {
-  animation: tick-fade 1s ease-out 0.4s both;
-}
-@keyframes tick-fade {
+@keyframes spoke-in {
   from {
+    stroke-dashoffset: 60;
     opacity: 0;
   }
   to {
+    stroke-dashoffset: 0;
     opacity: 1;
   }
 }
 
-/* View transitions — keep things subtle */
+.spoke {
+  stroke-dasharray: 60;
+  animation: spoke-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.28s;

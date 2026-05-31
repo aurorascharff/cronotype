@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { EvolutionStrip } from '@/features/profile/components/evolution-strip';
 import { HeroCard } from '@/components/hero-card';
 import { ShareBlock } from '@/components/share-block';
+import { recordEntry } from '@/features/leaderboard/leaderboard-queries';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 
@@ -9,7 +12,16 @@ type Props = {
   login: string;
 };
 
-export async function CronotypeProfile({ login }: Props) {
+/** Public entry — owns its own Suspense boundary and skeleton. */
+export function CronotypeProfile({ login }: Props) {
+  return (
+    <Suspense fallback={<CronotypeProfileSkeleton />}>
+      <CronotypeProfileBody login={login} />
+    </Suspense>
+  );
+}
+
+async function CronotypeProfileBody({ login }: Props) {
   let result;
   try {
     result = await computeCronotype(login, '90d');
@@ -24,12 +36,24 @@ export async function CronotypeProfile({ login }: Props) {
     return <EmptyProfile login={login} />;
   }
 
-  const bioLine = `Cronotype: ${archetype.name} · cronotype.dev/u/${profile.login}`;
+  // Record in the leaderboard. Done here (outside the cached compute) because
+  // module-scoped state mutations are not allowed inside `'use cache'`.
+  recordEntry({
+    archetype,
+    classifiedAt: new Date().toISOString(),
+    profile,
+    score: 0,
+    stats,
+  });
+
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.dev';
+  const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;
 
   return (
     <div className="space-y-4">
       <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
-      <ShareBlock bioLine={bioLine} />
+      <ShareBlock shareUrl={shareUrl} />
+      <EvolutionStrip login={profile.login} />
     </div>
   );
 }
@@ -53,39 +77,20 @@ function EmptyProfile({ login }: { login: string }) {
   );
 }
 
-export function CronotypeProfileSkeleton() {
+function CronotypeProfileSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="border-border dark:border-border-dark dark:bg-ink-2/40 rounded-2xl border bg-white/60 p-8 backdrop-blur-sm sm:p-12">
-        <div className="flex items-center gap-3">
-          <div className="skeleton h-9 w-9 rounded-full" />
-          <div className="space-y-1.5">
-            <div className="skeleton h-3 w-24" />
-            <div className="skeleton h-3 w-16 opacity-60" />
-          </div>
+      <div className="border-border dark:border-border-dark dark:bg-ink-2/40 flex flex-col items-center rounded-3xl border bg-white/60 p-8 backdrop-blur-sm sm:p-12">
+        <div className="skeleton h-80 w-80 rounded-full opacity-50" />
+        <div className="skeleton mt-8 h-3 w-24 opacity-60" />
+        <div className="skeleton mt-2 h-12 w-64 sm:h-16" />
+        <div className="skeleton mt-3 h-4 w-3/4 max-w-sm" />
+        <div className="mt-8 grid w-full max-w-md grid-cols-4 gap-2 sm:gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton h-14 rounded-xl" />
+          ))}
         </div>
-        <div className="skeleton mt-8 h-12 w-2/3 sm:h-16" />
-        <div className="skeleton mt-3 h-4 w-3/4" />
-        <div className="mt-10 flex h-32 items-end gap-[3px] sm:h-40">
-          {Array.from({ length: 24 }).map((_, i) => {
-            const h = 18 + ((i * 11) % 60);
-            return <div key={i} className="skeleton flex-1 rounded-t-sm" style={{ height: `${h}%` }} />;
-          })}
-        </div>
-        <div className="mt-8 flex items-end justify-between">
-          <div className="flex gap-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-1.5">
-                <div className="skeleton h-3 w-12 opacity-60" />
-                <div className="skeleton h-4 w-10" />
-              </div>
-            ))}
-          </div>
-          <div className="space-y-1.5 text-right">
-            <div className="skeleton ml-auto h-7 w-14" />
-            <div className="skeleton ml-auto h-3 w-16 opacity-60" />
-          </div>
-        </div>
+        <div className="skeleton mt-6 h-8 w-32" />
       </div>
       <div className="skeleton h-12 rounded-xl" />
     </div>

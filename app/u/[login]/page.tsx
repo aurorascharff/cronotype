@@ -1,5 +1,6 @@
-import { Suspense } from 'react';
-import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
+import Link from 'next/link';
+import { RecentDiagnosed } from '@/features/leaderboard/components/recent-diagnosed';
+import { CronotypeProfile } from '@/features/profile/components/cronotype-profile';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
@@ -27,10 +28,28 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
-    <Suspense fallback={<CronotypeProfileSkeleton />}>
+    <div className="space-y-10">
+      <header className="flex items-center justify-between gap-3">
+        <Link
+          href="/"
+          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
+        >
+          ← Diagnose another
+        </Link>
+        <Link
+          href="/leaderboard"
+          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
+        >
+          Leaderboard →
+        </Link>
+      </header>
+
       {params.then(({ login }) => (
-        <CronotypeProfile login={login} />
+        <>
+          <CronotypeProfile login={login} />
+          <RecentDiagnosed excludeLogin={login} limit={8} />
+        </>
       ))}
-    </Suspense>
+    </div>
   );
 }

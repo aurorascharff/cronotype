@@ -1,5 +1,4 @@
-import clsx from 'clsx';
-import { Waveform } from '@/components/waveform';
+import { HaloChart } from '@/components/halo-chart';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
@@ -9,87 +8,89 @@ type Props = {
   percentile: number;
 };
 
-/** The HeroCard is the share artifact. Archetype is the headline. Waveform is the proof. */
+/** The HeroCard — avatar inside a halo of hour-spokes, themed by archetype. */
 export function HeroCard({ profile, archetype, stats, percentile }: Props) {
+  const { theme } = archetype;
+
   return (
     <article
-      className={clsx(
-        'border-border dark:border-border-dark dark:bg-ink-2/60 relative overflow-hidden rounded-2xl border bg-white/70 p-8 backdrop-blur-sm sm:p-12',
-        'shadow-[0_30px_60px_-30px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]',
-      )}
-      style={{ viewTransitionName: 'hero-card' }}
+      className="relative overflow-hidden rounded-3xl border border-white/40 bg-white/90 p-8 backdrop-blur-sm dark:border-white/10 dark:bg-ink-2/80 sm:p-12"
+      style={{
+        backgroundImage: `radial-gradient(circle at 30% 0%, ${hexAlpha(theme.accent, 0.18)}, transparent 60%), radial-gradient(circle at 100% 100%, ${hexAlpha(theme.accent2, 0.14)}, transparent 50%)`,
+        boxShadow: `0 1px 0 rgba(255,255,255,0.5) inset, 0 40px 80px -40px ${hexAlpha(theme.accent, 0.4)}`,
+        viewTransitionName: 'hero-card',
+      }}
     >
-      <div
-        className={clsx(
-          'pointer-events-none absolute -top-40 -left-40 h-80 w-80 rounded-full opacity-30 blur-3xl',
-          archetype.colorVar,
-        )}
-        style={{ backgroundColor: 'currentColor' }}
-        aria-hidden
-      />
+      <div className="relative flex flex-col items-center text-center">
+        <HaloChart stats={stats} theme={theme} avatarUrl={profile.avatarUrl} size={320} animate />
 
-      <header className="relative flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={profile.avatarUrl}
-          alt=""
-          width={36}
-          height={36}
-          className="border-border dark:border-border-dark h-9 w-9 rounded-full border"
-        />
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
-          <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
-        </div>
-      </header>
-
-      <h1
-        className={clsx(
-          'verdict-text relative mt-8 bg-gradient-to-r text-5xl leading-[0.95] font-semibold tracking-tightest sm:text-7xl',
-          archetype.glowVar,
-        )}
-      >
-        {archetype.name}
-      </h1>
-      <p className="text-muted dark:text-muted-dark relative mt-3 max-w-prose text-base sm:text-lg">
-        {archetype.tagline}
-      </p>
-
-      <div className="relative mt-10">
-        <Waveform stats={stats} colorClass={archetype.colorVar} animate />
-      </div>
-
-      <footer className="relative mt-8 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <dl className="flex flex-wrap gap-x-8 gap-y-2">
-          <Stat label="Peak" value={formatHour(stats.peakHour)} />
-          <Stat label="Nocturnal" value={`${Math.round(stats.pctNocturnal)}%`} />
-          <Stat label="Weekend" value={`${Math.round(stats.pctWeekend)}%`} />
-          <Stat label="Commits" value={stats.total.toLocaleString()} />
-        </dl>
-        <div className="text-right">
-          <div className={clsx('text-3xl font-semibold tracking-tight tabular-nums', archetype.colorVar)}>
-            {percentile}
-            <span className="text-muted dark:text-muted-dark text-base font-normal">th</span>
+        <div className="mt-8 space-y-2">
+          <div className="text-sm font-medium" style={{ color: theme.accent }}>
+            @{profile.login}
           </div>
-          <div className="text-muted dark:text-muted-dark text-xs">percentile</div>
+          <h1
+            className="text-5xl leading-[0.95] font-semibold tracking-tightest sm:text-7xl"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            {archetype.name}
+          </h1>
+          <p className="text-muted dark:text-muted-dark mx-auto mt-3 max-w-md text-base sm:text-lg">
+            {archetype.tagline}
+          </p>
         </div>
-      </footer>
+
+        <dl className="mt-8 grid w-full max-w-md grid-cols-4 gap-2 sm:gap-4">
+          <Stat label="Peak" value={formatHour(stats.peakHour)} accent={theme.accent} />
+          <Stat label="Nocturnal" value={`${Math.round(stats.pctNocturnal)}%`} accent={theme.accent} />
+          <Stat label="Weekend" value={`${Math.round(stats.pctWeekend)}%`} accent={theme.accent} />
+          <Stat label="Commits" value={formatCount(stats.total)} accent={theme.accent} />
+        </dl>
+
+        <div className="mt-6">
+          <div className="text-3xl font-semibold tabular-nums" style={{ color: theme.accent }}>
+            {percentile}
+            <span className="text-muted dark:text-muted-dark text-base font-normal">th percentile</span>
+          </div>
+        </div>
+      </div>
     </article>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="flex flex-col">
-      <dt className="text-muted dark:text-muted-dark text-xs">{label}</dt>
-      <dd className="text-base font-semibold tabular-nums">{value}</dd>
+    <div
+      className="rounded-xl border border-white/40 bg-white/40 p-2.5 backdrop-blur-sm dark:border-white/5 dark:bg-white/5"
+      style={{ boxShadow: `0 1px 0 ${hexAlpha(accent, 0.2)} inset` }}
+    >
+      <dt className="text-muted dark:text-muted-dark text-[10px] sm:text-xs">{label}</dt>
+      <dd className="mt-0.5 text-base font-semibold tabular-nums sm:text-lg" style={{ color: accent }}>
+        {value}
+      </dd>
     </div>
   );
 }
 
+function hexAlpha(hex: string, a: number) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 function formatHour(h: number) {
-  if (h === 0) return '12am';
-  if (h === 12) return '12pm';
-  if (h < 12) return `${h}am`;
-  return `${h - 12}pm`;
+  if (h === 0) return '12a';
+  if (h === 12) return '12p';
+  if (h < 12) return `${h}a`;
+  return `${h - 12}p`;
+}
+
+function formatCount(n: number) {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
 }

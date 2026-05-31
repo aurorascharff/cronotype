@@ -8,10 +8,13 @@ export default function HomePage() {
     <div className="space-y-16 sm:space-y-24">
       <section className="space-y-8 pt-8 sm:pt-16">
         <div className="space-y-5 text-center">
-          <h1 className="from-ink via-ink to-muted dark:from-paper dark:via-paper dark:to-muted-dark mx-auto max-w-3xl bg-gradient-to-b bg-clip-text text-4xl leading-[1] font-semibold tracking-tightest text-transparent sm:text-6xl">
+          <h1 className="mx-auto max-w-3xl text-4xl leading-[1] font-semibold tracking-tightest sm:text-6xl">
             What kind of developer
             <br />
-            <span className="from-vampire via-sunrise to-warrior bg-gradient-to-r bg-clip-text text-transparent">
+            <span
+              className="bg-clip-text text-transparent"
+              style={{ backgroundImage: 'linear-gradient(135deg, #60a5fa, #3b82f6)' }}
+            >
               are you, really?
             </span>
           </h1>

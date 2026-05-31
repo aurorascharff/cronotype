@@ -8,7 +8,8 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-70">
           <span
             aria-hidden
-            className="from-vampire via-sunrise to-nineto5 inline-flex h-5 w-5 items-center justify-center rounded-sm bg-gradient-to-br text-[10px] font-black text-white"
+            className="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-black text-white"
+            style={{ background: 'linear-gradient(135deg, #60a5fa, #3b82f6)' }}
           >
             C
           </span>
