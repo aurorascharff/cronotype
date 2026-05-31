@@ -1,0 +1,115 @@
+import 'server-only';
+import { cacheLife, cacheTag } from 'next/cache';
+import { cache } from 'react';
+import { ARCHETYPES } from '@/lib/archetypes';
+import { syntheticStatsFor } from '@/lib/synthetic';
+import type { Archetype, ArchetypeId, HourStats, ProfileSummary } from '@/types/cronotype';
+
+export type LeaderboardEntry = {
+  profile: ProfileSummary;
+  archetype: Archetype;
+  stats: HourStats;
+  /** Score for the bucket this entry is in. Higher = more emblematic. */
+  score: number;
+  /** ISO timestamp this entry was last classified. */
+  classifiedAt: string;
+};
+
+export type Bucket = 'nocturnal' | 'sunrise' | 'disciplined' | 'weekend' | 'recent' | 'popular';
+
+type Store = {
+  entries: Map<string, LeaderboardEntry>;
+};
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __cronotype_store: Store | undefined;
+}
+
+function store(): Store {
+  if (!globalThis.__cronotype_store) {
+    globalThis.__cronotype_store = { entries: new Map() };
+    seed(globalThis.__cronotype_store);
+  }
+  return globalThis.__cronotype_store;
+}
+
+function seed(s: Store) {
+  const seeds: Array<{ login: string; name: string; id: ArchetypeId }> = [
+    { id: 'vampire', login: 'rauchg', name: 'Guillermo Rauch' },
+    { id: 'vampire', login: 'gaearon', name: 'Dan Abramov' },
+    { id: 'insomniac-maintainer', login: 'leerob', name: 'Lee Robinson' },
+    { id: 'nine-to-fiver', login: 'shuding', name: 'Shu Ding' },
+    { id: 'sunrise-sniper', login: 'sebmarkbage', name: 'Sebastian Markbåge' },
+    { id: 'lunch-bandit', login: 'acdlite', name: 'Andrew Clark' },
+    { id: 'weekend-warrior', login: 'sophiebits', name: 'Sophie Alpert' },
+    { id: 'drifter', login: 'feross', name: 'Feross Aboukhadijeh' },
+    { id: 'nine-to-fiver', login: 'wesbos', name: 'Wes Bos' },
+    { id: 'vampire', login: 'tj', name: 'TJ Holowaychuk' },
+    { id: 'insomniac-maintainer', login: 'sindresorhus', name: 'Sindre Sorhus' },
+    { id: 'sunrise-sniper', login: 'kentcdodds', name: 'Kent C. Dodds' },
+  ];
+
+  for (const { login, name, id } of seeds) {
+    const stats = syntheticStatsFor(id, 200 + (login.length % 7) * 30);
+    s.entries.set(login.toLowerCase(), {
+      archetype: ARCHETYPES[id],
+      classifiedAt: new Date(Date.now() - (login.length * 3600_000) % (30 * 24 * 3600_000)).toISOString(),
+      profile: {
+        avatarUrl: `https://avatars.githubusercontent.com/${login}`,
+        bio: null,
+        followers: 1000 + login.length * 137,
+        login,
+        name,
+        publicRepos: 30,
+      },
+      score: scoreFor('recent', stats, id),
+      stats,
+    });
+  }
+}
+
+function scoreFor(bucket: Bucket, stats: HourStats, id: ArchetypeId, followers = 0): number {
+  switch (bucket) {
+    case 'nocturnal':
+      return stats.pctNocturnal;
+    case 'sunrise':
+      return stats.pctSunrise;
+    case 'disciplined':
+      return stats.pctBusiness / Math.max(0.5, stats.hourlyVariance);
+    case 'weekend':
+      return stats.pctWeekend;
+    case 'popular':
+      return followers;
+    case 'recent':
+    default:
+      return id === 'touch-grass' ? 0 : stats.total;
+  }
+}
+
+export function recordEntry(entry: LeaderboardEntry) {
+  store().entries.set(entry.profile.login.toLowerCase(), entry);
+}
+
+export const getLeaderboard = cache(async (bucket: Bucket, limit = 10): Promise<LeaderboardEntry[]> => {
+  'use cache';
+  cacheTag(`leaderboard-${bucket}`);
+  cacheLife('minutes');
+
+  const all = Array.from(store().entries.values());
+  const scored = all
+    .map(e => ({ ...e, score: scoreFor(bucket, e.stats, e.archetype.id, e.profile.followers) }))
+    .filter(e => (bucket === 'recent' || bucket === 'popular' ? true : e.score > 0));
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit);
+});
+
+export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardEntry[]> => {
+  'use cache';
+  cacheTag('leaderboard-recent');
+  cacheLife('minutes');
+
+  const all = Array.from(store().entries.values());
+  all.sort((a, b) => +new Date(b.classifiedAt) - +new Date(a.classifiedAt));
+  return all.slice(0, limit);
+});
