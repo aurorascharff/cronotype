@@ -1,20 +1,20 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Cool neutrals — light mode is icy white, dark mode is deep slate. */
-  --color-paper: #fafafb;
-  --color-paper-2: #f0f0f4;
-  --color-ink: #0b0c14; /* deep cool near-black */
-  --color-ink-2: #11131e;
-  --color-ink-3: #181a2a;
-  --color-border: #ececef;
-  --color-border-dark: #1f2233;
-  --color-muted: #6e7080;
-  --color-muted-dark: #8b8ea3;
+  /* True neutrals — no color cast. Light is clean white, dark is near-black slate. */
+  --color-paper: #fafafa;
+  --color-paper-2: #f4f4f5;
+  --color-ink: #08090b; /* deep neutral near-black */
+  --color-ink-2: #0f1013;
+  --color-ink-3: #17181c;
+  --color-border: #e7e7ea;
+  --color-border-dark: #1f2024;
+  --color-muted: #6b7280;
+  --color-muted-dark: #8b8d96;
 
-  /* The single vibrant accent — true blue. */
-  --color-brand: #3b82f6;
-  --color-brand-2: #60a5fa;
+  /* The accent. Used sparingly — on the verdict word, halo chart, percentile. */
+  --color-brand: #06b6d4;
+  --color-brand-2: #22d3ee;
 
   --font-mono: var(--font-geist-mono);
   --font-sans: var(--font-geist-sans);
@@ -41,19 +41,17 @@
   body {
     @apply text-ink dark:text-paper font-sans antialiased;
     background-color: var(--color-paper);
-    background-image: radial-gradient(
-      ellipse 90% 60% at 50% -10%,
-      color-mix(in oklab, var(--color-brand) 18%, transparent),
-      transparent 70%
-    );
-    background-attachment: fixed;
   }
 
   .dark body {
     background-color: var(--color-ink);
-    background-image:
-      radial-gradient(ellipse 80% 50% at 20% -10%, color-mix(in oklab, var(--color-brand) 22%, transparent), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 90% 110%, color-mix(in oklab, var(--color-brand-2) 14%, transparent), transparent 60%);
+    /* A single faint accent glow from upper-left in dark mode only. Subtle — not branding. */
+    background-image: radial-gradient(
+      ellipse 70% 50% at 10% -5%,
+      color-mix(in oklab, var(--color-brand) 8%, transparent),
+      transparent 60%
+    );
+    background-attachment: fixed;
   }
 
   h1,
@@ -86,22 +84,6 @@
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
   border-radius: var(--radius-sm);
-}
-
-@keyframes spoke-in {
-  from {
-    stroke-dashoffset: 60;
-    opacity: 0;
-  }
-  to {
-    stroke-dashoffset: 0;
-    opacity: 1;
-  }
-}
-
-.spoke {
-  stroke-dasharray: 60;
-  animation: spoke-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 ::view-transition-old(root),

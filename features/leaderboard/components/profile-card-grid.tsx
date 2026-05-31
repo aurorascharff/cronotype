@@ -7,14 +7,13 @@ type Props = {
 };
 
 /**
- * The shared profile card. A square tile with the halo chart up top and the
- * verdict + handle below. Used by the home leaderboard grid and the "recent
- * diagnoses" rail under each profile.
+ * Shared profile card. Neutral translucent tile, halo chart up top, verdict
+ * + handle below. The only color comes from the chart spokes.
  */
 export function ProfileCardGrid({ entries }: Props) {
   if (entries.length === 0) {
     return (
-      <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-white/20 p-8 text-center text-sm">
+      <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-black/10 p-8 text-center text-sm dark:border-white/10">
         No one diagnosed yet. Be the first.
       </p>
     );
@@ -36,7 +35,7 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
   return (
     <Link
       href={{ pathname: `/u/${profile.login}` }}
-      className="group flex h-full flex-col gap-3 rounded-2xl border border-white/10 bg-white/60 p-4 backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/80 dark:border-white/5 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
+      className="dark:bg-ink-2 group flex h-full flex-col gap-3 rounded-xl border border-black/10 bg-white p-4 transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30"
     >
       <div className="relative flex aspect-square items-center justify-center">
         <RadialChip stats={stats} color={archetype.theme.accent} size={140} />
@@ -46,14 +45,16 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
           alt=""
           width={56}
           height={56}
-          className="absolute h-14 w-14 rounded-full border border-white/40 dark:border-white/10"
+          className="absolute h-14 w-14 rounded-full border border-black/10 dark:border-white/10"
         />
       </div>
       <div className="min-w-0 space-y-0.5">
-        <div className="truncate text-sm font-semibold" style={{ color: archetype.theme.accent }}>
-          {archetype.name}
+        <div className="text-ink dark:text-paper truncate text-sm font-semibold">
+          {profile.name ?? profile.login}
         </div>
-        <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
+        <div className="text-muted dark:text-muted-dark truncate text-xs">
+          @{profile.login} · {archetype.name}
+        </div>
       </div>
     </Link>
   );
@@ -65,7 +66,7 @@ export function ProfileCardGridSkeleton({ count = 8 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <li
           key={i}
-          className="flex h-full flex-col gap-3 rounded-2xl border border-white/10 bg-white/40 p-4 backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.02]"
+          className="dark:bg-ink-2 flex h-full flex-col gap-3 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
         >
           <div className="skeleton aspect-square rounded-xl" />
           <div className="space-y-1.5">

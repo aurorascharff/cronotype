@@ -2,30 +2,25 @@ import type { HourStats } from '@/types/cronotype';
 
 type Props = {
   stats: HourStats;
-  /** Hex color for the spokes. */
+  /** Hex color for the bars. */
   color: string;
   size?: number;
 };
 
-/** A tiny polar version of the halo chart. Used in lists and evolution strips. */
+/** A tiny polar version of the halo chart. Same square-bar aesthetic as the hero. */
 export function RadialChip({ stats, color, size = 64 }: Props) {
   const max = Math.max(1, ...stats.hourly);
   const cx = size / 2;
   const cy = size / 2;
   const inner = size * 0.22;
   const outer = size * 0.48;
+  const barWidth = Math.max(1.2, size * 0.032);
 
-  const spokes = stats.hourly.map((count, h) => {
-    const angle = (h / 24) * Math.PI * 2 - Math.PI / 2;
-    const len = inner + (count / max) * (outer - inner);
-    return {
-      h,
-      x1: cx + Math.cos(angle) * inner,
-      x2: cx + Math.cos(angle) * len,
-      y1: cy + Math.sin(angle) * inner,
-      y2: cy + Math.sin(angle) * len,
-    };
-  });
+  const bars = stats.hourly.map((count, h) => ({
+    angle: (h / 24) * 360,
+    h,
+    len: Math.max(1.5, (count / max) * (outer - inner)),
+  }));
 
   return (
     <svg
@@ -36,18 +31,17 @@ export function RadialChip({ stats, color, size = 64 }: Props) {
       role="img"
       aria-label={`${stats.total} commits, peak at hour ${stats.peakHour}`}
     >
-      <circle cx={cx} cy={cy} r={inner - 1} fill={color} opacity={0.1} />
-      {spokes.map(s => (
-        <line
-          key={s.h}
-          x1={s.x1}
-          y1={s.y1}
-          x2={s.x2}
-          y2={s.y2}
-          stroke={color}
-          strokeLinecap="round"
-          strokeWidth={Math.max(1.4, size * 0.028)}
-          opacity={0.85}
+      <circle cx={cx} cy={cy} r={inner - 0.5} fill="none" stroke={color} opacity={0.18} strokeWidth={1} />
+      {bars.map(b => (
+        <rect
+          key={b.h}
+          x={cx - barWidth / 2}
+          y={cy - inner - b.len}
+          width={barWidth}
+          height={b.len}
+          fill={color}
+          opacity={0.9}
+          transform={`rotate(${b.angle}, ${cx}, ${cy})`}
         />
       ))}
     </svg>

@@ -1,8 +1,6 @@
 import { PopularLeaderboard } from '@/features/leaderboard/components/popular-leaderboard';
 import { UsernameForm } from '@/components/username-form';
 
-export const unstable_prefetch = 'force-runtime';
-
 export default function HomePage() {
   return (
     <div className="space-y-16 sm:space-y-24">
@@ -13,7 +11,7 @@ export default function HomePage() {
             <br />
             <span
               className="bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(135deg, #60a5fa, #3b82f6)' }}
+              style={{ backgroundImage: 'linear-gradient(135deg, #22d3ee, #06b6d4)' }}
             >
               are you, really?
             </span>

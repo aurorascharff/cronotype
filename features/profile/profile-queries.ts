@@ -1,10 +1,13 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
+import { ARCHETYPES } from '@/lib/archetypes';
 import { buildStats, type Commit } from '@/lib/stats';
-import type { ProfileSummary, Window } from '@/types/cronotype';
+import { syntheticStatsFor } from '@/lib/synthetic';
+import type { ArchetypeId, ProfileSummary, Window } from '@/types/cronotype';
 
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
+const MOCK = process.env.MOCK_PROFILE === '1';
 
 export class GitHubError extends Error {
   status: number;
@@ -49,6 +52,8 @@ export async function getProfile(login: string): Promise<ProfileSummary> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
   cacheLife('hours');
+
+  if (MOCK) return mockProfile(login);
 
   const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
   if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
@@ -143,6 +148,8 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 
+  if (MOCK) return syntheticStatsFor(mockArchetypeFor(login), 220 + (login.length * 17) % 180);
+
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 3600_000);
@@ -161,6 +168,13 @@ export async function getYearStats(login: string, year: number) {
   cacheTag(`year-${login.toLowerCase()}-${year}`);
   const isCurrent = year === new Date().getUTCFullYear();
   cacheLife(isCurrent ? 'hours' : 'weeks');
+
+  if (MOCK) {
+    // Walk through 3 archetypes across the years so the strip shows evolution.
+    const arc = mockArc(login);
+    const idx = Math.abs(year - new Date().getUTCFullYear() + 7) % arc.length;
+    return syntheticStatsFor(arc[idx], 150 + ((year + login.length) * 31) % 350);
+  }
 
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
@@ -194,4 +208,39 @@ export async function getEvolution(login: string) {
     }
   }
   return out;
+}
+
+// ── Mock helpers (only used when MOCK_PROFILE=1) ──────────────────────────
+
+function mockProfile(login: string): ProfileSummary {
+  return {
+    avatarUrl: `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`,
+    bio: null,
+    createdAt: '2017-01-01T00:00:00Z',
+    followers: 1200 + (login.length * 137) % 8000,
+    login,
+    name: titleCase(login),
+    publicRepos: 40,
+  };
+}
+
+const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as ArchetypeId[];
+
+/** Deterministically pick an archetype for this login so the mock is stable. */
+function mockArchetypeFor(login: string): ArchetypeId {
+  let h = 0;
+  for (const c of login.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return ARCHETYPE_IDS[h % ARCHETYPE_IDS.length];
+}
+
+/** A small narrative arc of archetypes the user has "moved through" over the years. */
+function mockArc(login: string): ArchetypeId[] {
+  const current = mockArchetypeFor(login);
+  const earlier = mockArchetypeFor(login + '-past');
+  const middle = mockArchetypeFor(login + '-mid');
+  return [earlier, earlier, middle, middle, current, current, current, current];
+}
+
+function titleCase(s: string) {
+  return s.replace(/(^|[-_])(\w)/g, (_, sep, c) => (sep ? ' ' : '') + c.toUpperCase());
 }

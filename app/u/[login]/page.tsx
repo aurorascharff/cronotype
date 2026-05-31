@@ -1,11 +1,10 @@
 import Link from 'next/link';
-import { RecentDiagnosed } from '@/features/leaderboard/components/recent-diagnosed';
-import { CronotypeProfile } from '@/features/profile/components/cronotype-profile';
+import { Suspense } from 'react';
+import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
+import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
-
-export const unstable_prefetch = 'force-runtime';
 
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
   const { login } = await params;
@@ -29,27 +28,25 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
     <div className="space-y-10">
-      <header className="flex items-center justify-between gap-3">
+      <header>
         <Link
           href="/"
           className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
         >
           ← Diagnose another
         </Link>
-        <Link
-          href="/leaderboard"
-          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
-        >
-          Leaderboard →
-        </Link>
       </header>
 
-      {params.then(({ login }) => (
-        <>
-          <CronotypeProfile login={login} />
-          <RecentDiagnosed excludeLogin={login} limit={8} />
-        </>
-      ))}
+      <Suspense fallback={<CronotypeProfileSkeleton />}>
+        {params.then(({ login }) => (
+          <>
+            <CronotypeProfile login={login} />
+            <Suspense fallback={<RecentDiagnosedSkeleton limit={8} />}>
+              <RecentDiagnosed excludeLogin={login} limit={8} />
+            </Suspense>
+          </>
+        ))}
+      </Suspense>
     </div>
   );
 }

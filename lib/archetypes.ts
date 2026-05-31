@@ -1,60 +1,60 @@
 import type { Archetype, ArchetypeId, ArchetypeTheme, HourStats } from '@/types/cronotype';
 
-/** One shared theme — true blue. The diagnostic is the word, not the color. */
+/** One shared theme — cyan. Used only on the verdict word, halo, and percentile. */
 const BRAND: ArchetypeTheme = {
-  accent: '#3b82f6',
-  accent2: '#60a5fa',
-  bgDark: '#0a1224',
-  bgLight: '#eff6ff',
+  accent: '#06b6d4',
+  accent2: '#22d3ee',
+  bgDark: '#08090b',
+  bgLight: '#fafafa',
 };
 
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
   drifter: {
     id: 'drifter',
     name: 'Drifter',
-    tagline: 'Your commit graph is a snowstorm. There is no pattern. There is no plan.',
+    tagline: 'No clear pattern. Commits scattered across the day.',
     theme: BRAND,
   },
   'insomniac-maintainer': {
     id: 'insomniac-maintainer',
     name: 'Insomniac Maintainer',
-    tagline: 'You work the day shift. Then you fix prod at 2am. Sleep is for v2.',
+    tagline: 'Two distinct peaks: business hours and late night.',
     theme: BRAND,
   },
   'lunch-bandit': {
     id: 'lunch-bandit',
     name: 'Lunch Bandit',
-    tagline: 'You commit during lunch like nobody can see you. We can see you.',
+    tagline: 'Disproportionate spike between noon and 1pm.',
     theme: BRAND,
   },
   'nine-to-fiver': {
     id: 'nine-to-fiver',
     name: 'Nine-to-Fiver',
-    tagline: 'Tight 9-to-6 distribution. Low variance. You log off. We respect it.',
+    tagline: 'Tight distribution between 9am and 6pm. Low variance.',
     theme: BRAND,
   },
   'sunrise-sniper': {
     id: 'sunrise-sniper',
     name: 'Sunrise Sniper',
-    tagline: 'Dawn commits. Empty inbox. You scare your team.',
+    tagline: 'Most commits land between 5am and 8am.',
     theme: BRAND,
   },
   'touch-grass': {
     id: 'touch-grass',
-    name: 'Touch Grass',
-    tagline: "You don't commit much. Your relationships are probably fine.",
+    name: 'Grass Toucher',
+    tagline: 'Low commit volume in the last 90 days.',
     theme: BRAND,
   },
   vampire: {
     id: 'vampire',
     name: 'Vampire',
-    tagline: 'You commit when normal people are dreaming. The sun is a rumor.',
+    tagline: 'Most commits land between midnight and 4am.',
     theme: BRAND,
   },
   'weekend-warrior': {
     id: 'weekend-warrior',
     name: 'Weekend Warrior',
-    tagline: 'Monday: meetings. Saturday: shipping. You have priorities.',
+    tagline: 'Weekends out-commit weekdays.',
     theme: BRAND,
   },
 };
