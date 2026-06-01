@@ -15,6 +15,7 @@
   /* The accent. Used sparingly — on the verdict word, halo chart, percentile. */
   --color-brand: #06b6d4;
   --color-brand-2: #22d3ee;
+  --color-on-brand: #08090b;
 
   --font-mono: var(--font-geist-mono);
   --font-sans: var(--font-geist-sans);
@@ -22,10 +23,10 @@
   --tracking-tightest: -0.04em;
   --tracking-tight: -0.02em;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

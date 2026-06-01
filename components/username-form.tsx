@@ -35,8 +35,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
       <div
         className={
           large
-            ? 'dark:bg-ink-2 flex flex-1 items-stretch overflow-hidden rounded-md border border-black/10 bg-white focus-within:border-black/40 dark:border-white/10 dark:focus-within:border-white/40'
-            : 'dark:bg-ink-2 flex flex-1 items-stretch overflow-hidden rounded-md border border-black/10 bg-white dark:border-white/10'
+            ? 'dark:bg-ink-2 flex flex-1 items-stretch overflow-hidden rounded-lg border border-black/10 bg-white focus-within:border-black/40 dark:border-white/10 dark:focus-within:border-white/40'
+            : 'dark:bg-ink-2 flex flex-1 items-stretch overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10'
         }
       >
         <span
@@ -71,8 +71,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         aria-label="Diagnose this developer"
         className={
           large
-            ? 'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand px-4 text-sm font-semibold text-[#08090b] transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
-            : 'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand px-3 text-xs font-semibold text-[#08090b] transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
+            ? 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
+            : 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
         }
       >
         <span>Diagnose</span>

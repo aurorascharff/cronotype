@@ -27,7 +27,7 @@ export function ProfileErrorCard({
         {onRetry ? (
           <button
             onClick={onRetry}
-            className="rounded-md border border-white/20 bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10 dark:border-white/10"
+            className="rounded-lg border border-black/10 bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:hover:bg-white/[0.06]"
           >
             {retryLabel}
           </button>
@@ -36,7 +36,7 @@ export function ProfileErrorCard({
         {showHomeLink ? (
           <Link
             href="/"
-            className="bg-ink text-paper dark:bg-paper dark:text-ink rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-85"
+            className="bg-brand text-on-brand rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] hover:brightness-105"
           >
             {homeLabel}
           </Link>

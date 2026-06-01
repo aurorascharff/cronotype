@@ -43,28 +43,15 @@ export async function CronotypeProfile({ login }: Props) {
       </div>
       <ShareUrl shareUrl={shareUrl} />
       <Suspense fallback={null}>
-        <RecordLeaderboardEntry profile={profile} archetype={archetype} stats={stats} />
+        <RecordLeaderboardEntry login={profile.login} />
       </Suspense>
     </div>
   );
 }
 
-async function RecordLeaderboardEntry({
-  profile,
-  archetype,
-  stats,
-}: {
-  profile: ProfileSummary;
-  archetype: Archetype;
-  stats: HourStats;
-}) {
+async function RecordLeaderboardEntry({ login }: { login: string }) {
   await connection();
-  recordEntry({
-    archetype,
-    classifiedAt: new Date().toISOString(),
-    profile,
-    stats,
-  });
+  recordEntry(login, new Date().toISOString());
   return null;
 }
 
@@ -74,7 +61,7 @@ function EmptyProfile({ login }: { login: string }) {
       <h2 className="text-2xl font-semibold tracking-tight">@{login} hasn&apos;t pushed in the last 90 days.</h2>
       <Link
         href="/"
-        className="bg-ink text-paper dark:bg-paper dark:text-ink mt-6 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium transition-opacity hover:opacity-85"
+        className="bg-brand text-on-brand mt-6 inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] hover:brightness-105"
       >
         Try another handle
       </Link>
