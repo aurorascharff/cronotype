@@ -1,5 +1,6 @@
 import 'server-only';
 import { Redis } from '@upstash/redis';
+import { cacheLife, cacheTag } from 'next/cache';
 
 // No-ops when KV_REST_API_URL / KV_REST_API_TOKEN are missing - callers treat
 // missing reveal state as locked and an empty featured list as unavailable.
@@ -39,9 +40,17 @@ export async function listFeaturedReveals(limit: number): Promise<string[]> {
 }
 
 export async function hasBeenRevealed(login: string): Promise<boolean> {
+  return hasBeenRevealedCached(login.toLowerCase());
+}
+
+async function hasBeenRevealedCached(login: string): Promise<boolean> {
+  'use cache';
+  cacheTag(`reveal-${login}`);
+  cacheLife('cronotype');
+
   const kv = getClient();
   if (!kv) return false;
-  const value = await kv.get(revealKey(login.toLowerCase()));
+  const value = await kv.get(revealKey(login));
   return value !== null;
 }
 

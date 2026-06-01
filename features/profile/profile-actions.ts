@@ -20,6 +20,7 @@ function invalidateAllForLogin(login: string) {
 export async function revealUser(login: string) {
   const lower = login.toLowerCase();
   await recordReveal(lower);
+  updateTag(`reveal-${lower}`);
   if (isFeaturedLogin(lower)) {
     await recordFeaturedReveal(lower);
     revalidateTag('reveals', 'max');
