@@ -18,3 +18,14 @@ export async function refreshPartialYears(login: string, years: number[]) {
     updateTag(`year-archetype-${lower}-${year}`);
   }
 }
+
+/**
+ * Retry classification for a single card without disturbing any other card.
+ *
+ * Invalidates ONLY the stats tag for this login. The leaderboard list and
+ * every other card's cache entry stay intact, so a rate-limited storm doesn't
+ * cause the whole grid to flash back to a loading state when retrying one card.
+ */
+export async function refreshCardStats(login: string) {
+  updateTag(`stats-${login.toLowerCase()}-90d`);
+}

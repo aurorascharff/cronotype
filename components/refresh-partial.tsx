@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { refreshPartialYears } from '@/features/profile/profile-actions';
 
@@ -10,7 +9,6 @@ type Props = {
 };
 
 export function RefreshPartial({ login, years }: Props) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -19,7 +17,6 @@ export function RefreshPartial({ login, years }: Props) {
       onClick={() =>
         startTransition(async () => {
           await refreshPartialYears(login, years);
-          router.refresh();
         })
       }
       disabled={isPending || years.length === 0}
