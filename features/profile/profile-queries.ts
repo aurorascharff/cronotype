@@ -217,7 +217,16 @@ async function getStatsForCached(login: string, window: Window): Promise<ReturnT
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 3600_000);
-  const commits = await fetchCommitsInRange(login, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10));
+  // Sample up to 100 commits from this range. One Search Commits request per
+  // profile keeps us well under the 30/min limit even with the leaderboard
+  // fan-out warming 30 users.
+  const commits = await fetchCommitsInRange(
+    login,
+    from.toISOString().slice(0, 10),
+    to.toISOString().slice(0, 10),
+    0,
+    1,
+  );
   return buildStats(commits);
 }
 
