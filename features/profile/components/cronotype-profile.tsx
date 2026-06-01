@@ -57,7 +57,7 @@ export async function CronotypeProfile({ login }: Props) {
 
 async function RecordLeaderboardEntry({ login }: { login: string }) {
   await connection();
-  recordEntry(login, new Date().toISOString());
+  recordEntry(login);
   return null;
 }
 
