@@ -26,6 +26,7 @@ export async function getTimelineChart(login: string, geometry: TimelineGeometry
       months,
       partial,
       profile,
+      yTicks: [],
       yearlyArchetypes,
       yearMarkers: [],
     };

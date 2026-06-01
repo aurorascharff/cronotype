@@ -30,6 +30,8 @@ export async function revealUser(login: string) {
 export async function regenerateUser(login: string) {
   const lower = login.toLowerCase();
   invalidateAllForLogin(lower);
+  await recordReveal(lower);
+  updateTag(`reveal-${lower}`);
   if (isFeaturedLogin(lower)) {
     await recordFeaturedReveal(lower);
     updateTag('reveals');

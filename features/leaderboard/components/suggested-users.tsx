@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { FEATURED } from '@/features/leaderboard/featured';
-import { hasBeenRevealed } from '@/lib/reveals';
+import { listFeaturedReveals } from '@/lib/reveals';
 import { connection } from 'next/server';
 
 type Props = {
@@ -10,10 +10,9 @@ type Props = {
 export async function SuggestedUsers({ limit = 6 }: Props) {
   await connection();
 
-  const revealStates = await Promise.all(FEATURED.map(async login => [login, await hasBeenRevealed(login)] as const));
-  const logins = revealStates
-    .filter(([, revealed]) => !revealed)
-    .map(([login]) => login)
+  const revealed = new Set((await listFeaturedReveals(FEATURED.length)).map(login => login.toLowerCase()));
+  const logins = FEATURED
+    .filter(login => !revealed.has(login.toLowerCase()))
     .slice(0, limit);
 
   if (logins.length === 0) {
