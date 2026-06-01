@@ -169,12 +169,10 @@ export async function EvolutionStrip({ login }: Props) {
 }
 
 export function EvolutionStripSkeleton() {
-  // Estimate a year-grid scaffold so the loading state matches the resolved
-  // chart's structure (year dividers + bottom-axis labels). We don't know the
-  // user's start year yet, so we render the most common shape: ~12 years.
-  const thisYear = new Date().getUTCFullYear();
+  // Render a structural placeholder, not an accurate one. Year labels are
+  // omitted in the skeleton because computing them needs `new Date()` which
+  // would force this fallback off the static shell during prerender.
   const years = 12;
-  const startYear = thisYear - years + 1;
 
   return (
     <section className="space-y-4" aria-hidden>
@@ -218,18 +216,11 @@ export function EvolutionStripSkeleton() {
           </div>
         </div>
 
-        <div className="text-muted/60 dark:text-muted-dark/60 relative mt-2 h-4 text-[10px] tabular-nums">
-          {[startYear, startYear + Math.floor(years / 3), startYear + Math.floor((years * 2) / 3), thisYear].map(
-            (year, i, arr) => (
-              <span
-                key={year}
-                className="absolute -translate-x-1/2"
-                style={{ left: `${(i / (arr.length - 1)) * 100}%` }}
-              >
-                {year}
-              </span>
-            ),
-          )}
+        <div className="text-muted/60 dark:text-muted-dark/60 mt-2 flex justify-between text-[10px] tabular-nums">
+          <span className="skeleton h-2.5 w-8" />
+          <span className="skeleton h-2.5 w-8" />
+          <span className="skeleton h-2.5 w-8" />
+          <span className="skeleton h-2.5 w-8" />
         </div>
       </div>
     </section>
