@@ -42,8 +42,39 @@ function headers(extra: Record<string, string> = {}): HeadersInit {
   return h;
 }
 
+// Limit concurrent GitHub requests to avoid hitting the 30 req/min Search
+// Commits rate limit when many cards fetch simultaneously on a cold homepage.
+const MAX_CONCURRENT = 4;
+let inflight = 0;
+const queue: Array<() => void> = [];
+
+function acquireSlot(): Promise<void> {
+  if (inflight < MAX_CONCURRENT) {
+    inflight++;
+    return Promise.resolve();
+  }
+  return new Promise(resolve => queue.push(resolve));
+}
+
+function releaseSlot() {
+  const next = queue.shift();
+  if (next) {
+    next();
+  } else {
+    inflight--;
+  }
+}
+
 async function gh(url: string, init: RequestInit = {}): Promise<Response> {
-  const res = await fetch(url, { ...init, headers: { ...headers(), ...(init.headers ?? {}) } });
+  await acquireSlot();
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers: { ...headers(), ...(init.headers ?? {}) } });
+  } catch (err) {
+    releaseSlot();
+    throw err;
+  }
+  releaseSlot();
   if (res.status === 401) throw new GitHubError('GitHub auth failed - check that GITHUB_TOKEN is valid', 401);
   if (res.status === 403 || res.status === 429) {
     const remaining = res.headers.get('x-ratelimit-remaining');
@@ -117,7 +148,7 @@ export const getProfile = cache(async (login: string): Promise<ProfileSummary> =
 async function getProfileCached(login: string): Promise<ProfileSummary> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
-  cacheLife('cronotype');
+  cacheLife('profile');
 
   if (MOCK || isShell(login)) return mockProfile(login);
 
@@ -223,7 +254,10 @@ async function getStatsForCached(login: string, window: Window): Promise<ReturnT
   if (MOCK || isShell(login)) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
 
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
-  const to = new Date();
+  // Snap to start-of-day so the cache key is stable within a day.
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const to = today;
   const from = new Date(to.getTime() - days * 24 * 3600_000);
   // Sample up to 100 commits from this range. One Search Commits request per
   // profile keeps us well under the 30/min limit even with the leaderboard
