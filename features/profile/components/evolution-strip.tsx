@@ -13,7 +13,7 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
-  const [{ months, yearlyArchetypes, partial }, { archetype, stats }] = await Promise.all([
+  const [{ months, yearlyArchetypes, partial }, { archetype }] = await Promise.all([
     getMonthlyHistory(login),
     computeCronotype(login, '90d'),
   ]);
@@ -35,8 +35,6 @@ export async function EvolutionStrip({ login }: Props) {
   const total = months.reduce((a, b) => a + b.count, 0);
   const yearMarkers = computeYearMarkers(months);
   const transitions = buildArchetypeTransitions(months, yearlyArchetypes, archetype.id);
-  const orbiters = buildOrbiters();
-  const clock = buildClock(stats.peakHour);
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
@@ -55,6 +53,38 @@ export async function EvolutionStrip({ login }: Props) {
       </header>
 
       <div className="relative">
+        <div className="relative mb-1 h-4">
+          {transitions.map((t, i) => {
+            const leftPct = (t.idx / (smoothed.length - 1)) * 100;
+            const align = leftPct < 12 ? 'left' : leftPct > 88 ? 'right' : 'center';
+            return (
+              <div
+                key={`transition-label-${i}`}
+                className="pointer-events-none absolute top-0 whitespace-nowrap text-[10px] font-medium tabular-nums"
+                style={{
+                  left: `${leftPct}%`,
+                  transform: align === 'center' ? 'translateX(-50%)' : align === 'right' ? 'translateX(-100%)' : 'none',
+                }}
+              >
+                <span style={{ color: t.color }}>{t.label}</span>
+                <span className="text-muted dark:text-muted-dark"> · {t.year}</span>
+              </div>
+            );
+          })}
+
+          {peak && (
+            <div
+              className="text-muted dark:text-muted-dark pointer-events-none absolute -translate-x-1/2 text-[10px] tabular-nums"
+              style={{
+                left: `${(peak.index / (smoothed.length - 1)) * 100}%`,
+                top: '-14px',
+              }}
+            >
+              <span style={{ color: archetype.theme.accent }}>peak</span> {peak.label} · {peak.count}
+            </div>
+          )}
+        </div>
+
         <svg
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="none"
@@ -67,36 +97,7 @@ export async function EvolutionStrip({ login }: Props) {
               <stop offset="0%" stopColor={archetype.theme.accent} stopOpacity="0.4" />
               <stop offset="100%" stopColor={archetype.theme.accent} stopOpacity="0" />
             </linearGradient>
-            <filter id={`aura-blur-${archetype.id}`} x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="5" />
-            </filter>
           </defs>
-
-          <circle cx={clock.cx} cy={clock.cy} r={clock.r} fill="none" stroke={archetype.theme.accent} opacity="0.1" />
-          <circle cx={clock.cx} cy={clock.cy} r={clock.r * 0.82} fill="none" stroke={archetype.theme.accent} opacity="0.06" />
-          {clock.ticks.map((t, i) => (
-            <line
-              key={`clock-tick-${i}`}
-              x1={t.x1}
-              y1={t.y1}
-              x2={t.x2}
-              y2={t.y2}
-              stroke={archetype.theme.accent}
-              opacity={i % 6 === 0 ? 0.24 : 0.12}
-              strokeWidth={i % 6 === 0 ? 1.6 : 1}
-            />
-          ))}
-          <line
-            x1={clock.cx}
-            y1={clock.cy}
-            x2={clock.handX}
-            y2={clock.handY}
-            stroke={archetype.theme.accent2}
-            strokeWidth="2"
-            opacity="0.72"
-            strokeLinecap="round"
-          />
-          <circle cx={clock.cx} cy={clock.cy} r="3" fill={archetype.theme.accent2} opacity="0.8" />
 
           {yearMarkers.map(yr => (
             <line
@@ -124,41 +125,23 @@ export async function EvolutionStrip({ login }: Props) {
             vectorEffect="non-scaling-stroke"
           />
 
-          {orbiters.map((o, i) => (
-            <g key={`floater-${i}`}>
-              <circle
-                r={o.r}
-                fill={archetype.theme.accent2}
-                opacity={o.opacity}
-                vectorEffect="non-scaling-stroke"
-              >
-                <animate
-                  attributeName="opacity"
-                  values={`${o.opacity};${Math.min(0.85, o.opacity + 0.22)};${o.opacity}`}
-                  dur={`${Math.max(3.2, o.duration - 1)}s`}
-                  begin={`${o.delay / 2}s`}
-                  repeatCount="indefinite"
-                />
-                <animateMotion
-                  path={linePath}
-                  dur={`${o.duration}s`}
-                  begin={`${o.delay}s`}
-                  keyPoints={`${o.start};${o.end};${o.start}`}
-                  keyTimes="0;0.5;1"
-                  calcMode="linear"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            </g>
-          ))}
-
           {transitions.map((t, i) => {
-            const y = PAD_TOP + usableH - (smoothed[t.idx] / max) * usableH;
             const x = (t.idx / (smoothed.length - 1)) * W;
+            const y = PAD_TOP + usableH - (smoothed[t.idx] / max) * usableH;
             return (
               <g key={`transition-${i}`}>
-                <circle cx={x} cy={y} r="8" fill={t.color} opacity="0.16" filter={`url(#aura-blur-${archetype.id})`} />
-                <circle cx={x} cy={y} r="3.6" fill={t.color} opacity="0.95" />
+                <line
+                  x1={x}
+                  y1={y}
+                  x2={x}
+                  y2={PAD_TOP + 14}
+                  stroke={t.color}
+                  strokeWidth="1"
+                  strokeDasharray="2 2"
+                  opacity="0.55"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <circle cx={x} cy={y} r="4.5" fill={t.color} stroke="currentColor" className="text-white dark:text-[#0a0b0d]" strokeWidth="1.5" />
               </g>
             );
           })}
@@ -173,18 +156,6 @@ export async function EvolutionStrip({ login }: Props) {
             />
           )}
         </svg>
-
-        {peak && (
-          <div
-            className="text-muted dark:text-muted-dark pointer-events-none absolute -translate-x-1/2 text-[10px] tabular-nums"
-            style={{
-              left: `${(peak.index / (smoothed.length - 1)) * 100}%`,
-              top: '-2px',
-            }}
-          >
-            <span style={{ color: archetype.theme.accent }}>peak</span> {peak.label} · {peak.count}
-          </div>
-        )}
 
         <div className="text-muted dark:text-muted-dark relative mt-2 h-4 text-[10px] tabular-nums">
           {yearMarkers.map(yr => (
@@ -317,54 +288,18 @@ function buildArchetypeTransitions(
   });
 
   const transitions = collapsed
-    .slice(1)
     .map(run => {
       const idx = firstIdxByYear.get(run.startYear);
       if (idx == null) return null;
+      const archetype = ARCHETYPES[run.archetypeId];
       return {
-        color: ARCHETYPES[run.archetypeId].theme.accent,
+        color: archetype.theme.accent,
         idx,
+        label: archetype.name,
+        year: run.startYear,
       };
     })
-    .filter(Boolean) as Array<{ color: string; idx: number }>;
+    .filter(Boolean) as Array<{ color: string; idx: number; label: string; year: number }>;
 
   return transitions;
-}
-
-function buildClock(peakHour: number) {
-  const cx = W * 0.86;
-  const cy = H * 0.5;
-  const r = H * 0.42;
-
-  const ticks = Array.from({ length: 24 }).map((_, i) => {
-    const theta = (i / 24) * Math.PI * 2 - Math.PI / 2;
-    const inner = i % 6 === 0 ? r * 0.83 : r * 0.89;
-    return {
-      x1: cx + Math.cos(theta) * inner,
-      x2: cx + Math.cos(theta) * r,
-      y1: cy + Math.sin(theta) * inner,
-      y2: cy + Math.sin(theta) * r,
-    };
-  });
-
-  const hourTheta = (peakHour / 24) * Math.PI * 2 - Math.PI / 2;
-  const handX = cx + Math.cos(hourTheta) * (r * 0.72);
-  const handY = cy + Math.sin(hourTheta) * (r * 0.72);
-
-  return { cx, cy, handX, handY, r, ticks };
-}
-
-function buildOrbiters() {
-  const starts = [0.06, 0.2, 0.34, 0.5, 0.66, 0.82];
-  return starts.map((start, i) => {
-    const span = 0.12 + (i % 3) * 0.03;
-    return {
-      delay: i * 0.35,
-      duration: 5.5 + (i % 4) * 1.2,
-      end: Math.min(0.98, start + span),
-      opacity: 0.34 + (i % 3) * 0.1,
-      r: i % 3 === 0 ? 5.2 : i % 2 === 0 ? 4.4 : 3.8,
-      start,
-    };
-  });
 }

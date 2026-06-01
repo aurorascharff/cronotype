@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Suspense } from 'react';
 import { ProfileErrorCard } from '@/components/profile-error-card';
 import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
@@ -56,16 +55,7 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
-    <div className="space-y-10">
-      <header>
-        <Link
-          href="/"
-          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
-        >
-          ← Diagnose another
-        </Link>
-      </header>
-
+    <>
       <Suspense fallback={<CronotypeProfileSkeleton />}>
         {params.then(({ login }) => (
           <CronotypeProfile login={login.toLowerCase()} />
@@ -83,7 +73,7 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
           <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={8} />
         ))}
       </Suspense>
-    </div>
+    </>
   );
 }
 

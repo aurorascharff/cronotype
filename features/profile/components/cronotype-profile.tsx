@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
+import { Suspense } from 'react';
 import { HeroCard } from '@/components/hero-card';
 import { ShareBlock } from '@/components/share-block';
 import { recordEntry } from '@/features/leaderboard/leaderboard-queries';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
+import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
   login: string;
@@ -25,13 +28,6 @@ export async function CronotypeProfile({ login }: Props) {
     return <EmptyProfile login={login} />;
   }
 
-  recordEntry({
-    archetype,
-    classifiedAt: new Date().toISOString(),
-    profile,
-    stats,
-  });
-
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.vercel.app';
   const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;
 
@@ -39,8 +35,30 @@ export async function CronotypeProfile({ login }: Props) {
     <div className="space-y-3">
       <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
       <ShareBlock shareUrl={shareUrl} />
+      <Suspense fallback={null}>
+        <RecordLeaderboardEntry profile={profile} archetype={archetype} stats={stats} />
+      </Suspense>
     </div>
   );
+}
+
+async function RecordLeaderboardEntry({
+  profile,
+  archetype,
+  stats,
+}: {
+  profile: ProfileSummary;
+  archetype: Archetype;
+  stats: HourStats;
+}) {
+  await connection();
+  recordEntry({
+    archetype,
+    classifiedAt: new Date().toISOString(),
+    profile,
+    stats,
+  });
+  return null;
 }
 
 function EmptyProfile({ login }: { login: string }) {
