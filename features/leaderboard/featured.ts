@@ -44,6 +44,7 @@ export const FEATURED: string[] = [
   'evanw',
   'developit',
   'antfu',
+  'danielroe',
   'yyx990803',
   'rich-harris',
   'torvalds',

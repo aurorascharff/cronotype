@@ -103,7 +103,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
               <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 10, width: 10 }} />
               <span style={{ color: e.color, fontWeight: 600 }}>{e.label}</span>
               <span style={{ color: '#8b8d96', fontSize: 16 }}>{e.yearLabel}</span>
-              <span style={{ color: '#8b8d96', fontSize: 16 }}>{e.commits.toLocaleString('en')}</span>
             </div>
           ))}
       </div>
