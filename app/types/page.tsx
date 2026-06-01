@@ -6,8 +6,8 @@ import type { ArchetypeId } from '@/types/cronotype';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  description: 'The eight commit-time archetypes Cronotype can reveal, and what each one means.',
-  title: 'The archetypes',
+  description: 'The commit-time archetypes Cronotype can reveal, how they are scored, and what Quiet lately means.',
+  title: 'The types',
 };
 
 type Detail = {
@@ -19,43 +19,43 @@ type Detail = {
 const DETAILS: Record<ArchetypeId, Detail> = {
   drifter: {
     meaning: 'You move through odd windows, bursts, and gaps, yet the work keeps appearing.',
-    percentile: 'Fixed midpoint. Drifters are the beautiful chaos bucket, so there is no single metric to rank.',
+    percentile: 'Fixed midpoint. Drifters are the beautiful chaos bucket, so there is no single signal to score.',
     signal: 'The fallback when no stronger rhythm wins: no night cluster, no sunrise lean, no lunch spike, no weekend tilt.',
   },
   'insomniac-maintainer': {
     meaning: 'You split your output between the official day and the second shift after everyone logs off.',
     percentile: 'Starts at 50 and climbs with nocturnal share. The stronger the second shift, the higher it lands.',
-    signal: 'A bimodal shape: one daytime peak and one after-midnight peak, both clearly above the average hour.',
+    signal: 'A two-shift shape: more than 25% during the day, more than 20% late at night, with a quieter evening valley.',
   },
   'lunch-bandit': {
     meaning: 'You turn the quiet middle of the day into a tiny shipping heist.',
     percentile: 'Higher when noon dominates the rest of the workday. A sharper spike means a better score.',
-    signal: 'Noon is more than 8% of all commits and more than 1.6x the average of 11am and 1pm.',
+    signal: 'Noon is more than 8% of the sample and more than 1.6x the average of 11am and 1pm.',
   },
   'nine-to-fiver': {
     meaning: 'You keep a steady workday pulse and still make it look clean.',
     percentile: 'Higher with a larger business-hours share. The more daytime your rhythm is, the stronger the type.',
-    signal: 'More than 70% of commits land from 9am to 7pm, without a strong night or weekend signature.',
+    signal: 'More than 70% of sampled commits land from 9am to 7pm, without a strong night or weekend signature.',
   },
   'sunrise-sniper': {
     meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
     percentile: 'Higher with more pre-9am commits. The more morning-weighted the graph is, the sharper the shot.',
-    signal: 'More than 25% of commits land between 5am and 9am.',
+    signal: 'More than 25% of sampled commits land between 5am and 9am.',
   },
   'touch-grass': {
     meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',
-    percentile: 'Inverse: fewer recent public commits means a higher percentile. The quietest graphs score highest.',
-    signal: 'Fewer than 25 public commits in the last 90 days.',
+    percentile: 'Inverse: fewer sampled commits means a higher score. The quietest non-empty graphs score highest.',
+    signal: 'Between 1 and 24 sampled public commits in the last 90 days. If the sample is empty, the profile shows Quiet lately instead.',
   },
   vampire: {
     meaning: 'You do your sharpest work when notifications are asleep and the world stops asking questions.',
     percentile: 'Higher with more nocturnal share. The deeper the night shift, the stronger the bite.',
-    signal: 'More than 30% of commits land between midnight and 5am.',
+    signal: 'More than 30% of sampled commits land between midnight and 5am.',
   },
   'weekend-warrior': {
     meaning: 'You turn Saturday and Sunday into the part of the week where momentum finally gets room.',
     percentile: 'Higher with more Saturday and Sunday share. Weekend-heavy graphs rise fast.',
-    signal: 'More than 40% of commits land on Saturday or Sunday.',
+    signal: 'More than 40% of sampled commits land on Saturday or Sunday.',
   },
 };
 
@@ -74,10 +74,10 @@ export default function TypesPage() {
   return (
     <div className="space-y-10">
       <header className="space-y-3">
-        <h1 className="tracking-tightest text-2xl font-semibold sm:text-3xl">The archetypes</h1>
+        <h1 className="tracking-tightest text-2xl font-semibold sm:text-3xl">The types</h1>
         <p className="text-muted dark:text-muted-dark max-w-2xl text-sm sm:text-base">
-          Cronotype reads the last 90 days of public commits and sorts you into one of eight rhythms. Each card shows
-          what the type means, the exact signal that triggers it, and what drives your percentile.
+          Cronotype samples recent public commits and sorts active profiles into one of eight rhythms. Empty 90-day
+          samples become Quiet lately instead: still a profile, just not enough recent public signal for a current type.
         </p>
       </header>
 
@@ -107,7 +107,7 @@ export default function TypesPage() {
                     {d.signal}
                   </p>
                   <p className="text-muted dark:text-muted-dark">
-                    <span className="text-ink/80 dark:text-paper/80 font-medium">Percentile</span>
+                    <span className="text-ink/80 dark:text-paper/80 font-medium">Score</span>
                     <br />
                     {d.percentile}
                   </p>
@@ -126,34 +126,36 @@ export default function TypesPage() {
           <li>
             <strong className="font-semibold">Data source.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              GitHub&apos;s Search Commits API for the last 90 days of public commits authored by the handle, keeping
-              each commit&apos;s author timestamp <em>with its original timezone offset</em> so 2am in Tokyo isn&apos;t
-              mistaken for 2am in San Francisco.
+              GitHub&apos;s Search Commits API for a recent 90-day sample of public commits authored by the handle. The
+              current card uses up to 100 commits, so a displayed sample of <code className="font-mono text-[11px]">100+</code>{' '}
+              means the sample hit GitHub&apos;s page cap.
             </span>
           </li>
           <li>
             <strong className="font-semibold">Bucketing.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              Each commit is binned by hour (24 buckets) and weekday (7 buckets) in its local timezone. From those we
-              derive shares: <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
+              Each sampled commit is binned by hour (24 buckets) and weekday (7 buckets) using the timestamp offset
+              GitHub returns, falling back to UTC when there is no offset. From those we derive shares:{' '}
+              <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
               <code className="font-mono text-[11px]">pctSunrise</code> (5am to 9am),{' '}
               <code className="font-mono text-[11px]">pctBusiness</code> (9am to 7pm),{' '}
               <code className="font-mono text-[11px]">pctWeekend</code>, plus an{' '}
-              <code className="font-mono text-[11px]">isBimodal</code> flag for two-peak distributions.
+              <code className="font-mono text-[11px]">isBimodal</code> flag for two-shift distributions.
             </span>
           </li>
           <li>
             <strong className="font-semibold">Classifier.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              A short cascade of rules in priority order. The first rule that matches wins. If nothing matches,
-              you&apos;re a Drifter.
+              A short cascade of rules in priority order. Empty samples become Quiet lately. Otherwise the first
+              matching rhythm wins: Grass Toucher, Insomniac Maintainer, Vampire, Sunrise Sniper, Lunch Bandit, Weekend
+              Warrior, Nine-to-Fiver, then Drifter.
             </span>
           </li>
           <li>
             <strong className="font-semibold">Year history.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              The colored evolution chart uses GitHub&apos;s GraphQL contributions calendar (one call per year) plus a
-              small sample of commits per year to classify the rhythm of each year.
+              The evolution chart totals come from GitHub&apos;s GraphQL contributions calendar. Its colors use a small
+              commit sample for each finished year, and the current year inherits the current 90-day type.
             </span>
           </li>
         </ul>
