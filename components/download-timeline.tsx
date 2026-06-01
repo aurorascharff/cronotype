@@ -37,7 +37,7 @@ export function DownloadTimeline({ login }: Props) {
       type="button"
       onClick={download}
       disabled={downloading}
-      className="text-muted/70 dark:text-muted-dark/70 hover:text-ink dark:hover:text-paper inline-flex items-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-[10.5px] tracking-wide uppercase transition-colors hover:border-black/10 disabled:opacity-60 dark:hover:border-white/10"
+      className="text-muted/70 dark:text-muted-dark/70 hover:text-ink dark:hover:text-paper inline-flex min-w-24 items-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-[10.5px] tracking-wide uppercase transition-colors hover:border-black/10 disabled:opacity-60 dark:hover:border-white/10"
     >
       <svg
         viewBox="0 0 24 24"
@@ -53,7 +53,7 @@ export function DownloadTimeline({ login }: Props) {
         <path d="M7 11l5 5 5-5" />
         <path d="M5 20h14" />
       </svg>
-      <span>{downloading ? 'Downloading' : 'Download'}</span>
+      <span className="inline-block min-w-18 text-left">{downloading ? 'Downloading' : 'Download'}</span>
     </button>
   );
 }

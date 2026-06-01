@@ -5,6 +5,7 @@ import { isFeaturedLogin } from '@/features/leaderboard/featured';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
 function invalidateAllForLogin(login: string) {
+  updateTag(`profile-page-${login}`);
   updateTag(`profile-${login}`);
   updateTag(`cronotype-${login}-90d`);
   updateTag(`stats-${login}-90d`);

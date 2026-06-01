@@ -172,14 +172,15 @@ export async function EvolutionStrip({ login }: Props) {
 export function EvolutionStripSkeleton() {
   return (
     <>
-      <header>
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
+        <div className="skeleton h-5 w-24 rounded-md" />
       </header>
       <div
         className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10"
         aria-hidden
       >
-        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+        <ul className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 sm:gap-x-4">
           <li className="flex items-center gap-1.5">
             <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
             <span className="skeleton h-3 w-20" />

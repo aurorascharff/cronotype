@@ -21,7 +21,7 @@ export function RegenerateButton({ login }: Props) {
         })
       }
       disabled={isPending}
-      className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white/85 px-2.5 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12]"
+      className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex min-w-24 items-center gap-1.5 rounded-lg border border-black/10 bg-white/85 px-2.5 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12]"
     >
       <svg
         viewBox="0 0 24 24"
@@ -36,7 +36,7 @@ export function RegenerateButton({ login }: Props) {
         <path d="M21 12a9 9 0 1 1-3.51-7.13" />
         <path d="M21 4v6h-6" />
       </svg>
-      <span>{isPending ? 'Regenerating' : 'Regenerate'}</span>
+      <span className="inline-block min-w-16 text-left">{isPending ? 'Regenerating' : 'Regenerate'}</span>
     </button>
   );
 }

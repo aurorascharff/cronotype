@@ -20,7 +20,7 @@ export function RevealGate({ login }: Props) {
         type="button"
         onClick={() => startTransition(() => revealUser(login))}
         disabled={isPending}
-        className="bg-brand text-on-brand dark:text-ink mt-2 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-60"
+        className="bg-brand text-on-brand dark:text-ink mt-2 inline-flex min-w-24 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-60"
       >
         {isPending ? 'Revealing…' : 'Reveal'}
       </button>
