@@ -67,9 +67,14 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
         <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
         <Crossfade>
           <Suspense fallback={<CronotypeProfileSkeleton />}>
-            {params.then(({ login }) => (
-              <CronotypeProfile login={login.toLowerCase()} />
-            ))}
+            <InlineErrorBoundary
+              title="We couldn't reveal this developer."
+              body="GitHub is rate-limited right now. Give it a minute and try again."
+            >
+              {params.then(({ login }) => (
+                <CronotypeProfile login={login.toLowerCase()} />
+              ))}
+            </InlineErrorBoundary>
           </Suspense>
         </Crossfade>
       </section>
