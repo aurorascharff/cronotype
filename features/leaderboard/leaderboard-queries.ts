@@ -13,7 +13,6 @@ export type LeaderboardEntry = {
 };
 
 const FEATURED: string[] = [
-  // React / Next.js core
   'gaearon',
   'sebmarkbage',
   'acdlite',
@@ -24,7 +23,6 @@ const FEATURED: string[] = [
   'shuding',
   'timneutkens',
   'styfle',
-  // JS ecosystem / tools
   'sindresorhus',
   'tj',
   'addyosmani',
@@ -40,17 +38,14 @@ const FEATURED: string[] = [
   'jaredpalmer',
   'mxstbr',
   'kettanaito',
-  // Frameworks / runtimes
   'evanw',
   'developit',
   'antfu',
   'yyx990803',
   'rich-harris',
-  // Infra / systems
   'torvalds',
   'mitchellh',
   'kelseyhightower',
-  // Design / UI
   'shadcn',
   'pacocoursey',
   'steveruizok',

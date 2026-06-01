@@ -42,8 +42,6 @@ function headers(extra: Record<string, string> = {}): HeadersInit {
   return h;
 }
 
-// Limit concurrent GitHub requests to avoid hitting the 30 req/min Search
-// Commits rate limit when many cards fetch simultaneously on a cold homepage.
 const MAX_CONCURRENT = 4;
 let inflight = 0;
 const queue: Array<() => void> = [];
@@ -254,14 +252,9 @@ async function getStatsForCached(login: string, window: Window): Promise<ReturnT
   if (MOCK || isShell(login)) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
 
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
-  // Snap to start-of-day so the cache key is stable within a day.
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  const to = today;
+  const now = new Date();
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const from = new Date(to.getTime() - days * 24 * 3600_000);
-  // Sample up to 100 commits from this range. One Search Commits request per
-  // profile keeps us well under the 30/min limit even with the leaderboard
-  // fan-out warming 30 users.
   const commits = await fetchCommitsInRange(
     login,
     from.toISOString().slice(0, 10),

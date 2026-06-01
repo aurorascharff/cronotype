@@ -184,9 +184,6 @@ export async function EvolutionStrip({ login }: Props) {
 }
 
 export function EvolutionStripSkeleton() {
-  // Render a structural placeholder, not an accurate one. Year labels are
-  // omitted in the skeleton because computing them needs `new Date()` which
-  // would force this fallback off the static shell during prerender.
   const years = 12;
 
   return (
