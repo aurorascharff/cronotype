@@ -241,37 +241,43 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
+async function getTodayKey(): Promise<string> {
+  'use cache';
+  cacheTag('today');
+  cacheLife('hours');
   const now = new Date();
-  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const dateKey = to.toISOString().slice(0, 10);
-  return getStatsForCached(login.toLowerCase(), window, dateKey);
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10);
+}
+
+function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO: string } {
+  const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
+  const toDate = new Date(`${toISO}T00:00:00Z`);
+  const fromDate = new Date(toDate.getTime() - days * 24 * 3600_000);
+  return { fromISO: fromDate.toISOString().slice(0, 10), toISO };
+}
+
+export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
+  const today = await getTodayKey();
+  const { fromISO, toISO } = rangeFromToday(today, window);
+  return getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
 }
 
 async function getStatsForCached(
   login: string,
   window: Window,
-  dateKey: string,
+  fromISO: string,
+  toISO: string,
 ): Promise<ReturnType<typeof buildStats>> {
   'use cache';
-  cacheTag(`stats-${login.toLowerCase()}-${window}`);
-  cacheTag(`stats-${login.toLowerCase()}-${window}-${dateKey}`);
+  cacheTag(`stats-${login}-${window}`);
+  cacheTag(`stats-${login}-${window}-${toISO}`);
   cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
     return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
   }
 
-  const to = new Date(`${dateKey}T00:00:00Z`);
-  const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
-  const from = new Date(to.getTime() - days * 24 * 3600_000);
-  const commits = await fetchCommitsInRange(
-    login,
-    from.toISOString().slice(0, 10),
-    to.toISOString().slice(0, 10),
-    0,
-    1,
-  );
+  const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
   return buildStats(commits);
 }
 
@@ -396,9 +402,10 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     return { failedArchetypeYears: [], failedMonthlyYears: [], months: [], partial: true, yearlyArchetypes: [] };
   }
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
-  const now = new Date();
-  const thisYear = now.getUTCFullYear();
-  const thisMonth = now.getUTCMonth() + 1;
+  const today = await getTodayKey();
+  const todayDate = new Date(`${today}T00:00:00Z`);
+  const thisYear = todayDate.getUTCFullYear();
+  const thisMonth = todayDate.getUTCMonth() + 1;
 
   const years: number[] = [];
   for (let year = thisYear; year >= firstYear; year--) years.push(year);
