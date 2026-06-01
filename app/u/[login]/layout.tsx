@@ -8,7 +8,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
           href="/"
           className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
         >
-          ← Diagnose another
+          ← Reveal another
         </Link>
       </header>
       <div className="space-y-10">{children}</div>

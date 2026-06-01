@@ -6,7 +6,7 @@ import type { ArchetypeId } from '@/types/cronotype';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  description: 'The eight commit-time archetypes Cronotype can diagnose, and what each one means.',
+  description: 'The eight commit-time archetypes Cronotype can reveal, and what each one means.',
   title: 'The archetypes',
 };
 
@@ -120,7 +120,7 @@ export default function TypesPage() {
 
       <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 sm:p-6 dark:border-white/10">
         <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
-          How the diagnosis works
+          How the reveal works
         </h2>
         <ul className="text-ink dark:text-paper space-y-2 text-sm">
           <li>
@@ -164,7 +164,7 @@ export default function TypesPage() {
           href="/"
           className="hover:text-ink dark:hover:text-paper underline-offset-2 transition-colors hover:underline"
         >
-          ← Diagnose a handle
+          ← Reveal a handle
         </Link>
       </div>
     </div>

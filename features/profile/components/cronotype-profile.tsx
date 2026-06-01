@@ -32,7 +32,7 @@ export async function CronotypeProfile({ login }: Props) {
   return (
     <section className="space-y-4">
       <header>
-        <h2 className="text-lg font-semibold tracking-tight">The diagnosis</h2>
+        <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
       </header>
       <div className="relative">
         <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />

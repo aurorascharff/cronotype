@@ -17,7 +17,7 @@ export function ProfileErrorCard({
   onRetry,
   retryLabel = 'Try again',
   showHomeLink = true,
-  homeLabel = 'Diagnose someone else',
+  homeLabel = 'Reveal someone else',
 }: Props) {
   return (
     <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-10 text-center dark:border-white/10">

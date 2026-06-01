@@ -20,11 +20,9 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
 
   const bars = stats.hourly.map((count, h) => {
     const len = (count / max) * (outer - inner);
-    const isNight = h < 5 || h >= 22;
     return {
       angle: (h / 24) * 360,
       h,
-      isNight,
       len: Math.max(2, len),
     };
   });
@@ -36,7 +34,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
     { anchor: 'end' as const, label: '6pm', x: cx - outer - 14, y: cy + 5 },
   ];
 
-  const gradId = `halo-grad-${theme.accent.replace('#', '')}`;
   const clipId = `halo-clip-${theme.accent.replace('#', '')}`;
 
   return (
@@ -49,10 +46,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
       aria-label={`Halo chart, ${stats.total} commits, peak at hour ${stats.peakHour}`}
     >
       <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={theme.accent2} />
-          <stop offset="100%" stopColor={theme.accent} />
-        </linearGradient>
         <clipPath id={clipId}>
           <circle cx={cx} cy={cy} r={avatarR} />
         </clipPath>
@@ -85,8 +78,8 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
           y={cy - inner - b.len}
           width={barWidth}
           height={b.len}
-          fill={`url(#${gradId})`}
-          opacity={b.isNight ? 1 : 0.7}
+          fill={theme.accent}
+          opacity={0.9}
           transform={`rotate(${b.angle}, ${cx}, ${cy})`}
         />
       ))}

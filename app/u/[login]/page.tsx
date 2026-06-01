@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
-import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
+import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { computeCronotype } from '@/features/profile/profile-service';
@@ -68,7 +68,7 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
       <Suspense fallback={<EvolutionStripSkeleton />}>
         <InlineErrorBoundary
           title="We couldn't load this history right now."
-          body="Your main diagnosis is still visible. Try again to fetch the full timeline."
+          body="Your main reading is still visible. Try again to fetch the full timeline."
         >
           <Crossfade>
             {params.then(({ login }) => (
@@ -79,10 +79,10 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
       </Suspense>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
-        <Suspense fallback={<RecentDiagnosedSkeleton limit={12} />}>
+        <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
+        <Suspense fallback={<RecentRevealedSkeleton limit={12} />}>
           {params.then(({ login }) => (
-            <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={12} />
+            <RecentRevealed excludeLogin={login.toLowerCase()} limit={12} />
           ))}
         </Suspense>
       </section>

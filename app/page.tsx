@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
+import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { UsernameForm } from '@/components/username-form';
 
 export default function HomePage() {
@@ -17,9 +17,9 @@ export default function HomePage() {
         </div>
       </section>
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
-        <Suspense fallback={<RecentDiagnosedSkeleton limit={16} />}>
-          <RecentDiagnosed limit={16} />
+        <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
+        <Suspense fallback={<RecentRevealedSkeleton limit={16} />}>
+          <RecentRevealed limit={16} />
         </Suspense>
       </section>
     </div>

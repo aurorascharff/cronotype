@@ -147,7 +147,6 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         {stats.hourly.map((count, h) => {
           const len = Math.max(2, (count / max) * (outer - inner));
           const angle = (h / 24) * 360;
-          const isNight = h < 5 || h >= 22;
           return (
             <div
               key={h}
@@ -157,7 +156,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
                 display: 'flex',
                 height: len,
                 left: cx - barWidth / 2,
-                opacity: isNight ? 1 : 0.7,
+                opacity: 0.9,
                 position: 'absolute',
                 top: cx - inner - len,
                 transform: `rotate(${angle}deg)`,

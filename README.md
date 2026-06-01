@@ -27,7 +27,7 @@ Every profile has a dynamic Open Graph image, a leaderboard of well-known develo
 ```
 app/                  Pages, layouts, OG images
 features/profile/     Queries, services, components for a single handle
-features/leaderboard/ Recently diagnosed list
+features/leaderboard/ Recently revealed list
 lib/archetypes.ts     Classifier and percentile math
 ```
 

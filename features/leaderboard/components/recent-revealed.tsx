@@ -7,7 +7,7 @@ type Props = {
   limit?: number;
 };
 
-export async function RecentDiagnosed({ excludeLogin, limit = 16 }: Props) {
+export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
   'use cache';
   cacheTag('leaderboard');
   cacheLife('hours');
@@ -19,6 +19,6 @@ export async function RecentDiagnosed({ excludeLogin, limit = 16 }: Props) {
   return <ProfileCardGrid entries={entries} />;
 }
 
-export function RecentDiagnosedSkeleton({ limit = 8 }: { limit?: number }) {
+export function RecentRevealedSkeleton({ limit = 8 }: { limit?: number }) {
   return <ProfileCardGridSkeleton count={limit} />;
 }

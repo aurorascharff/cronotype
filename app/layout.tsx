@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  description: 'A diagnosis for your commit habits. One field. One verdict. One screenshot.',
+  description: 'A reveal for your commit habits. One field. One verdict. One screenshot.',
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL ??
       (process.env.VERCEL_PROJECT_PRODUCTION_URL
