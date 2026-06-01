@@ -329,33 +329,28 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
 
-  try {
-    const days = await fetchContributionCalendar(login, from, to);
+  const days = await fetchContributionCalendar(login, from, to);
 
-    const counts = new Map<string, number>();
-    for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
-    for (const d of days) {
-      const key = d.date.slice(0, 7);
-      if (key.startsWith(String(year))) {
-        counts.set(key, (counts.get(key) ?? 0) + d.contributionCount);
-      }
+  const counts = new Map<string, number>();
+  for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
+  for (const d of days) {
+    const key = d.date.slice(0, 7);
+    if (key.startsWith(String(year))) {
+      counts.set(key, (counts.get(key) ?? 0) + d.contributionCount);
     }
-    const months = Array.from(counts.entries())
-      .map(([month, count]) => ({ count, month }))
-      .sort((a, b) => a.month.localeCompare(b.month));
-
-    const commitsCount = months.reduce((sum, m) => sum + m.count, 0);
-
-    return {
-      archetypeId: null,
-      commits: commitsCount,
-      months,
-      year,
-    };
-  } catch {
-    cacheLife('hours');
-    return null;
   }
+  const months = Array.from(counts.entries())
+    .map(([month, count]) => ({ count, month }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  const commitsCount = months.reduce((sum, m) => sum + m.count, 0);
+
+  return {
+    archetypeId: null,
+    commits: commitsCount,
+    months,
+    year,
+  };
 }
 
 async function getYearArchetype(login: string, year: number): Promise<ArchetypeId | null> {
@@ -365,14 +360,9 @@ async function getYearArchetype(login: string, year: number): Promise<ArchetypeI
 
   if (MOCK || isShell(login)) return mockArchetypeFor(`${login}-${year}`);
 
-  try {
-    const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 2);
-    if (sampleCommits.length === 0) return null;
-    return classify(buildStats(sampleCommits)).id;
-  } catch {
-    cacheLife('hours');
-    return null;
-  }
+  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 2);
+  if (sampleCommits.length === 0) return null;
+  return classify(buildStats(sampleCommits)).id;
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
