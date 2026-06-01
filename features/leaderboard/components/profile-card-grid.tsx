@@ -76,54 +76,20 @@ export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <li
           key={i}
-          className="dark:bg-ink-2 text-muted/40 dark:text-muted-dark/40 flex h-full flex-col items-center gap-3 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
+          className="dark:bg-ink-2 flex h-full flex-col items-center gap-3 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
           aria-hidden
         >
           <div className="flex h-28 items-center justify-center">
-            <RadialChipSkeleton size={112} />
+            <div className="skeleton h-24 w-24 rounded-full" />
           </div>
           <div className="flex w-full flex-col items-center gap-1.5">
-            <div className="h-3 w-24 rounded-full border border-current bg-current/[0.08]" />
-            <div className="h-2 w-16 rounded-full border border-current bg-current/[0.08]" />
-            <div className="h-2.5 w-20 rounded-full border border-current bg-current/[0.08]" />
+            <div className="skeleton h-3 w-24" />
+            <div className="skeleton h-2 w-16" />
+            <div className="skeleton h-2.5 w-20" />
           </div>
         </li>
       ))}
     </ul>
-  );
-}
-
-function RadialChipSkeleton({ size }: { size: number }) {
-  const cx = size / 2;
-  const cy = size / 2;
-  const inner = size * 0.22;
-  const outer = size * 0.48;
-  const barWidth = Math.max(1.2, size * 0.032);
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className="text-muted/40 dark:text-muted-dark/40 overflow-visible"
-      aria-hidden
-    >
-      <circle cx={cx} cy={cy} r={inner - 0.5} fill="currentColor" fillOpacity={0.08} stroke="currentColor" strokeWidth={1} />
-      {Array.from({ length: 24 }).map((_, h) => {
-        const len = (outer - inner) * (0.35 + 0.4 * Math.abs(Math.sin((h / 24) * Math.PI * 2)));
-        return (
-          <rect
-            key={h}
-            x={cx - barWidth / 2}
-            y={cy - inner - len}
-            width={barWidth}
-            height={len}
-            fill="currentColor"
-            transform={`rotate(${(h / 24) * 360}, ${cx}, ${cy})`}
-          />
-        );
-      })}
-    </svg>
   );
 }
 
