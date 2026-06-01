@@ -13,13 +13,37 @@ export const unstable_prefetch = 'force-runtime';
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
   const { login: rawLogin } = await params;
   const login = rawLogin.toLowerCase();
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : 'http://localhost:3000');
+  const imageUrl = `${baseUrl.replace(/\/$/, '')}/u/${login}/opengraph-image`;
   try {
     const { archetype, percentile, profile } = await computeCronotype(login, '90d');
     const title = `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
     const description = `${archetype.tagline} ${percentile}th percentile.`;
     return {
       description,
-      openGraph: { description, title, type: 'profile' },
+      openGraph: {
+        description,
+        images: [
+          {
+            alt: `${profile.login} cronotype chart`,
+            height: 630,
+            url: imageUrl,
+            width: 1200,
+          },
+        ],
+        title,
+        type: 'profile',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        description,
+        images: [imageUrl],
+        title,
+      },
       title,
     };
   } catch (err) {

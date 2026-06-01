@@ -10,6 +10,10 @@ export default function HomePage() {
           What type of developer are you?
         </h1>
 
+        <p className="text-muted dark:text-muted-dark mx-auto max-w-2xl text-center text-sm sm:text-base">
+          Enter a GitHub handle and get a commit-time archetype, timeline, and shareable profile card.
+        </p>
+
         <div className="mx-auto max-w-xl">
           <UsernameForm />
         </div>

@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory, type MonthBucket } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
@@ -36,8 +35,8 @@ export async function EvolutionStrip({ login }: Props) {
   const peak = findPeak(months);
   const total = months.reduce((a, b) => a + b.count, 0);
   const yearMarkers = computeYearMarkers(months);
-  const journey = buildArchetypeJourney(yearlyArchetypes, archetype.id);
-  const floaters = buildFloaters(smoothed, max, usableH);
+  const aura = buildArchetypeAuras(months, yearlyArchetypes, archetype.id);
+  const orbiters = buildOrbiters();
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
@@ -68,7 +67,30 @@ export async function EvolutionStrip({ login }: Props) {
               <stop offset="0%" stopColor={archetype.theme.accent} stopOpacity="0.4" />
               <stop offset="100%" stopColor={archetype.theme.accent} stopOpacity="0" />
             </linearGradient>
+            <filter id={`aura-blur-${archetype.id}`} x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
+            {aura.bands.map((b, i) => (
+              <linearGradient key={`aura-grad-${i}`} id={`aura-grad-${archetype.id}-${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={b.color} stopOpacity="0" />
+                <stop offset="50%" stopColor={b.color} stopOpacity="0.22" />
+                <stop offset="100%" stopColor={b.color} stopOpacity="0" />
+              </linearGradient>
+            ))}
           </defs>
+
+          {/* Archetype aura bands so the chart itself carries the evolution story. */}
+          {aura.bands.map((b, i) => (
+            <rect
+              key={`aura-band-${i}`}
+              x={b.x}
+              y={PAD_TOP}
+              width={b.width}
+              height={usableH}
+              fill={`url(#aura-grad-${archetype.id}-${i})`}
+              filter={`url(#aura-blur-${archetype.id})`}
+            />
+          ))}
 
           {/* Year divider hairlines */}
           {yearMarkers.map(yr => (
@@ -99,34 +121,46 @@ export async function EvolutionStrip({ login }: Props) {
             vectorEffect="non-scaling-stroke"
           />
 
-          {/* Ambient floating orbs that ride the curve. */}
-          {floaters.map((f, i) => (
+          {/* Orbiting markers that visibly move along the curve. */}
+          {orbiters.map((o, i) => (
             <g key={`floater-${i}`}>
               <circle
-                cx={f.x}
-                cy={f.y}
-                r={f.r}
+                r={o.r}
                 fill={archetype.theme.accent2}
-                opacity={f.opacity}
+                opacity={o.opacity}
                 vectorEffect="non-scaling-stroke"
               >
                 <animate
-                  attributeName="cy"
-                  values={`${f.y};${f.y - f.drift};${f.y};${f.y + f.drift};${f.y}`}
-                  dur={`${f.duration}s`}
-                  begin={`${f.delay}s`}
+                  attributeName="opacity"
+                  values={`${o.opacity};${Math.min(0.85, o.opacity + 0.22)};${o.opacity}`}
+                  dur={`${Math.max(3.2, o.duration - 1)}s`}
+                  begin={`${o.delay / 2}s`}
                   repeatCount="indefinite"
                 />
-                <animate
-                  attributeName="opacity"
-                  values={`${f.opacity};${Math.min(0.65, f.opacity + 0.2)};${f.opacity}`}
-                  dur={`${Math.max(3.8, f.duration - 1.2)}s`}
-                  begin={`${f.delay / 2}s`}
+                <animateMotion
+                  path={linePath}
+                  dur={`${o.duration}s`}
+                  begin={`${o.delay}s`}
+                  keyPoints={`${o.start};${o.end};${o.start}`}
+                  keyTimes="0;0.5;1"
+                  calcMode="linear"
                   repeatCount="indefinite"
                 />
               </circle>
             </g>
           ))}
+
+          {/* Archetype transition markers along the curve. */}
+          {aura.transitions.map((t, i) => {
+            const y = PAD_TOP + usableH - (smoothed[t.idx] / max) * usableH;
+            const x = (t.idx / (smoothed.length - 1)) * W;
+            return (
+              <g key={`transition-${i}`}>
+                <circle cx={x} cy={y} r="8" fill={t.color} opacity="0.16" filter={`url(#aura-blur-${archetype.id})`} />
+                <circle cx={x} cy={y} r="3.6" fill={t.color} opacity="0.95" />
+              </g>
+            );
+          })}
 
           {/* Peak marker — a single accent dot at the user's busiest month. */}
           {peak && (
@@ -165,26 +199,6 @@ export async function EvolutionStrip({ login }: Props) {
             </span>
           ))}
         </div>
-
-        {journey.length > 1 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
-            {journey.map((step, i) => {
-              const a = ARCHETYPES[step.archetypeId];
-              const label = step.current ? 'now' : String(step.year);
-              return (
-                <Fragment key={`${step.archetypeId}-${step.year}-${i}`}>
-                  {i > 0 && <span className="text-muted dark:text-muted-dark">→</span>}
-                  <span
-                    className="rounded-full border border-black/10 px-2 py-0.5 dark:border-white/10"
-                    style={{ color: a.theme.accent }}
-                  >
-                    {a.name} <span className="text-muted dark:text-muted-dark">{label}</span>
-                  </span>
-                </Fragment>
-              );
-            })}
-          </div>
-        )}
       </div>
     </section>
   );
@@ -281,45 +295,87 @@ function computeYearMarkers(months: MonthBucket[]): Array<{ label: string; x: nu
   }));
 }
 
-function buildArchetypeJourney(
+function buildArchetypeAuras(
+  months: MonthBucket[],
   yearly: Array<{ year: number; archetypeId: ArchetypeId; commits: number }>,
   currentId: ArchetypeId,
 ) {
   const dense = yearly
     .filter(y => y.commits > 0)
-    .map(y => ({ archetypeId: y.archetypeId, current: false, year: y.year }));
+    .sort((a, b) => a.year - b.year)
+    .map(y => ({ archetypeId: y.archetypeId, year: y.year }));
 
-  const collapsed: Array<{ year: number; archetypeId: ArchetypeId; current: boolean }> = [];
+  const collapsed: Array<{ startYear: number; endYear: number; archetypeId: ArchetypeId }> = [];
   for (const step of dense) {
     const prev = collapsed[collapsed.length - 1];
-    if (!prev || prev.archetypeId !== step.archetypeId) collapsed.push(step);
+    if (!prev || prev.archetypeId !== step.archetypeId) {
+      collapsed.push({ archetypeId: step.archetypeId, endYear: step.year, startYear: step.year });
+    } else {
+      prev.endYear = step.year;
+    }
   }
 
+  const thisYear = new Date().getUTCFullYear();
   const last = collapsed[collapsed.length - 1];
   if (!last || last.archetypeId !== currentId) {
-    collapsed.push({ archetypeId: currentId, current: true, year: new Date().getUTCFullYear() });
+    collapsed.push({ archetypeId: currentId, endYear: thisYear, startYear: thisYear });
   } else {
-    last.current = true;
+    last.endYear = Math.max(last.endYear, thisYear);
   }
 
-  return collapsed.slice(Math.max(0, collapsed.length - 6));
+  const firstIdxByYear = new Map<number, number>();
+  const lastIdxByYear = new Map<number, number>();
+  months.forEach((m, i) => {
+    const y = Number(m.month.slice(0, 4));
+    if (!firstIdxByYear.has(y)) firstIdxByYear.set(y, i);
+    lastIdxByYear.set(y, i);
+  });
+
+  const bands = collapsed
+    .map(run => {
+      const startIdx = firstIdxByYear.get(run.startYear);
+      const endIdx = lastIdxByYear.get(run.endYear);
+      if (startIdx == null || endIdx == null) return null;
+
+      const x1 = (startIdx / (months.length - 1)) * W;
+      const x2 = (endIdx / (months.length - 1)) * W;
+      return {
+        color: ARCHETYPES[run.archetypeId].theme.accent,
+        width: Math.max(24, x2 - x1 + 22),
+        x: Math.max(0, x1 - 11),
+      };
+    })
+    .filter(Boolean) as Array<{ color: string; x: number; width: number }>;
+
+  const transitions = collapsed
+    .slice(1)
+    .map(run => {
+      const idx = firstIdxByYear.get(run.startYear);
+      if (idx == null) return null;
+      return {
+        color: ARCHETYPES[run.archetypeId].theme.accent,
+        idx,
+      };
+    })
+    .filter(Boolean) as Array<{ color: string; idx: number }>;
+
+  return {
+    bands,
+    transitions,
+  };
 }
 
-function buildFloaters(smoothed: number[], max: number, usableH: number) {
-  const anchors = [0.08, 0.19, 0.33, 0.47, 0.62, 0.79, 0.91];
-  return anchors.map((a, i) => {
-    const idx = Math.min(smoothed.length - 1, Math.max(0, Math.round(a * (smoothed.length - 1))));
-    const x = (idx / (smoothed.length - 1)) * W;
-    const y = PAD_TOP + usableH - (smoothed[idx] / max) * usableH;
-
+function buildOrbiters() {
+  const starts = [0.06, 0.2, 0.34, 0.5, 0.66, 0.82];
+  return starts.map((start, i) => {
+    const span = 0.12 + (i % 3) * 0.03;
     return {
-      delay: i * 0.45,
-      drift: i % 2 === 0 ? 8 : 6,
-      duration: 4.4 + (i % 3) * 1.1,
-      opacity: 0.25 + (i % 3) * 0.08,
-      r: i % 3 === 0 ? 4.4 : i % 2 === 0 ? 3.6 : 3,
-      x,
-      y,
+      delay: i * 0.35,
+      duration: 5.5 + (i % 4) * 1.2,
+      end: Math.min(0.98, start + span),
+      opacity: 0.34 + (i % 3) * 0.1,
+      r: i % 3 === 0 ? 5.2 : i % 2 === 0 ? 4.4 : 3.8,
+      start,
     };
   });
 }

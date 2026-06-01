@@ -71,11 +71,16 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         aria-label="Diagnose this developer"
         className={
           large
-            ? 'bg-ink text-paper dark:bg-paper dark:text-ink inline-flex w-28 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-opacity hover:opacity-85 disabled:opacity-70'
-            : 'bg-ink text-paper dark:bg-paper dark:text-ink inline-flex w-20 shrink-0 items-center justify-center rounded-md text-xs font-medium transition-opacity hover:opacity-85 disabled:opacity-70'
+            ? 'inline-flex w-30 shrink-0 items-center justify-center rounded-md border border-black/10 bg-linear-to-r from-[#22d3ee] to-[#84cc16] px-4 text-sm font-semibold text-[#08090b] shadow-[0_8px_20px_rgba(34,211,238,0.22)] transition-[transform,filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10'
+            : 'inline-flex w-22 shrink-0 items-center justify-center rounded-md border border-black/10 bg-linear-to-r from-[#22d3ee] to-[#84cc16] px-3 text-xs font-semibold text-[#08090b] transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10'
         }
       >
-        {pending ? <Spinner /> : 'Diagnose'}
+        <span>Diagnose</span>
+        {pending ? (
+          <span className="ml-2 inline-flex" aria-hidden>
+            <Spinner />
+          </span>
+        ) : null}
       </button>
     </form>
   );

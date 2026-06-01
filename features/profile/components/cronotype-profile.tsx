@@ -33,7 +33,7 @@ export async function CronotypeProfile({ login }: Props) {
     stats,
   });
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.dev';
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.vercel.app';
   const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;
 
   return (
