@@ -1,5 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
+import { FEATURED } from '@/features/leaderboard/featured';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify } from '@/lib/archetypes';
 import { listFeaturedReveals } from '@/lib/reveals';
@@ -11,13 +12,13 @@ export type LeaderboardEntry = {
   stats: HourStats;
 };
 
-export async function getRecentLogins(limit: number): Promise<string[]> {
+export async function getRecentLogins(): Promise<string[]> {
   'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
   cacheLife('minutes');
 
-  const revealed = await listFeaturedReveals(limit);
+  const revealed = await listFeaturedReveals(FEATURED.length);
   if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(
@@ -31,7 +32,7 @@ export async function getRecentLogins(limit: number): Promise<string[]> {
   );
   profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
 
-  return profiles.map(p => p.login).slice(0, limit);
+  return profiles.map(p => p.login);
 }
 
 export async function getCardProfile(login: string): Promise<ProfileSummary | null> {

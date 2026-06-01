@@ -1,8 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { revealUser } from '@/features/profile/profile-actions';
+import { revealUserAndRedirect } from '@/features/profile/profile-actions';
 
 type Props = {
   login: string;
@@ -11,7 +10,6 @@ type Props = {
 export function RevealGate({ login }: Props) {
   const [isWorking, setIsWorking] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
   const busy = isWorking || isPending;
 
   function reveal() {
@@ -19,8 +17,7 @@ export function RevealGate({ login }: Props) {
     setIsWorking(true);
     startTransition(async () => {
       try {
-        await revealUser(login);
-        router.refresh();
+        await revealUserAndRedirect(login);
       } catch {
         setIsWorking(false);
       }

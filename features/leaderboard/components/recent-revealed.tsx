@@ -1,19 +1,17 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
+import { FEATURED } from '@/features/leaderboard/featured';
 import { getRecentLogins } from '@/features/leaderboard/leaderboard-queries';
 import { connection } from 'next/server';
 
 type Props = {
   excludeLogin?: string;
-  limit?: number;
 };
 
-export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
+export async function RecentRevealed({ excludeLogin }: Props) {
   await connection();
 
-  const all = await getRecentLogins(limit + (excludeLogin ? 1 : 0));
-  const logins = excludeLogin
-    ? all.filter(l => l.toLowerCase() !== excludeLogin.toLowerCase()).slice(0, limit)
-    : all.slice(0, limit);
+  const all = await getRecentLogins();
+  const logins = excludeLogin ? all.filter(l => l.toLowerCase() !== excludeLogin.toLowerCase()) : all;
 
   if (logins.length === 0) {
     return (
@@ -34,10 +32,12 @@ export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
   );
 }
 
-export function RecentRevealedSkeleton({ limit = 8 }: { limit?: number }) {
+export function RecentRevealedSkeleton() {
+  const count = Math.ceil(FEATURED.length / 2);
+
   return (
     <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-      {Array.from({ length: limit }).map((_, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <li key={i}>
           <ProfileCardSkeleton />
         </li>

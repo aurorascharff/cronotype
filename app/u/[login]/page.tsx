@@ -137,8 +137,8 @@ function GeneratedProfile({ login }: { login: string }) {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
         <Crossfade>
-          <Suspense fallback={<RecentRevealedSkeleton limit={16} />}>
-            <RecentRevealed excludeLogin={login} limit={16} />
+          <Suspense fallback={<RecentRevealedSkeleton />}>
+            <RecentRevealed excludeLogin={login} />
           </Suspense>
         </Crossfade>
       </section>

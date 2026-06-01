@@ -17,29 +17,18 @@ export default function HomePage() {
           <UsernameForm />
         </div>
       </section>
-      <Suspense
-        fallback={
-          <>
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
-              <RecentRevealedSkeleton limit={12} />
-            </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-              <SuggestedUsersSkeleton limit={6} />
-            </section>
-          </>
-        }
-      >
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
-          <RecentRevealed limit={12} />
-        </section>
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-          <SuggestedUsers limit={6} />
-        </section>
-      </Suspense>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
+        <Suspense fallback={<RecentRevealedSkeleton />}>
+          <RecentRevealed />
+        </Suspense>
+      </section>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
+        <Suspense fallback={<SuggestedUsersSkeleton />}>
+          <SuggestedUsers />
+        </Suspense>
+      </section>
     </div>
   );
 }

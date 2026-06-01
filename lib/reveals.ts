@@ -32,7 +32,7 @@ export async function recordFeaturedReveal(login: string): Promise<void> {
   await kv.zremrangebyrank(FEATURED_REVEALS_KEY, 0, -MAX_REVEALS - 1);
 }
 
-export async function listFeaturedReveals(limit: number): Promise<string[]> {
+export async function listFeaturedReveals(limit = MAX_REVEALS): Promise<string[]> {
   const kv = getClient();
   if (!kv) return [];
   const raw = await kv.zrange<string[]>(FEATURED_REVEALS_KEY, 0, limit - 1, { rev: true });

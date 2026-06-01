@@ -1,6 +1,7 @@
 'use server';
 
 import { updateTag } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { isFeaturedLogin } from '@/features/leaderboard/featured';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
@@ -25,6 +26,12 @@ export async function revealUser(login: string) {
     await recordFeaturedReveal(lower);
     updateTag('reveals');
   }
+}
+
+export async function revealUserAndRedirect(login: string) {
+  const lower = login.toLowerCase();
+  await revealUser(lower);
+  redirect(`/u/${lower}`);
 }
 
 export async function regenerateUser(login: string) {
