@@ -15,9 +15,9 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - React 19 with `ViewTransition` for streaming reveals; toggled via `experimental.viewTransition` in [next.config.ts](next.config.ts)
 - Feature folders: `features/profile/`, `features/leaderboard/`
 - Domain verb "reveal" is the app's term for classifying a handle; don't reintroduce "diagnose"
-- All pages export `unstable_prefetch = 'force-runtime'`
-- All public queries are wrapped in React `cache()` for in-request dedupe and `'use cache'` for cross-request caching
-- Components that fetch live data (`<CronotypeProfile>`, `<EvolutionStrip>`, `<RecentRevealed>`) call `await connection()` so they don't run at prerender
+- Public GitHub queries use `'use cache: remote'` where durable cross-request caching protects rate limits
+- Components with slow cached data (`<CronotypeProfile>`, `<EvolutionStrip>`) sit behind Suspense so the static shell can stream
+- Components that intentionally read request-time mutable lists (`<RecentRevealed>`, `<SuggestedUsers>`) call `await connection()`
 - Theme: light/dark via `next-themes`; client components use `useSyncExternalStore` (not `useEffect + setMounted`) to read "mounted" state without lint errors
 - Section headers (`<h2>` titles) live in `app/**/page.tsx` outside Suspense so they paint in the static shell; feature components return only their grid/card content
 
@@ -25,7 +25,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 
 - **Search Commits API** for the 90-day hourly distribution. 30 requests/minute limit - the dominant cost. Capped to 1 page (100 commits) per profile in [features/profile/profile-queries.ts](features/profile/profile-queries.ts) to keep budget reasonable.
 - **GraphQL contributions calendar** for the multi-year history. 5000/hr pool. One call per year, fanned out serially in [features/profile/profile-queries.ts](features/profile/profile-queries.ts).
-- The leaderboard (`getFeaturedEntries`) iterates 18 featured logins serially and caches the aggregate for `cacheLife('hours')`. On a cold cache it consumes ~18 Search Commits requests; subsequent visitors are served from cache.
+- The recently revealed list reads featured reveal handles from KV, then caches the sorted handle list briefly with `cacheLife('minutes')`.
 
 ## Cache discipline
 
@@ -36,7 +36,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 
 ## Prerender hygiene
 
-- `new Date()` outside a `connection()` gate fails the build with "Next.js encountered the unstable value". The leaderboard, profile, and evolution components all gate.
+- `new Date()` inside cached scopes should be isolated behind explicit `cacheLife()` so the cache behavior is clear.
 - Don't use `generateStaticParams` on routes that fan out to GitHub - a single rate-limit during build bakes the fallback PNG permanently as a static asset.
 
 ## View Transitions
