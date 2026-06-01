@@ -11,7 +11,7 @@ export type LeaderboardEntry = {
   stats: HourStats;
 };
 
-const FEATURED: string[] = [
+export const FEATURED: string[] = [
   'gaearon',
   'sebmarkbage',
   'acdlite',
@@ -56,18 +56,11 @@ export async function getRecentLogins(limit: number): Promise<string[]> {
   cacheTag('reveals');
   cacheLife('minutes');
 
-  const revealed = await listReveals(50);
-  const seen = new Set<string>();
-  const logins: string[] = [];
-  for (const login of [...revealed, ...FEATURED]) {
-    const lower = login.toLowerCase();
-    if (seen.has(lower)) continue;
-    seen.add(lower);
-    logins.push(lower);
-  }
+  const revealed = await listReveals(limit);
+  if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(
-    logins.map(async login => ({ login, profile: await getProfile(login) })),
+    revealed.map(async login => ({ login, profile: await getProfile(login) })),
   );
   profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
 
