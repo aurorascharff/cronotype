@@ -52,9 +52,8 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
         <div className="text-ink dark:text-paper truncate text-sm font-semibold">
           {profile.name ?? profile.login}
         </div>
-        <div className="text-muted dark:text-muted-dark truncate text-xs">
-          @{profile.login} · {archetype.name}
-        </div>
+        <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
+        <div className="text-ink dark:text-paper truncate text-xs font-medium">{archetype.name}</div>
       </div>
     </Link>
   );

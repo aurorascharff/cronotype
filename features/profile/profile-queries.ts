@@ -166,8 +166,12 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
 export async function getYearStats(login: string, year: number) {
   'use cache';
   cacheTag(`year-${login.toLowerCase()}-${year}`);
-  const isCurrent = year === new Date().getUTCFullYear();
-  cacheLife(isCurrent ? 'hours' : 'weeks');
+  // Past years never change; current year still accumulating.
+  if (year === new Date().getUTCFullYear()) {
+    cacheLife('hours');
+  } else {
+    cacheLife('weeks');
+  }
 
   if (MOCK) {
     // Walk through 3 archetypes across the years so the strip shows evolution.
