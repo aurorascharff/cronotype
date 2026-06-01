@@ -157,8 +157,8 @@ export function CronotypeProfileSkeleton() {
         </div>
 
         <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-          <div className="relative flex items-center justify-center sm:justify-start sm:pl-3">
-            <div className="relative flex h-[140px] w-[140px] items-center justify-center sm:h-[220px] sm:w-[220px]">
+          <div className="mx-auto flex h-44 w-44 items-center justify-center min-[420px]:h-52 min-[420px]:w-52 sm:mx-0 sm:h-[220px] sm:w-[220px] sm:justify-start sm:pl-3">
+            <div className="relative flex h-full w-full items-center justify-center">
               <ClassifyingRing variant="inset" />
               <div className="skeleton h-[44%] w-[44%] rounded-full" />
             </div>

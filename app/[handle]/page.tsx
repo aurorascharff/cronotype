@@ -79,13 +79,18 @@ export default function ProfilePage({ params }: PageProps<'/[handle]'>) {
 
 function ProfilePageSkeleton() {
   return (
-    <section className="space-y-4">
-      <header className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
-        <div className="skeleton h-8 w-24 rounded-lg" aria-hidden />
-      </header>
-      <CronotypeProfileSkeleton />
-    </section>
+    <>
+      <section className="space-y-4">
+        <header className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+          <div className="skeleton h-8 w-28 rounded-lg" aria-hidden />
+        </header>
+        <CronotypeProfileSkeleton />
+      </section>
+      <section className="space-y-4">
+        <EvolutionStripSkeleton />
+      </section>
+    </>
   );
 }
 

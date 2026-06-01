@@ -222,9 +222,12 @@ export async function EvolutionStrip({ handle }: Props) {
 export function EvolutionStripSkeleton() {
   return (
     <>
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-        <div className="skeleton h-5 w-24 rounded-md" />
+        <div className="flex items-center gap-2">
+          <div className="skeleton h-3 w-28 rounded" />
+          <div className="skeleton h-5 w-24 rounded-md" />
+        </div>
       </header>
       <div
         className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10"

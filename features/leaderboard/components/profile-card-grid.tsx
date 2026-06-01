@@ -117,6 +117,7 @@ export function ProfileCardSkeleton() {
       className="dark:bg-ink-2 relative h-full rounded-xl border border-black/10 bg-white dark:border-white/10"
       aria-hidden
     >
+      <div className="skeleton absolute top-2 right-2 h-6 w-6 rounded-md" />
       <div className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
