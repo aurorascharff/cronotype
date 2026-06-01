@@ -9,6 +9,7 @@ import type { ArchetypeId, ProfileSummary, Window } from '@/types/cronotype';
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
+const DEFAULT_RATE_LIMIT_COOLDOWN_MS = 60_000;
 
 /**
  * Sentinel login used by `generateStaticParams` to opt the route into PPR
@@ -30,6 +31,20 @@ export class GitHubError extends Error {
 
 function isRateLimitError(err: unknown): boolean {
   return err instanceof GitHubError && (err.status === 403 || err.status === 429);
+}
+
+let githubCooldownUntil = 0;
+
+function setGitHubCooldownFromHeaders(headers: Headers): void {
+  const resetAt = headers.get('x-ratelimit-reset');
+  const resetMs = resetAt ? Number(resetAt) * 1000 : 0;
+  githubCooldownUntil = Math.max(githubCooldownUntil, resetMs || Date.now() + DEFAULT_RATE_LIMIT_COOLDOWN_MS);
+}
+
+function assertGitHubAvailable(): void {
+  if (Date.now() >= githubCooldownUntil) return;
+  const mins = Math.max(1, Math.ceil((githubCooldownUntil - Date.now()) / 60_000));
+  throw new GitHubError(`GitHub rate limit hit. Resets in ~${mins} minute${mins === 1 ? '' : 's'}.`, 403);
 }
 
 function headers(extra: Record<string, string> = {}): HeadersInit {
@@ -67,6 +82,7 @@ function releaseSlot() {
 }
 
 async function gh(url: string, init: RequestInit = {}): Promise<Response> {
+  assertGitHubAvailable();
   await acquireSlot();
   let res: Response;
   try {
@@ -78,6 +94,7 @@ async function gh(url: string, init: RequestInit = {}): Promise<Response> {
   releaseSlot();
   if (res.status === 401) throw new GitHubError('GitHub auth failed - check that GITHUB_TOKEN is valid', 401);
   if (res.status === 403 || res.status === 429) {
+    setGitHubCooldownFromHeaders(res.headers);
     const remaining = res.headers.get('x-ratelimit-remaining');
     const resetAt = res.headers.get('x-ratelimit-reset');
     if (remaining === '0') {
@@ -96,6 +113,7 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
   if (!process.env.GITHUB_TOKEN) {
     throw new GitHubError('GraphQL contributions require GITHUB_TOKEN', 401);
   }
+  assertGitHubAvailable();
   const query = `
   query($login: String!, $from: DateTime!, $to: DateTime!) {
    user(login: $login) {
@@ -126,6 +144,7 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
   });
   if (res.status === 401) throw new GitHubError('GitHub auth failed', 401);
   if (res.status === 403 || res.status === 429) {
+    setGitHubCooldownFromHeaders(res.headers);
     throw new GitHubError('GitHub rate limit hit.', 403);
   }
   if (!res.ok) throw new GitHubError(`GitHub GraphQL error (${res.status})`, res.status);
