@@ -9,7 +9,7 @@ export async function computeCronotype(login: string, window: Window = '90d'): P
 }
 
 async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
-  'use cache: remote';
+  'use cache';
   cacheTag(`cronotype-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 

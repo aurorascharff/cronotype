@@ -71,7 +71,7 @@ export function recordEntry(entry: LeaderboardEntry) {
 export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {
   'use cache';
   cacheTag('leaderboard-recent');
-  cacheLife('minutes');
+  cacheLife('seconds');
 
   const all = Array.from(store().entries.values());
   all.sort((a, b) => +new Date(b.classifiedAt) - +new Date(a.classifiedAt));

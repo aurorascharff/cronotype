@@ -104,7 +104,7 @@ export async function getProfile(login: string): Promise<ProfileSummary> {
 }
 
 async function getProfileCached(login: string): Promise<ProfileSummary> {
-  'use cache: remote';
+  'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
   cacheLife('hours');
 
@@ -199,7 +199,7 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
 }
 
 async function getStatsForCached(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
-  'use cache: remote';
+  'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 
@@ -236,7 +236,7 @@ export async function getYearMonthly(login: string, year: number): Promise<YearM
 }
 
 async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly> {
-  'use cache: remote';
+  'use cache';
   cacheTag(`monthly-${login.toLowerCase()}-${year}`);
   if (year === new Date().getUTCFullYear()) {
     cacheLife('hours');
@@ -280,24 +280,36 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
 
   const commitsCount = months.reduce((sum, m) => sum + m.count, 0);
 
-  let archetypeId: ArchetypeId | null = null;
-  if (commitsCount > 0) {
-    try {
-      const sampleCommits = await fetchCommitsInRange(login, from, to, 0, 1);
-      if (sampleCommits.length > 0) {
-        archetypeId = classify(buildStats(sampleCommits)).id;
-      }
-    } catch {
-      archetypeId = null;
-    }
-  }
-
   return {
-    archetypeId,
+    archetypeId: null,
     commits: commitsCount,
     months,
     year,
   };
+}
+
+async function getYearArchetype(login: string, year: number): Promise<ArchetypeId | null> {
+  return getYearArchetypeCached(login.toLowerCase(), year);
+}
+
+async function getYearArchetypeCached(login: string, year: number): Promise<ArchetypeId | null> {
+  'use cache';
+  cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
+  if (year === new Date().getUTCFullYear()) {
+    cacheLife('hours');
+  } else {
+    cacheLife('weeks');
+  }
+
+  if (MOCK) return mockArchetypeFor(`${login}-${year}`);
+
+  try {
+    const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1);
+    if (sampleCommits.length === 0) return null;
+    return classify(buildStats(sampleCommits)).id;
+  } catch {
+    return null;
+  }
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
@@ -305,20 +317,23 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const thisYear = new Date().getUTCFullYear();
 
+  const years: number[] = [];
+  for (let year = thisYear; year >= firstYear; year--) years.push(year);
+
+  const results = await Promise.allSettled(years.map(year => getYearMonthly(login, year)));
+
   const byYear: YearMonthly[] = [];
   let partial = false;
-
-  for (let year = thisYear; year >= firstYear; year--) {
-    try {
-      const result = await getYearMonthly(login, year);
-      byYear.push(result);
-    } catch (err) {
-      if (err instanceof GitHubError && (err.status === 403 || err.status === 429)) {
-        partial = true;
-        break;
-      }
-      throw err;
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      byYear.push(r.value);
+    } else {
+      partial = true;
     }
+  }
+
+  if (byYear.length === 0) {
+    return { months: [], partial: true, yearlyArchetypes: [] };
   }
 
   const out = byYear
@@ -339,10 +354,27 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
 
   const startYear = Number(months[0].month.slice(0, 4));
   const endYear = Number(months[months.length - 1].month.slice(0, 4));
-  const yearlyArchetypes = byYear
-    .filter(y => y.year >= startYear && y.year <= endYear && y.archetypeId)
-    .map(y => ({ archetypeId: y.archetypeId as ArchetypeId, commits: y.commits, year: y.year }))
-    .sort((a, b) => a.year - b.year);
+
+  const yearsWithCommits = byYear
+    .filter(y => y.year >= startYear && y.year <= endYear && y.commits > 0)
+    .map(y => y.year)
+    .sort((a, b) => a - b);
+
+  const archetypeResults = await Promise.allSettled(
+    yearsWithCommits.map(year => getYearArchetype(login, year)),
+  );
+
+  const yearlyArchetypes: YearArchetypeBucket[] = [];
+  archetypeResults.forEach((r, i) => {
+    const year = yearsWithCommits[i];
+    const yearData = byYear.find(y => y.year === year);
+    if (!yearData) return;
+    if (r.status === 'fulfilled' && r.value) {
+      yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
+    } else if (r.status === 'rejected') {
+      partial = true;
+    }
+  });
 
   return { months, partial, yearlyArchetypes };
 }
