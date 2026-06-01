@@ -1,10 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { connection } from 'next/server';
-import { Suspense } from 'react';
 import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
-import { recordEntry } from '@/features/leaderboard/leaderboard-queries';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
@@ -44,17 +41,8 @@ export async function CronotypeProfile({ login }: Props) {
           </div>
         </div>
       </div>
-      <Suspense fallback={null}>
-        <RecordLeaderboardEntry login={profile.login} />
-      </Suspense>
     </div>
   );
-}
-
-async function RecordLeaderboardEntry({ login }: { login: string }) {
-  await connection();
-  recordEntry(login);
-  return null;
 }
 
 function EmptyProfile({ login }: { login: string }) {
