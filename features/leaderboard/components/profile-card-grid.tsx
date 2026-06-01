@@ -69,10 +69,14 @@ export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
           key={i}
           className="dark:bg-ink-2 flex h-full flex-col gap-4 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
         >
-          <div className="skeleton h-28 rounded-md" />
+          <div className="relative flex h-28 items-center justify-center">
+            <div className="skeleton h-24 w-24 rounded-full" />
+            <div className="bg-paper dark:bg-ink-2 absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10" />
+          </div>
           <div className="space-y-1.5">
-            <div className="skeleton h-3 w-20" />
-            <div className="skeleton h-3 w-14" />
+            <div className="skeleton h-3 w-24 rounded" />
+            <div className="skeleton h-2.5 w-16 rounded" />
+            <div className="skeleton h-2.5 w-20 rounded" />
           </div>
         </li>
       ))}

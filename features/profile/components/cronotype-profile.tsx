@@ -38,7 +38,6 @@ export async function CronotypeProfile({ login }: Props) {
         <ShareButton
           shareUrl={shareUrl}
           accent={archetype.theme.accent}
-          accent2={archetype.theme.accent2}
           className="absolute bottom-4 right-4 z-20 sm:bottom-6 sm:right-6"
         />
       </div>
@@ -86,22 +85,41 @@ function EmptyProfile({ login }: { login: string }) {
 export function CronotypeProfileSkeleton() {
   return (
     <div className="space-y-2">
-      <div
-        className="dark:bg-ink-2 relative overflow-hidden rounded-xl border border-black/10 bg-white dark:border-white/10 [aspect-ratio:auto] sm:[aspect-ratio:1200/630]"
-      >
-        <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-          <div className="flex items-center justify-center">
-            <div className="skeleton h-[120px] w-[120px] rounded-full sm:h-[190px] sm:w-[190px]" />
+      <div className="dark:bg-ink-2 relative overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]">
+        <div className="skeleton absolute top-4 right-4 h-5 w-22 rounded-md sm:top-6 sm:right-6" />
+
+        <div className="grid h-full grid-cols-1 items-center gap-6 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
+          <div className="flex items-center justify-center sm:justify-start">
+            <HaloSkeleton />
           </div>
 
-          <div className="flex min-w-0 flex-col gap-2.5">
-            <div className="skeleton h-8 w-2/3 sm:h-10" />
-            <div className="skeleton h-3.5 w-3/4 sm:w-2/3" />
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="skeleton h-3 w-24 rounded" />
+            <div className="skeleton h-10 w-2/3 rounded sm:h-14" />
+            <div className="skeleton h-3.5 w-3/4 rounded sm:w-2/3" />
+
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:mt-4 sm:flex sm:flex-wrap sm:items-end sm:gap-x-8">
+              {[24, 28, 24, 20].map((w, i) => (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className="skeleton h-2.5 rounded" style={{ width: 44 }} />
+                  <div className="skeleton h-6 rounded sm:h-7" style={{ width: w + 24 }} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="skeleton h-3 w-52 rounded" />
+      <div className="skeleton h-2.5 w-52 rounded" />
+    </div>
+  );
+}
+
+function HaloSkeleton() {
+  return (
+    <div className="relative">
+      <div className="skeleton h-[140px] w-[140px] rounded-full sm:h-[220px] sm:w-[220px]" />
+      <div className="absolute inset-0 m-auto h-[64px] w-[64px] rounded-full border border-black/10 bg-paper dark:border-white/10 dark:bg-ink-2 sm:h-[100px] sm:w-[100px]" />
     </div>
   );
 }

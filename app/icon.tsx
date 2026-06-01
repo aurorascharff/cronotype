@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 export const size = { height: 32, width: 32 };
 export const contentType = 'image/png';
 
-const CYAN = '#06b6d4';
+const FG = '#06b6d4';
 const HEIGHTS = [
   0.15, 0.1, 0.08, 0.06, 0.05, 0.1, 0.25, 0.45, 0.7, 0.9, 1, 0.95, 0.7, 0.85, 0.95, 0.9, 0.75, 0.55, 0.35, 0.25,
   0.2, 0.18, 0.16, 0.15,
@@ -36,7 +36,7 @@ export default function Icon() {
             <div
               key={h}
               style={{
-                background: CYAN,
+                background: FG,
                 height: len,
                 left: cx - barWidth / 2,
                 position: 'absolute',

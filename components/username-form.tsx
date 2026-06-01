@@ -28,7 +28,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const large = size === 'lg';
 
   return (
-    <form onSubmit={submit} className={large ? 'flex w-full gap-2' : 'flex w-full gap-1.5'}>
+    <form onSubmit={submit} className="flex w-full gap-1.5">
       <label htmlFor="login" className="sr-only">
         GitHub username
       </label>
@@ -42,7 +42,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         <span
           className={
             large
-              ? 'text-muted dark:text-muted-dark flex items-center pr-1 pl-4 font-mono text-base'
+              ? 'text-muted dark:text-muted-dark flex items-center pr-0.5 pl-3 font-mono text-sm'
               : 'text-muted dark:text-muted-dark flex items-center pr-1 pl-3 font-mono text-sm'
           }
         >
@@ -60,8 +60,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
           spellCheck={false}
           className={
             large
-              ? 'placeholder-muted/50 dark:placeholder-muted-dark/50 dark:text-paper flex-1 border-0 bg-transparent px-1 py-3 text-base outline-none focus:ring-0'
-              : 'placeholder-muted/50 dark:placeholder-muted-dark/50 dark:text-paper flex-1 border-0 bg-transparent px-1 py-2 text-sm outline-none focus:ring-0'
+              ? 'placeholder-muted/50 dark:placeholder-muted-dark/50 dark:text-paper flex-1 border-0 bg-transparent px-1 py-2 text-sm outline-none focus:ring-0'
+              : 'placeholder-muted/50 dark:placeholder-muted-dark/50 dark:text-paper flex-1 border-0 bg-transparent px-1 py-1.5 text-sm outline-none focus:ring-0'
           }
         />
       </div>
@@ -71,13 +71,13 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         aria-label="Diagnose this developer"
         className={
           large
-            ? 'inline-flex w-30 shrink-0 items-center justify-center rounded-md border border-black/10 bg-linear-to-r from-[#22d3ee] to-[#84cc16] px-4 text-sm font-semibold text-[#08090b] shadow-[0_8px_20px_rgba(34,211,238,0.22)] transition-[transform,filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10'
-            : 'inline-flex w-22 shrink-0 items-center justify-center rounded-md border border-black/10 bg-linear-to-r from-[#22d3ee] to-[#84cc16] px-3 text-xs font-semibold text-[#08090b] transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10'
+            ? 'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand px-4 text-sm font-semibold text-[#08090b] transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
+            : 'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand px-3 text-xs font-semibold text-[#08090b] transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
         }
       >
         <span>Diagnose</span>
         {pending ? (
-          <span className="ml-2 inline-flex" aria-hidden>
+          <span className="inline-flex" aria-hidden>
             <Spinner />
           </span>
         ) : null}

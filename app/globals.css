@@ -45,10 +45,9 @@
 
   .dark body {
     background-color: var(--color-ink);
-    /* A single faint accent glow from upper-left in dark mode only. Subtle — not branding. */
     background-image: radial-gradient(
       ellipse 70% 50% at 10% -5%,
-      color-mix(in oklab, var(--color-brand) 8%, transparent),
+      rgba(255, 255, 255, 0.04),
       transparent 60%
     );
     background-attachment: fixed;
@@ -60,33 +59,47 @@
     @apply font-sans font-semibold tracking-tight;
   }
 
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
   input {
     @apply border-border dark:border-border-dark dark:bg-white/5 placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-md border bg-white px-3 py-2 text-sm outline-none transition-colors focus:ring-2 focus:ring-current/20;
   }
 }
 
-@keyframes skeletonPulse {
+@keyframes wave-lines {
   0% {
-    opacity: 0.55;
+    background-position: -468px 0;
   }
-
-  50% {
-    opacity: 0.82;
-  }
-
   100% {
-    opacity: 0.55;
+    background-position: 468px 0;
   }
 }
 
 .skeleton {
-  background-color: color-mix(in oklab, var(--color-muted) 20%, transparent);
-  animation: skeletonPulse 1.8s ease-in-out infinite;
+  background: rgba(120, 120, 120, 0.18);
+  background: linear-gradient(
+    to right,
+    rgba(120, 120, 120, 0.18) 8%,
+    rgba(160, 160, 160, 0.28) 18%,
+    rgba(120, 120, 120, 0.18) 33%
+  );
+  background-size: 800px 100px;
+  animation: wave-lines 1.8s infinite linear;
   border-radius: var(--radius-sm);
 }
 
 .dark .skeleton {
-  background-color: color-mix(in oklab, var(--color-muted-dark) 28%, transparent);
+  background: rgba(140, 140, 140, 0.10);
+  background: linear-gradient(
+    to right,
+    rgba(140, 140, 140, 0.10) 8%,
+    rgba(180, 180, 180, 0.22) 18%,
+    rgba(140, 140, 140, 0.10) 33%
+  );
+  background-size: 800px 100px;
 }
 
 ::view-transition-old(root),

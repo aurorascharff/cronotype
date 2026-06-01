@@ -47,6 +47,58 @@ async function gh(url: string, init: RequestInit = {}): Promise<Response> {
   return res;
 }
 
+type ContributionDay = { date: string; contributionCount: number };
+
+async function fetchContributionCalendar(
+  login: string,
+  fromISO: string,
+  toISO: string,
+): Promise<ContributionDay[]> {
+  if (!process.env.GITHUB_TOKEN) {
+    throw new GitHubError('GraphQL contributions require GITHUB_TOKEN', 401);
+  }
+  const query = `
+    query($login: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $login) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const res = await fetch(`${API}/graphql`, {
+    body: JSON.stringify({
+      query,
+      variables: { from: `${fromISO}T00:00:00Z`, login, to: `${toISO}T23:59:59Z` },
+    }),
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      'Content-Type': 'application/json',
+      'User-Agent': UA,
+    },
+    method: 'POST',
+  });
+  if (res.status === 401) throw new GitHubError('GitHub auth failed', 401);
+  if (res.status === 403 || res.status === 429) {
+    throw new GitHubError('GitHub rate limit hit.', 403);
+  }
+  if (!res.ok) throw new GitHubError(`GitHub GraphQL error (${res.status})`, res.status);
+  const j = (await res.json()) as {
+    data?: { user?: { contributionsCollection?: { contributionCalendar?: { weeks: Array<{ contributionDays: ContributionDay[] }> } } } };
+    errors?: Array<{ message: string }>;
+  };
+  if (j.errors?.length) throw new GitHubError(j.errors[0].message, 400);
+  const weeks = j.data?.user?.contributionsCollection?.contributionCalendar?.weeks ?? [];
+  return weeks.flatMap(w => w.contributionDays);
+}
+
 export async function getProfile(login: string): Promise<ProfileSummary> {
   return getProfileCached(login.toLowerCase());
 }
@@ -81,12 +133,12 @@ type SearchCommitItem = {
   repository: { full_name: string };
 };
 
-async function fetchCommitsInRange(login: string, fromISO: string, toISO: string, depth = 0): Promise<Commit[]> {
+async function fetchCommitsInRange(login: string, fromISO: string, toISO: string, depth = 0, maxPages = 10): Promise<Commit[]> {
   const q = `author:${login} author-date:${fromISO}..${toISO}`;
   const commits: Commit[] = [];
   let truncated = false;
 
-  for (let page = 1; page <= 10; page++) {
+  for (let page = 1; page <= maxPages; page++) {
     const url = `${API}/search/commits?q=${encodeURIComponent(q)}&per_page=100&page=${page}&sort=author-date&order=desc`;
     const res = await gh(url, { headers: { Accept: 'application/vnd.github.cloak-preview+json' } });
     if (!res.ok) {
@@ -94,7 +146,7 @@ async function fetchCommitsInRange(login: string, fromISO: string, toISO: string
       break;
     }
     const j = (await res.json()) as { total_count: number; incomplete_results: boolean; items: SearchCommitItem[] };
-    if (j.total_count > 1000 && depth < 3) truncated = true;
+    if (j.total_count > 1000 && depth < 3 && maxPages > 1) truncated = true;
     for (const item of j.items ?? []) {
       const iso = item.commit.author?.date ?? item.commit.committer?.date;
       if (!iso) continue;
@@ -113,8 +165,8 @@ async function fetchCommitsInRange(login: string, fromISO: string, toISO: string
     const to = new Date(toISO).getTime();
     const mid = new Date((from + to) / 2).toISOString().slice(0, 10);
     const [a, b] = await Promise.all([
-      fetchCommitsInRange(login, fromISO, mid, depth + 1),
-      fetchCommitsInRange(login, mid, toISO, depth + 1),
+      fetchCommitsInRange(login, fromISO, mid, depth + 1, maxPages),
+      fetchCommitsInRange(login, mid, toISO, depth + 1, maxPages),
     ]);
     return dedupe([...a, ...b]);
   }
@@ -211,20 +263,34 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
 
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
-  const commits = await fetchCommitsInRange(login, from, to);
+
+  const days = await fetchContributionCalendar(login, from, to);
 
   const counts = new Map<string, number>();
   for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
-  for (const c of commits) {
-    const key = c.authoredAt.slice(0, 7);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+  for (const d of days) {
+    const key = d.date.slice(0, 7);
+    if (key.startsWith(String(year))) {
+      counts.set(key, (counts.get(key) ?? 0) + d.contributionCount);
+    }
   }
   const months = Array.from(counts.entries())
     .map(([month, count]) => ({ count, month }))
     .sort((a, b) => a.month.localeCompare(b.month));
 
-  const commitsCount = commits.length;
-  const archetypeId = commitsCount === 0 ? null : classify(buildStats(commits)).id;
+  const commitsCount = months.reduce((sum, m) => sum + m.count, 0);
+
+  let archetypeId: ArchetypeId | null = null;
+  if (commitsCount > 0) {
+    try {
+      const sampleCommits = await fetchCommitsInRange(login, from, to, 0, 1);
+      if (sampleCommits.length > 0) {
+        archetypeId = classify(buildStats(sampleCommits)).id;
+      }
+    } catch {
+      archetypeId = null;
+    }
+  }
 
   return {
     archetypeId,
