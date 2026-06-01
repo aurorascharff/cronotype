@@ -110,8 +110,8 @@ function NoRecentProfileCard({
             Quiet lately
           </h1>
           <p className="text-muted dark:text-muted-dark max-w-md text-sm sm:text-base">
-            This profile is here, and the long-term timeline still has shape. There just aren&apos;t public commits in
-            the last 90 days to classify a current rhythm.
+            This profile is here, and the long-term timeline still has shape. There just aren&apos;t recent authored
+            signal commits to classify a current rhythm.
           </p>
 
           <Link
@@ -123,7 +123,7 @@ function NoRecentProfileCard({
           </Link>
 
           <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
-            <ProfileStat label="Sample" value="0" accent={theme.accent} />
+            <ProfileStat label="Signal" value="0" accent={theme.accent} />
             <ProfileStat label="Followers" value={formatFollowers(profile.followers)} />
             <ProfileStat label="Repos" value={String(profile.publicRepos)} />
             <ProfileStat label="Joined" value={joined} />

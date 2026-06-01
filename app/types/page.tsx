@@ -30,32 +30,32 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   'lunch-bandit': {
     meaning: 'You turn the quiet middle of the day into a tiny shipping heist.',
     percentile: 'Higher when noon dominates the rest of the workday. A sharper spike means a better score.',
-    signal: 'Noon is more than 8% of the sample and more than 1.6x the average of 11am and 1pm.',
+    signal: 'Noon is more than 8% of the signal sample and more than 1.6x the average of 11am and 1pm.',
   },
   'nine-to-fiver': {
     meaning: 'You keep a steady workday pulse and still make it look clean.',
     percentile: 'Higher with a larger business-hours share. The more daytime your rhythm is, the stronger the type.',
-    signal: 'More than 70% of sampled commits land from 9am to 7pm, without a strong night or weekend signature.',
+    signal: 'More than 70% of signal commits land from 9am to 7pm, without a strong night or weekend signature.',
   },
   'sunrise-sniper': {
     meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
     percentile: 'Higher with more pre-9am commits. The more morning-weighted the graph is, the sharper the shot.',
-    signal: 'More than 25% of sampled commits land between 5am and 9am.',
+    signal: 'More than 25% of signal commits land between 5am and 9am.',
   },
   'touch-grass': {
     meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',
-    percentile: 'Inverse: fewer sampled commits means a higher score. The quietest non-empty graphs score highest.',
-    signal: 'Between 1 and 24 sampled public commits in the last 90 days. If the sample is empty, the profile shows Quiet lately instead.',
+    percentile: 'Inverse: fewer signal commits means a higher score. The quietest non-empty graphs score highest.',
+    signal: 'Between 1 and 24 signal commits in the last 90 days. If the filtered sample is empty, the profile shows Quiet lately instead.',
   },
   vampire: {
     meaning: 'You do your sharpest work when notifications are asleep and the world stops asking questions.',
     percentile: 'Higher with more nocturnal share. The deeper the night shift, the stronger the bite.',
-    signal: 'More than 30% of sampled commits land between midnight and 5am.',
+    signal: 'More than 30% of signal commits land between midnight and 5am.',
   },
   'weekend-warrior': {
     meaning: 'You turn Saturday and Sunday into the part of the week where momentum finally gets room.',
     percentile: 'Higher with more Saturday and Sunday share. Weekend-heavy graphs rise fast.',
-    signal: 'More than 40% of sampled commits land on Saturday or Sunday.',
+    signal: 'More than 40% of signal commits land on Saturday or Sunday.',
   },
 };
 
@@ -76,8 +76,9 @@ export default function TypesPage() {
       <header className="space-y-3">
         <h1 className="tracking-tightest text-2xl font-semibold sm:text-3xl">The types</h1>
         <p className="text-muted dark:text-muted-dark max-w-2xl text-sm sm:text-base">
-          Cronotype samples recent public commits and sorts active profiles into one of eight rhythms. Empty 90-day
-          samples become Quiet lately instead: still a profile, just not enough recent public signal for a current type.
+          Cronotype samples recent authored commits, filters out obvious merge and dependency noise, and sorts active
+          profiles into one of eight rhythms. Empty signal samples become Quiet lately instead: still a profile, just
+          not enough recent public signal for a current type.
         </p>
       </header>
 
@@ -127,14 +128,15 @@ export default function TypesPage() {
             <strong className="font-semibold">Data source.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
               GitHub&apos;s Search Commits API for a recent 90-day sample of public commits authored by the handle. The
-              current card uses up to 100 commits, so a displayed sample of <code className="font-mono text-[11px]">100+</code>{' '}
-              means the sample hit GitHub&apos;s page cap.
+              current card filters out merge commits and obvious dependency automation, then uses up to 100 signal
+              commits. A displayed signal of <code className="font-mono text-[11px]">100+</code> means the filtered
+              sample hit GitHub&apos;s page cap.
             </span>
           </li>
           <li>
             <strong className="font-semibold">Bucketing.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              Each sampled commit is binned by hour (24 buckets) and weekday (7 buckets) using the timestamp offset
+              Each signal commit is binned by hour (24 buckets) and weekday (7 buckets) using the timestamp offset
               GitHub returns, falling back to UTC when there is no offset. From those we derive shares:{' '}
               <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
               <code className="font-mono text-[11px]">pctSunrise</code> (5am to 9am),{' '}
@@ -146,7 +148,7 @@ export default function TypesPage() {
           <li>
             <strong className="font-semibold">Classifier.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              A short cascade of rules in priority order. Empty samples become Quiet lately. Otherwise the first
+              A short cascade of rules in priority order. Empty signal samples become Quiet lately. Otherwise the first
               matching rhythm wins: Grass Toucher, Insomniac Maintainer, Vampire, Sunrise Sniper, Lunch Bandit, Weekend
               Warrior, Nine-to-Fiver, then Drifter.
             </span>
@@ -155,7 +157,7 @@ export default function TypesPage() {
             <strong className="font-semibold">Year history.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
               The evolution chart totals come from GitHub&apos;s GraphQL contributions calendar. Its colors use a small
-              commit sample for each finished year, and the current year inherits the current 90-day type.
+              signal sample for each finished year, and the current year inherits the current 90-day type.
             </span>
           </li>
         </ul>

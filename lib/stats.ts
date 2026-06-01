@@ -2,9 +2,30 @@ import type { HourStats } from '@/types/cronotype';
 
 export type Commit = {
   authoredAt: string;
+  message: string;
+  parentCount: number;
   tzOffsetMinutes: number | null;
   repo: string;
 };
+
+export function signalCommits(commits: Commit[]): Commit[] {
+  return commits.filter(isSignalCommit);
+}
+
+export function isSignalCommit(commit: Commit): boolean {
+  if (commit.parentCount > 1) return false;
+
+  const message = commit.message.trim().toLowerCase();
+  if (!message) return true;
+
+  const firstLine = message.split('\n', 1)[0];
+  if (/^merge\b/.test(firstLine)) return false;
+  if (/^(chore|build)\(deps(?:-dev)?\)!?:/.test(firstLine)) return false;
+  if (/^bump .+ from .+ to .+/.test(firstLine)) return false;
+  if (firstLine.includes('dependabot') || firstLine.includes('renovate')) return false;
+
+  return true;
+}
 
 export function buildStats(commits: Commit[]): HourStats {
   const hourly = new Array<number>(24).fill(0);

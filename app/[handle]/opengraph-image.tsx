@@ -81,7 +81,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   const barWidth = Math.max(4, haloSize * 0.018);
   const titleFontSize = titleSizeFor(archetype.name);
   const meaningFontSize = meaningSizeFor(archetype.meaning);
-  const sampleSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
+  const signalSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
 
   const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
     <div
@@ -286,7 +286,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         <div style={{ display: 'flex', gap: 40, marginTop: 24 }}>
           <Stat label="PEAK" value={formatHour(stats.peakHour)} />
           <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
-          <Stat label="SAMPLE" value={sampleSize} />
+          <Stat label="SIGNAL" value={signalSize} />
           <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
         </div>
       </div>
@@ -433,7 +433,7 @@ function quietImage(profile: ProfileSummary, fonts?: Awaited<ReturnType<typeof l
             maxWidth: 620,
           }}
         >
-          This profile is here. There just are not public commits in the last 90 days to classify a current rhythm.
+          This profile is here. There just are not recent authored signal commits to classify a current rhythm.
         </div>
       </div>
 

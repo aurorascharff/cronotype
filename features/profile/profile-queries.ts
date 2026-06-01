@@ -2,7 +2,7 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { classify } from '@/lib/archetypes';
-import { buildStats, type Commit } from '@/lib/stats';
+import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import { syntheticStatsFor } from '@/lib/synthetic';
 import type { ArchetypeId, ProfileSummary, Window } from '@/types/cronotype';
 
@@ -164,7 +164,9 @@ type SearchCommitItem = {
   commit: {
     author: { date: string };
     committer: { date: string };
+    message?: string;
   };
+  parents?: unknown[];
   repository: { full_name: string };
 };
 
@@ -194,6 +196,8 @@ async function fetchCommitsInRange(
       const tz = parseTzOffsetMinutes(iso);
       commits.push({
         authoredAt: iso,
+        message: item.commit.message ?? '',
+        parentCount: item.parents?.length ?? 1,
         repo: item.repository?.full_name ?? 'unknown',
         tzOffsetMinutes: tz,
       });
@@ -272,7 +276,7 @@ async function getStatsForCached(
   }
 
   const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
-  return buildStats(commits);
+  return buildStats(signalCommits(commits));
 }
 
 export type MonthBucket = { month: string; count: number };
@@ -363,8 +367,9 @@ async function getYearArchetype(login: string, year: number, currentYear: number
   if (MOCK) return mockArchetypeFor(`${login}-${year}`);
 
   const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1);
-  if (sampleCommits.length === 0) return null;
-  return classify(buildStats(sampleCommits)).id;
+  const signal = signalCommits(sampleCommits);
+  if (signal.length === 0) return null;
+  return classify(buildStats(signal)).id;
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {

@@ -56,7 +56,7 @@ async function getProfileMetadata(handle: string, imageUrl: string): Promise<Met
     stats.total === 0 ? `${profile.name ?? '@' + profile.login} is quiet lately` : `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
   const description =
     stats.total === 0
-      ? `@${profile.login} has a profile, but no public commits in the last 90 days to classify a current rhythm.`
+      ? `@${profile.login} has a profile, but no recent authored signal commits to classify a current rhythm.`
       : `${archetype.tagline} ${percentile}th percentile.`;
   return {
     description,
