@@ -1,10 +1,12 @@
 import Link from 'next/link';
+import { updateTag } from 'next/cache';
 import { notFound } from 'next/navigation';
-import { connection } from 'next/server';
+import { after, connection } from 'next/server';
 import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
+import { recordReveal } from '@/lib/reveals';
 
 type Props = {
   login: string;
@@ -25,6 +27,13 @@ export async function CronotypeProfile({ login }: Props) {
   if (stats.total === 0) {
     return <EmptyProfile login={login} />;
   }
+
+  // After the response ships, log this reveal and invalidate the leaderboard
+  // cache so the homepage picks it up. No-op locally if KV env vars are unset.
+  after(async () => {
+    await recordReveal(profile.login);
+    updateTag('reveals');
+  });
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.vercel.app';
   const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;

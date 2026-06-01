@@ -10,6 +10,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@upstash/redis": "^1.38.0",
     "clsx": "^2.1.1",
     "geist": "^1.7.0",
     "lucide-react": "^1.8.0",
