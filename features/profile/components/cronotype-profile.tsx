@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { HeroCard } from '@/components/hero-card';
+import { RegenerateButton } from '@/components/regenerate-button';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
@@ -31,6 +32,9 @@ export async function CronotypeProfile({ login }: Props) {
   return (
     <div className="relative">
       <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
+      <div className="absolute top-4 right-20 z-20 sm:top-6 sm:right-32">
+        <RegenerateButton login={profile.login} />
+      </div>
       <div className="pointer-events-none absolute inset-x-4 bottom-3 z-20 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 sm:inset-x-6 sm:bottom-5">
         <div className="pointer-events-auto">
           <ShareUrl shareUrl={shareUrl} />

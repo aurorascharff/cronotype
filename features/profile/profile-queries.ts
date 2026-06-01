@@ -254,7 +254,9 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
 
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
   const now = new Date();
-  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dateKey = to.toISOString().slice(0, 10);
+  cacheTag(`stats-${login.toLowerCase()}-${window}-${dateKey}`);
   const from = new Date(to.getTime() - days * 24 * 3600_000);
   try {
     const commits = await fetchCommitsInRange(

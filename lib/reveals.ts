@@ -5,7 +5,7 @@ import { Redis } from '@upstash/redis';
 // an empty list as "show the seed set" rather than "show nothing".
 
 const REVEALS_KEY = 'reveals:v1';
-const MAX_REVEALS = 100;
+const MAX_REVEALS = 10_000;
 
 function getClient(): Redis | null {
   if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
