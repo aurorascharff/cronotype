@@ -74,21 +74,18 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
         </Crossfade>
       </section>
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-        <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-          <Crossfade>
-            <Suspense fallback={<EvolutionStripSkeleton />}>
-              <InlineErrorBoundary
-                title="We couldn't load this history right now."
-                body="Your main reading is still visible. Try again to fetch the full timeline."
-              >
-                {params.then(({ login }) => (
-                  <EvolutionStrip login={login.toLowerCase()} />
-                ))}
-              </InlineErrorBoundary>
-            </Suspense>
-          </Crossfade>
-        </div>
+        <Crossfade>
+          <Suspense fallback={<EvolutionStripSkeleton />}>
+            <InlineErrorBoundary
+              title="We couldn't load this history right now."
+              body="Your main reading is still visible. Try again to fetch the full timeline."
+            >
+              {params.then(({ login }) => (
+                <EvolutionStrip login={login.toLowerCase()} />
+              ))}
+            </InlineErrorBoundary>
+          </Suspense>
+        </Crossfade>
       </section>
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>

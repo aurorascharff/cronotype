@@ -139,11 +139,7 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
   return weeks.flatMap(w => w.contributionDays);
 }
 
-export const getProfile = cache(async (login: string): Promise<ProfileSummary> => {
-  return getProfileCached(login.toLowerCase());
-});
-
-async function getProfileCached(login: string): Promise<ProfileSummary> {
+export async function getProfile(login: string): Promise<ProfileSummary> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
   cacheLife('profile');
@@ -240,11 +236,7 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-export const getStatsFor = cache(async (login: string, window: Window): Promise<ReturnType<typeof buildStats>> => {
-  return getStatsForCached(login.toLowerCase(), window);
-});
-
-async function getStatsForCached(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
+export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
   'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('cronotype');
@@ -282,11 +274,7 @@ type YearMonthly = {
   year: number;
 };
 
-export const getYearMonthly = cache(async (login: string, year: number): Promise<YearMonthly> => {
-  return getYearMonthlyCached(login.toLowerCase(), year);
-});
-
-async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly> {
+export async function getYearMonthly(login: string, year: number): Promise<YearMonthly> {
   'use cache';
   cacheTag(`monthly-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
@@ -336,10 +324,6 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
 }
 
 async function getYearArchetype(login: string, year: number): Promise<ArchetypeId | null> {
-  return getYearArchetypeCached(login.toLowerCase(), year);
-}
-
-async function getYearArchetypeCached(login: string, year: number): Promise<ArchetypeId | null> {
   'use cache';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
@@ -351,14 +335,13 @@ async function getYearArchetypeCached(login: string, year: number): Promise<Arch
   return classify(buildStats(sampleCommits)).id;
 }
 
-export const getMonthlyHistory = cache(
-  async (login: string): Promise<MonthlyHistory> => getMonthlyHistoryImpl(login.toLowerCase()),
-);
-
-async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
-  const profile = await getProfile(login);
+export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
+  const lower = login.toLowerCase();
+  const profile = await getProfile(lower);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
-  const thisYear = new Date().getUTCFullYear();
+  const now = new Date();
+  const thisYear = now.getUTCFullYear();
+  const thisMonth = now.getUTCMonth() + 1;
 
   const years: number[] = [];
   for (let year = thisYear; year >= firstYear; year--) years.push(year);
@@ -389,7 +372,7 @@ async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
   while (
     end > start &&
     out[end - 1].count === 0 &&
-    out[end - 1].month > `${thisYear}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`
+    out[end - 1].month > `${thisYear}-${String(thisMonth).padStart(2, '0')}`
   ) {
     end--;
   }
