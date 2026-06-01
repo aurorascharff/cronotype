@@ -28,6 +28,9 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
       : 'http://localhost:3000');
   const imageUrl = `${baseUrl.replace(/\/$/, '')}/u/${login}/opengraph-image`;
   try {
+    if (login === SHELL_LOGIN || !(await hasBeenRevealed(login))) {
+      return { title: `Reveal @${login}` };
+    }
     return await getProfileMetadata(login, imageUrl);
   } catch (err) {
     if (err instanceof GitHubError && err.status === 404) {
