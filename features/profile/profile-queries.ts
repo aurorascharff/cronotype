@@ -1,6 +1,5 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { cache } from 'react';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { classify } from '@/lib/archetypes';
 import { buildStats, type Commit } from '@/lib/stats';

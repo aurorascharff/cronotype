@@ -1,6 +1,5 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { cache } from 'react';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify } from '@/lib/archetypes';
 import { listReveals } from '@/lib/reveals';
@@ -51,11 +50,7 @@ const FEATURED: string[] = [
   'steveruizok',
 ];
 
-export const getRecentLogins = cache(async (limit: number): Promise<string[]> => {
-  return getRecentLoginsCached(limit);
-});
-
-async function getRecentLoginsCached(limit: number): Promise<string[]> {
+export async function getRecentLogins(limit: number): Promise<string[]> {
   'use cache';
   cacheTag('leaderboard');
   cacheTag('reveals');
@@ -74,17 +69,15 @@ async function getRecentLoginsCached(limit: number): Promise<string[]> {
   return logins;
 }
 
-export const getCardProfile = cache(async (login: string): Promise<ProfileSummary | null> => {
+export async function getCardProfile(login: string): Promise<ProfileSummary | null> {
   try {
     return await getProfile(login);
   } catch {
     return null;
   }
-});
+}
 
-export const getCardClassification = cache(
-  async (login: string): Promise<{ archetype: Archetype; stats: HourStats }> => {
-    const stats = await getStatsFor(login, '90d');
-    return { archetype: classify(stats), stats };
-  },
-);
+export async function getCardClassification(login: string): Promise<{ archetype: Archetype; stats: HourStats }> {
+  const stats = await getStatsFor(login, '90d');
+  return { archetype: classify(stats), stats };
+}

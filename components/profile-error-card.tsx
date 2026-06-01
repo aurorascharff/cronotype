@@ -6,6 +6,7 @@ type Props = {
   title: string;
   body: string;
   onRetry?: () => void;
+  isPending?: boolean;
   retryLabel?: string;
   showHomeLink?: boolean;
   homeLabel?: string;
@@ -15,6 +16,7 @@ export function ProfileErrorCard({
   title,
   body,
   onRetry,
+  isPending = false,
   retryLabel = 'Try again',
   showHomeLink = true,
   homeLabel = 'Reveal someone else',
@@ -27,9 +29,10 @@ export function ProfileErrorCard({
         {onRetry ? (
           <button
             onClick={onRetry}
-            className="rounded-lg border border-black/10 bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[0.04] dark:border-white/10 dark:hover:bg-white/[0.06]"
+            disabled={isPending}
+            className="rounded-lg border border-black/10 bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-black/[0.04] disabled:opacity-60 dark:border-white/10 dark:hover:bg-white/[0.06]"
           >
-            {retryLabel}
+            {isPending ? 'Retrying…' : retryLabel}
           </button>
         ) : null}
 
