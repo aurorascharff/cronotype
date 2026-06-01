@@ -8,6 +8,10 @@ const memoryCache = new Map();
 const memoryTags = new Map();
 const pendingSets = new Map();
 
+function warn(operation, error) {
+  console.warn(`[cache:remote] ${operation} failed`, error);
+}
+
 function getClient() {
   if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
   return new Redis({
@@ -83,18 +87,23 @@ async function getTagExpiration(kv, tags) {
 
 module.exports = {
   async get(key, softTags) {
-    const pending = pendingSets.get(key);
-    if (pending) await pending;
+    try {
+      const pending = pendingSets.get(key);
+      if (pending) await pending;
 
-    const kv = getClient();
-    const stored = kv ? await kv.get(cacheKey(key)) : memoryCache.get(key);
-    if (!stored) return undefined;
+      const kv = getClient();
+      const stored = kv ? await kv.get(cacheKey(key)) : memoryCache.get(key);
+      if (!stored) return undefined;
 
-    const tags = [...(stored.tags ?? []), ...(softTags ?? [])];
-    const tagExpiration = await getTagExpiration(kv, tags);
-    if (isExpired(stored, tagExpiration)) return undefined;
+      const tags = [...(stored.tags ?? []), ...(softTags ?? [])];
+      const tagExpiration = await getTagExpiration(kv, tags);
+      if (isExpired(stored, tagExpiration)) return undefined;
 
-    return storedToEntry(stored);
+      return storedToEntry(stored);
+    } catch (error) {
+      warn('get', error);
+      return undefined;
+    }
   },
 
   async set(key, pendingEntry) {
@@ -114,6 +123,8 @@ module.exports = {
       } else {
         memoryCache.set(key, stored);
       }
+    } catch (error) {
+      warn('set', error);
     } finally {
       resolvePending();
       pendingSets.delete(key);
@@ -123,7 +134,12 @@ module.exports = {
   async refreshTags() {},
 
   async getExpiration(tags) {
-    return getTagExpiration(getClient(), tags);
+    try {
+      return await getTagExpiration(getClient(), tags);
+    } catch (error) {
+      warn('getExpiration', error);
+      return 0;
+    }
   },
 
   async updateTags(tags, durations) {
@@ -131,16 +147,20 @@ module.exports = {
     const ttl = Math.max(1, durations?.expire ?? FALLBACK_TTL_SECONDS);
     const kv = getClient();
 
-    if (kv) {
-      await Promise.all(tags.map(tag => kv.set(tagKey(tag), now, { ex: ttl })));
-      return;
-    }
-
-    for (const tag of tags) {
-      memoryTags.set(tag, now);
-      for (const [key, entry] of memoryCache.entries()) {
-        if ((entry.tags ?? []).includes(tag)) memoryCache.delete(key);
+    try {
+      if (kv) {
+        await Promise.all(tags.map(tag => kv.set(tagKey(tag), now, { ex: ttl })));
+        return;
       }
+
+      for (const tag of tags) {
+        memoryTags.set(tag, now);
+        for (const [key, entry] of memoryCache.entries()) {
+          if ((entry.tags ?? []).includes(tag)) memoryCache.delete(key);
+        }
+      }
+    } catch (error) {
+      warn('updateTags', error);
     }
   },
 };

@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   cacheHandlers: {
     remote: require.resolve('./cache-handlers/upstash-remote.cjs'),
   },
+  outputFileTracingIncludes: {
+    '/*': ['./cache-handlers/upstash-remote.cjs'],
+  },
   cacheLife: {
     cronotype: {
       expire: 60 * DAY,
