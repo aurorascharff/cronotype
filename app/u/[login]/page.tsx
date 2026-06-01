@@ -64,11 +64,20 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
-    <Suspense fallback={<CronotypeProfileSkeleton />}>
+    <Suspense fallback={<ProfilePageSkeleton />}>
       {params.then(({ login }) => (
         <ProfileContent login={login.toLowerCase()} />
       ))}
     </Suspense>
+  );
+}
+
+function ProfilePageSkeleton() {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+      <CronotypeProfileSkeleton />
+    </section>
   );
 }
 

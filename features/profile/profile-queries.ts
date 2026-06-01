@@ -141,9 +141,9 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
 export async function getProfile(login: string): Promise<ProfileSummary | null> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
+  cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
-    cacheLife('profile');
     return mockProfile(login);
   }
 
@@ -152,7 +152,6 @@ export async function getProfile(login: string): Promise<ProfileSummary | null> 
     if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
     if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
     const j = await res.json();
-    cacheLife('profile');
     return {
       avatarUrl: j.avatar_url,
       bio: j.bio ?? null,
@@ -164,7 +163,7 @@ export async function getProfile(login: string): Promise<ProfileSummary | null> 
     };
   } catch (err) {
     if (err instanceof GitHubError && err.status === 404) throw err;
-    cacheLife('minutes');
+    cacheLife('hours');
     return null;
   }
 }
@@ -247,9 +246,9 @@ function dedupe(commits: Commit[]): Commit[] {
 export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats> | null> {
   'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
+  cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
-    cacheLife('cronotype');
     return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
   }
 
@@ -265,10 +264,9 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
       0,
       1,
     );
-    cacheLife('cronotype');
     return buildStats(commits);
   } catch {
-    cacheLife('minutes');
+    cacheLife('hours');
     return null;
   }
 }

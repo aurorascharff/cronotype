@@ -56,19 +56,18 @@ async function CardMeta({ login }: { login: string }) {
   return (
     <div className="min-w-0 space-y-1">
       <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
-      <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
-      <div className="flex items-center justify-between gap-2">
-        {classification ? (
-          <div className="truncate text-xs font-medium" style={{ color: classification.archetype.theme.accent }}>
-            {classification.archetype.name}
-          </div>
-        ) : (
-          <span className="text-muted/40 dark:text-muted-dark/40 text-xs">—</span>
-        )}
-        <div className="text-muted dark:text-muted-dark shrink-0 text-[10.5px] tabular-nums">
-          {formatFollowers(profile.followers)}
-        </div>
+      <div className="text-muted dark:text-muted-dark flex items-baseline gap-1.5 truncate text-xs">
+        <span className="truncate">@{profile.login}</span>
+        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">·</span>
+        <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
       </div>
+      {classification ? (
+        <div className="truncate text-xs font-medium" style={{ color: classification.archetype.theme.accent }}>
+          {classification.archetype.name}
+        </div>
+      ) : (
+        <span className="text-muted/40 dark:text-muted-dark/40 truncate text-xs">—</span>
+      )}
     </div>
   );
 }
@@ -77,11 +76,12 @@ function CardMetaSkeleton({ login }: { login: string }) {
   return (
     <div className="min-w-0 space-y-1">
       <div className="skeleton h-5 w-3/4 rounded" />
-      <div className="text-muted dark:text-muted-dark truncate text-xs">@{login}</div>
-      <div className="flex items-center justify-between gap-2">
-        <div className="skeleton h-4 w-1/2 rounded" />
-        <div className="skeleton h-3 w-10 shrink-0 rounded" />
+      <div className="text-muted dark:text-muted-dark flex items-baseline gap-1.5 truncate text-xs">
+        <span className="truncate">@{login}</span>
+        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">·</span>
+        <span className="skeleton inline-block h-3 w-10 rounded" />
       </div>
+      <div className="skeleton h-4 w-1/2 rounded" />
     </div>
   );
 }
@@ -111,11 +111,8 @@ export function ProfileCardSkeleton() {
         </div>
         <div className="min-w-0 space-y-1">
           <div className="skeleton h-5 w-3/4 rounded" />
+          <div className="skeleton h-4 w-2/3 rounded" />
           <div className="skeleton h-4 w-1/2 rounded" />
-          <div className="flex items-center justify-between gap-2">
-            <div className="skeleton h-4 w-1/2 rounded" />
-            <div className="skeleton h-3 w-10 shrink-0 rounded" />
-          </div>
         </div>
       </div>
     </div>
