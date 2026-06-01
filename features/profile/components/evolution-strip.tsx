@@ -1,7 +1,5 @@
 import { DownloadTimeline } from '@/components/download-timeline';
-import { computeCronotype } from '@/features/profile/profile-service';
-import { getMonthlyHistory } from '@/features/profile/profile-queries';
-import { buildEras, buildSmoothPath, buildYearMarks, computeYearMarkers, smooth } from '@/lib/timeline';
+import { getTimelineChart } from '@/features/profile/timeline-chart';
 
 type Props = {
   login: string;
@@ -13,10 +11,12 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
-  const [{ months, yearlyArchetypes, partial }, { archetype }] =
-    await Promise.all([getMonthlyHistory(login), computeCronotype(login, '90d')]);
-
-  const hasData = months.length >= 2;
+  const { archetype, areaPath, eras, hasData, linePath, months, partial, yearMarkers } = await getTimelineChart(login, {
+    height: H,
+    padBottom: PAD_BOT,
+    padTop: PAD_TOP,
+    width: W,
+  });
 
   if (!hasData) {
     return (
@@ -31,24 +31,6 @@ export async function EvolutionStrip({ login }: Props) {
     );
   }
 
-  const smoothed = smooth(
-    months.map(m => m.count),
-    2,
-  );
-  const max = Math.max(1, ...smoothed);
-  const usableH = H - PAD_TOP - PAD_BOT;
-
-  const points = smoothed.map((v, i) => ({
-    x: (i / (smoothed.length - 1)) * W,
-    y: PAD_TOP + usableH - (v / max) * usableH,
-  }));
-
-  const linePath = buildSmoothPath(points);
-  const areaPath = `${linePath} L${W},${H - PAD_BOT} L0,${H - PAD_BOT} Z`;
-
-  const yearMarkers = computeYearMarkers(months, W);
-  const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
-  const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
   const hasUnknown = eras.some(e => e.unknown);
   const fillId = `evolution-fill-${archetype.id}`;
 

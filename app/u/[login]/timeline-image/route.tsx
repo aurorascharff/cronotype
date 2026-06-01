@@ -1,7 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getMonthlyHistory } from '@/features/profile/profile-queries';
-import { computeCronotype } from '@/features/profile/profile-service';
-import { buildEras, buildSmoothPath, buildYearMarks, computeYearMarkers, smooth } from '@/lib/timeline';
+import { getTimelineChart } from '@/features/profile/timeline-chart';
 
 const size = { width: 1200, height: 630 };
 
@@ -36,14 +34,16 @@ const PAD_BOT = 8;
 export async function GET(_req: Request, { params }: RouteContext) {
   const { login } = await params;
 
-  const [{ months, yearlyArchetypes }, { profile, archetype }] = await Promise.all([
-    getMonthlyHistory(login),
-    computeCronotype(login, '90d'),
-  ]);
+  const { archetype, areaPath, eras, hasData, linePath, months, profile, yearMarkers } = await getTimelineChart(login, {
+    height: H,
+    padBottom: PAD_BOT,
+    padTop: PAD_TOP,
+    width: W,
+  });
 
   const fonts = await loadGeist();
 
-  if (months.length < 2) {
+  if (!hasData) {
     return new ImageResponse(
       <div
         style={{
@@ -63,25 +63,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
       { ...size, fonts },
     );
   }
-
-  const smoothed = smooth(
-    months.map(m => m.count),
-    2,
-  );
-  const max = Math.max(1, ...smoothed);
-  const usableH = H - PAD_TOP - PAD_BOT;
-
-  const points = smoothed.map((v, i) => ({
-    x: (i / (smoothed.length - 1)) * W,
-    y: PAD_TOP + usableH - (v / max) * usableH,
-  }));
-
-  const linePath = buildSmoothPath(points);
-  const areaPath = `${linePath} L${W},${H - PAD_BOT} L0,${H - PAD_BOT} Z`;
-
-  const yearMarkers = computeYearMarkers(months, W);
-  const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
-  const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
 
   const fillId = `evolution-fill-${archetype.id}`;
 

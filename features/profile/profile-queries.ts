@@ -300,14 +300,18 @@ type YearMonthly = {
   year: number;
 };
 
-export async function getYearMonthly(login: string, year: number): Promise<YearMonthly | null> {
-  return getYearMonthlyCached(login.toLowerCase(), year);
+async function getYearMonthly(login: string, year: number, currentYear: number): Promise<YearMonthly | null> {
+  return getYearMonthlyCached(login.toLowerCase(), year, currentYear);
 }
 
-async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly | null> {
+async function getYearMonthlyCached(login: string, year: number, currentYear: number): Promise<YearMonthly | null> {
   'use cache';
   cacheTag(`monthly-${login}-${year}`);
-  cacheLife('cronotype');
+  if (year === currentYear) {
+    cacheLife('hours');
+  } else {
+    cacheLife('cronotype');
+  }
 
   if (MOCK || isShell(login)) {
     const seed = login.length * 31 + year;
@@ -353,14 +357,18 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   };
 }
 
-async function getYearArchetype(login: string, year: number): Promise<ArchetypeId | null> {
+async function getYearArchetype(login: string, year: number, currentYear: number): Promise<ArchetypeId | null> {
   'use cache';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
-  cacheLife('cronotype');
+  if (year === currentYear) {
+    cacheLife('hours');
+  } else {
+    cacheLife('cronotype');
+  }
 
   if (MOCK || isShell(login)) return mockArchetypeFor(`${login}-${year}`);
 
-  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 2);
+  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1);
   if (sampleCommits.length === 0) return null;
   return classify(buildStats(sampleCommits)).id;
 }
@@ -370,7 +378,7 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
 
   if (MOCK || isShell(lower)) {
     const years = [2026, 2025, 2024, 2023, 2022];
-    const rawResults = await Promise.all(years.map(y => getYearMonthly(lower, y)));
+    const rawResults = await Promise.all(years.map(y => getYearMonthly(lower, y, 2026)));
     const results = rawResults.filter((r): r is YearMonthly => r !== null);
     return {
       failedArchetypeYears: [],
@@ -400,20 +408,24 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   const years: number[] = [];
   for (let year = thisYear; year >= firstYear; year--) years.push(year);
 
-  const results = await Promise.allSettled(years.map(year => getYearMonthly(login, year)));
-
   const byYear: YearMonthly[] = [];
   const failedMonthlySet = new Set<number>();
   const failedArchetypeSet = new Set<number>();
   let partial = false;
-  results.forEach((r, i) => {
-    if (r.status === 'fulfilled' && r.value !== null) {
-      byYear.push(r.value);
-    } else {
+  for (const year of years) {
+    try {
+      const value = await getYearMonthly(login, year, thisYear);
+      if (value !== null) {
+        byYear.push(value);
+        continue;
+      }
       partial = true;
-      failedMonthlySet.add(years[i]);
+      failedMonthlySet.add(year);
+    } catch {
+      partial = true;
+      failedMonthlySet.add(year);
     }
-  });
+  }
 
   if (byYear.length === 0) {
     return {
@@ -454,13 +466,14 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
 
   const yearsWithCommits = byYear
     .filter(y => y.year >= startYear && y.year <= endYear && y.commits > 0)
+    .filter(y => y.year !== thisYear)
     .map(y => y.year)
     .sort((a, b) => a - b);
 
   const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
   for (const year of yearsWithCommits) {
     try {
-      const value = await getYearArchetype(lower, year);
+      const value = await getYearArchetype(lower, year, thisYear);
       archetypeResults.push({ status: 'fulfilled', value });
     } catch (reason) {
       archetypeResults.push({ status: 'rejected', reason });
