@@ -40,25 +40,60 @@ export async function EvolutionStrip({ login }: Props) {
   const fillId = `evolution-fill-${archetype.id}`;
 
   return (
-    <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
-      <h2 className="text-muted dark:text-muted-dark mb-4 text-[11px] font-medium tracking-[0.14em] uppercase">
+    <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 sm:p-8">
+      <h2 className="text-muted dark:text-muted-dark mb-6 text-[11px] font-medium tracking-[0.14em] uppercase">
         How you got here{partial ? ' · partial' : ''}
       </h2>
 
       <div className="relative">
-        <div className="relative mb-3 flex flex-wrap gap-x-4 gap-y-1.5">
-          {eras.map((e, i) => {
-            if (!e.label) return null;
-            return (
-              <div key={`era-legend-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ background: e.color }} />
-                <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
-                  {e.label}
-                </span>
-                <span className="text-muted dark:text-muted-dark text-[11px] tabular-nums">{e.yearLabel}</span>
-              </div>
-            );
-          })}
+        <div className="relative mb-2 h-9">
+          {(() => {
+            // Approximate label width in percent of chart width. Tuned so
+            // adjacent labels never visually touch when slotted into rows.
+            const CHAR_PCT = 0.85;
+            const PAD_PCT = 3;
+            // Two rows: above-the-chart preferred, drop below if taken.
+            const rowEnds = [-Infinity, -Infinity];
+            return eras.map((e, i) => {
+              if (!e.label) return null;
+              const midPct = (e.startPct + e.endPct) / 2;
+              const align = midPct < 14 ? 'left' : midPct > 86 ? 'right' : 'center';
+              const text = `${e.label} ${e.yearLabel}`;
+              const widthPct = text.length * CHAR_PCT + PAD_PCT;
+              const startPct =
+                align === 'center'
+                  ? midPct - widthPct / 2
+                  : align === 'right'
+                    ? midPct - widthPct
+                    : midPct;
+              let row = 0;
+              while (row < rowEnds.length && rowEnds[row] > startPct) row++;
+              if (row >= rowEnds.length) row = rowEnds.length - 1;
+              rowEnds[row] = startPct + widthPct;
+              return (
+                <div
+                  key={`era-label-${i}`}
+                  className="absolute flex items-center gap-1.5 whitespace-nowrap"
+                  style={{
+                    left: `${midPct}%`,
+                    top: row === 0 ? '0' : '20px',
+                    transform:
+                      align === 'center'
+                        ? 'translateX(-50%)'
+                        : align === 'right'
+                          ? 'translateX(-100%)'
+                          : 'none',
+                  }}
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ background: e.color }} />
+                  <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
+                    {e.label}
+                  </span>
+                  <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
+                </div>
+              );
+            });
+          })()}
         </div>
 
         <div className="relative">
@@ -76,27 +111,50 @@ export async function EvolutionStrip({ login }: Props) {
                   <stop key={`${i}-b`} offset={`${e.endPct}%`} stopColor={e.color} />,
                 ])}
               </linearGradient>
-              <linearGradient id={fillId} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={archetype.theme.accent} stopOpacity="0.28" />
-                <stop offset="100%" stopColor={archetype.theme.accent} stopOpacity="0" />
-              </linearGradient>
+              {eras.map((e, i) => (
+                <linearGradient key={`${fillId}-${i}`} id={`${fillId}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={e.color} stopOpacity="0.28" />
+                  <stop offset="100%" stopColor={e.color} stopOpacity="0" />
+                </linearGradient>
+              ))}
+              {eras.map((e, i) => {
+                const x1 = (e.startPct / 100) * W;
+                const x2 = (e.endPct / 100) * W;
+                return (
+                  <clipPath key={`${fillId}-clip-${i}`} id={`${fillId}-clip-${i}`}>
+                    <rect x={x1} y={0} width={Math.max(0.5, x2 - x1)} height={H} />
+                  </clipPath>
+                );
+              })}
             </defs>
 
-            {yearMarkers.map(yr => (
-              <line
-                key={yr.x}
-                x1={yr.x}
-                y1={PAD_TOP}
-                x2={yr.x}
-                y2={H - PAD_BOT}
-                stroke="currentColor"
-                className="text-muted/15 dark:text-muted-dark/15"
-                strokeWidth="1"
-                vectorEffect="non-scaling-stroke"
+            {eras.map((e, i) => (
+              <path
+                key={`era-fill-${i}`}
+                d={areaPath}
+                fill={`url(#${fillId}-${i})`}
+                clipPath={`url(#${fillId}-clip-${i})`}
               />
             ))}
 
-            <path d={areaPath} fill={`url(#${fillId})`} />
+            {eras.map((e, i) => {
+              if (i === 0) return null;
+              const x = (e.startPct / 100) * W;
+              return (
+                <line
+                  key={`era-divider-${i}`}
+                  x1={x}
+                  y1={PAD_TOP}
+                  x2={x}
+                  y2={H - PAD_BOT}
+                  stroke={e.color}
+                  strokeWidth="1"
+                  strokeDasharray="2 3"
+                  opacity="0.35"
+                  vectorEffect="non-scaling-stroke"
+                />
+              );
+            })}
 
             <path
               d={linePath}

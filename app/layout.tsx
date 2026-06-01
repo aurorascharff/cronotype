@@ -64,7 +64,7 @@ function SiteFooter() {
         </a>
         . Inspired by{' '}
         <a
-          href="https://areyougoingexponential.com"
+          href="https://areyougoingexponential.rhys.dev/"
           target="_blank"
           rel="noreferrer noopener"
           className="hover:text-ink dark:hover:text-paper underline-offset-2 transition-colors hover:underline"

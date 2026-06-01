@@ -19,7 +19,7 @@ export function ShareActions({ shareUrl, archetypeName, accent, className }: Pro
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast.success('Link copied');
+      toast.success('Link copied · pastes as a preview card');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Couldn't copy. Try selecting the URL manually.");
@@ -54,9 +54,9 @@ export function ShareActions({ shareUrl, archetypeName, accent, className }: Pro
 export function ShareUrl({ shareUrl }: { shareUrl: string }) {
   const display = shareUrl.replace(/^https?:\/\//, '');
   return (
-    <div className="text-muted/70 dark:text-muted-dark/70 px-1 font-mono text-[11px] tracking-tight">
+    <span className="text-muted/70 dark:text-muted-dark/70 font-mono text-[11px] tracking-tight">
       {display}
-    </div>
+    </span>
   );
 }
 

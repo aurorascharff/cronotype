@@ -303,13 +303,11 @@ async function getYearArchetypeCached(login: string, year: number): Promise<Arch
 
   if (MOCK) return mockArchetypeFor(`${login}-${year}`);
 
-  try {
-    const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1);
-    if (sampleCommits.length === 0) return null;
-    return classify(buildStats(sampleCommits)).id;
-  } catch {
-    return null;
-  }
+  // Sample two pages (up to 200 commits) so a high-activity year doesn't get
+  // classified off the most recent two weeks alone.
+  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 2);
+  if (sampleCommits.length === 0) return null;
+  return classify(buildStats(sampleCommits)).id;
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {

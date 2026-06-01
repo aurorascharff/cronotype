@@ -10,43 +10,85 @@ export const metadata: Metadata = {
   title: 'The archetypes',
 };
 
-const HOW_WE_KNOW: Record<ArchetypeId, string> = {
-  drifter: 'No single window dominates. Commits scatter across the clock.',
-  'insomniac-maintainer': 'Two peaks: a daytime shift and a second wind well after midnight.',
-  'lunch-bandit': 'A sharp midday spike that towers over the hours on either side.',
-  'nine-to-fiver': 'Most commits land between 9am and 7pm with low hour-to-hour variance.',
-  'sunrise-sniper': 'A heavy share of commits before 9am.',
-  'touch-grass': 'Very few public commits in the recent window.',
-  vampire: 'A heavy share of commits between midnight and 4am.',
-  'weekend-warrior': 'Saturday and Sunday carry an outsized share of the week.',
+type Detail = {
+  /** One-line description shown directly under the name. */
+  meaning: string;
+  /** The exact rule from the classifier. */
+  signal: string;
+  /** What pushes your percentile higher inside this archetype. */
+  percentile: string;
 };
 
-// Stable display order, brightest/most-distinct types first.
+const DETAILS: Record<ArchetypeId, Detail> = {
+  drifter: {
+    meaning: 'You code in stolen moments and still somehow keep shipping.',
+    percentile: 'Flat: drifters get a fixed midpoint score (no single metric to rank by).',
+    signal: 'The fallback. Nothing else triggers: no nocturnal cluster, no business-hours block, no weekend tilt.',
+  },
+  'insomniac-maintainer': {
+    meaning: 'You keep the lights on after everyone else logs off.',
+    percentile: 'Higher with more nocturnal commits added to a base of 50%.',
+    signal: 'isBimodal: a daytime peak and a second peak after midnight, both well above the average hour.',
+  },
+  'lunch-bandit': {
+    meaning: 'Your sharpest commits happen in that one sacred quiet hour.',
+    percentile: 'Higher the more dominant the midday hour is.',
+    signal: 'The noon hour is > 8% of all commits AND > 1.6× the average of the surrounding 11am and 1pm hours.',
+  },
+  'nine-to-fiver': {
+    meaning: 'You ship clean during work hours and leave work at work.',
+    percentile: 'Higher with a larger pctBusiness share.',
+    signal: '> 70% of commits land 9am to 7pm AND hour-to-hour variance is under 5 (a flat business-hours block).',
+  },
+  'sunrise-sniper': {
+    meaning: 'You do your best work in the quiet before the world wakes up.',
+    percentile: 'Higher with more pre-9am commits.',
+    signal: '> 25% of commits land between 5am and 9am.',
+  },
+  'touch-grass': {
+    meaning: 'Either your life is balanced, or your best work is happening off-stage.',
+    percentile: 'Inverse: lower total commits → higher percentile.',
+    signal: 'Fewer than 25 public commits in the last 90 days.',
+  },
+  vampire: {
+    meaning: 'You come alive when notifications sleep.',
+    percentile: 'Higher with more nocturnal share.',
+    signal: '> 30% of commits land between midnight and 5am.',
+  },
+  'weekend-warrior': {
+    meaning: 'Your real momentum starts when the week is officially over.',
+    percentile: 'Higher with more Sat/Sun share.',
+    signal: '> 40% of commits land on Saturday or Sunday.',
+  },
+};
+
+// Order matches the classifier’s priority: more specific signals are checked first.
 const ORDER: ArchetypeId[] = [
+  'touch-grass',
   'vampire',
   'sunrise-sniper',
-  'nine-to-fiver',
   'lunch-bandit',
   'weekend-warrior',
   'insomniac-maintainer',
+  'nine-to-fiver',
   'drifter',
-  'touch-grass',
 ];
 
 export default function TypesPage() {
   return (
-    <div className="space-y-8">
-      <header className="space-y-2">
+    <div className="space-y-10">
+      <header className="space-y-3">
         <h1 className="text-2xl font-semibold tracking-tightest sm:text-3xl">The archetypes</h1>
         <p className="text-muted dark:text-muted-dark max-w-2xl text-sm sm:text-base">
-          Cronotype reads the last 90 days of public commit timestamps and sorts you into one of eight
-          rhythms. Here&apos;s every type and how the classifier spots it.
+          Cronotype reads the last 90 days of public commits and sorts you into one of eight rhythms. Each
+          card shows what the type means, the exact signal that triggers it, and what drives your percentile.
         </p>
       </header>
 
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {ORDER.map(id => {
           const a = ARCHETYPES[id];
+          const d = DETAILS[id];
           const stats = syntheticStatsFor(id, 220);
           return (
             <li
@@ -57,17 +99,67 @@ export default function TypesPage() {
               <div className="flex h-16 w-16 shrink-0 items-center justify-center">
                 <RadialChip stats={stats} color={a.theme.accent} size={64} />
               </div>
-              <div className="min-w-0 space-y-1">
+              <div className="min-w-0 space-y-2.5">
                 <h2 className="text-base font-semibold tracking-tight" style={{ color: a.theme.accent }}>
                   {a.name}
                 </h2>
-                <p className="text-ink dark:text-paper text-sm">{a.meaning}</p>
-                <p className="text-muted dark:text-muted-dark text-xs">{HOW_WE_KNOW[id]}</p>
+                <p className="text-ink dark:text-paper text-sm">{d.meaning}</p>
+                <dl className="space-y-1 text-xs">
+                  <div>
+                    <dt className="text-muted dark:text-muted-dark inline font-medium">Signal. </dt>
+                    <dd className="text-ink/85 dark:text-paper/85 inline">{d.signal}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted dark:text-muted-dark inline font-medium">Percentile. </dt>
+                    <dd className="text-ink/85 dark:text-paper/85 inline">{d.percentile}</dd>
+                  </div>
+                </dl>
               </div>
             </li>
           );
         })}
       </ul>
+
+      <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
+        <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
+          How the diagnosis works
+        </h2>
+        <ul className="text-ink dark:text-paper space-y-2 text-sm">
+          <li>
+            <strong className="font-semibold">Data source.</strong>{' '}
+            <span className="text-muted dark:text-muted-dark">
+              GitHub&apos;s Search Commits API for the last 90 days of public commits authored by the handle,
+              keeping each commit&apos;s author timestamp <em>with its original timezone offset</em> so 2am in
+              Tokyo isn&apos;t mistaken for 2am in San Francisco.
+            </span>
+          </li>
+          <li>
+            <strong className="font-semibold">Bucketing.</strong>{' '}
+            <span className="text-muted dark:text-muted-dark">
+              Each commit is binned by hour (24 buckets) and weekday (7 buckets) in its local timezone. From
+              those we derive shares: <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
+              <code className="font-mono text-[11px]">pctSunrise</code> (5am to 9am),{' '}
+              <code className="font-mono text-[11px]">pctBusiness</code> (9am to 7pm),{' '}
+              <code className="font-mono text-[11px]">pctWeekend</code>, plus an{' '}
+              <code className="font-mono text-[11px]">isBimodal</code> flag for two-peak distributions.
+            </span>
+          </li>
+          <li>
+            <strong className="font-semibold">Classifier.</strong>{' '}
+            <span className="text-muted dark:text-muted-dark">
+              A short cascade of rules in priority order. The first rule that matches wins. If nothing matches,
+              you&apos;re a Drifter.
+            </span>
+          </li>
+          <li>
+            <strong className="font-semibold">Year history.</strong>{' '}
+            <span className="text-muted dark:text-muted-dark">
+              The colored evolution chart uses GitHub&apos;s GraphQL contributions calendar (one call per year)
+              plus a small sample of commits per year to classify the rhythm of each year.
+            </span>
+          </li>
+        </ul>
+      </section>
 
       <div className="text-muted dark:text-muted-dark text-sm">
         <Link

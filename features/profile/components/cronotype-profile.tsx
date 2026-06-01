@@ -35,14 +35,19 @@ export async function CronotypeProfile({ login }: Props) {
     <div className="space-y-2">
       <div className="relative">
         <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
-        <ShareActions
-          shareUrl={shareUrl}
-          archetypeName={archetype.name}
-          accent={archetype.theme.accent}
-          className="absolute bottom-4 right-4 z-20 sm:bottom-6 sm:right-6"
-        />
+        <div className="pointer-events-none absolute inset-x-4 bottom-3 z-20 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 sm:inset-x-6 sm:bottom-5">
+          <div className="pointer-events-auto">
+            <ShareUrl shareUrl={shareUrl} />
+          </div>
+          <div className="pointer-events-auto">
+            <ShareActions
+              shareUrl={shareUrl}
+              archetypeName={archetype.name}
+              accent={archetype.theme.accent}
+            />
+          </div>
+        </div>
       </div>
-      <ShareUrl shareUrl={shareUrl} />
       <Suspense fallback={null}>
         <RecordLeaderboardEntry login={profile.login} />
       </Suspense>
@@ -75,7 +80,7 @@ export function CronotypeProfileSkeleton() {
     <div className="space-y-2">
       <div className="dark:bg-ink-2 relative w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]">
         <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-          <div className="flex items-center justify-center sm:justify-start">
+          <div className="flex items-center justify-center sm:justify-start sm:pl-3">
             <HaloSkeleton />
           </div>
 

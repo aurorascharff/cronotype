@@ -24,7 +24,7 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
       </div>
 
       <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-        <div className="flex items-center justify-center sm:justify-start">
+        <div className="flex items-center justify-center sm:justify-start sm:pl-3">
           <HaloChart stats={stats} theme={theme} avatarUrl={profile.avatarUrl} size={220} />
         </div>
 
