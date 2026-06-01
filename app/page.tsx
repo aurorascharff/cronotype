@@ -2,8 +2,6 @@ import { Suspense } from 'react';
 import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { UsernameForm } from '@/components/username-form';
 
-export const unstable_prefetch = 'force-runtime';
-
 export default function HomePage() {
   return (
     <div className="space-y-12 sm:space-y-16">
