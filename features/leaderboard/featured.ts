@@ -35,6 +35,7 @@ export const FEATURED: string[] = [
   'shadcn',
   'pacocoursey',
   'steveruizok',
+  'aurorascharff',
 ];
 
 const FEATURED_SET = new Set(FEATURED);

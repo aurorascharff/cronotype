@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidateTag, updateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 import { isFeaturedLogin } from '@/features/leaderboard/featured';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
@@ -23,7 +23,7 @@ export async function revealUser(login: string) {
   updateTag(`reveal-${lower}`);
   if (isFeaturedLogin(lower)) {
     await recordFeaturedReveal(lower);
-    revalidateTag('reveals', 'max');
+    updateTag('reveals');
   }
 }
 

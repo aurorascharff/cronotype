@@ -3,8 +3,6 @@ import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/c
 import { SuggestedUsers } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
 
-export const unstable_prefetch = 'force-runtime';
-
 export default function HomePage() {
   return (
     <div className="space-y-12 sm:space-y-16">
