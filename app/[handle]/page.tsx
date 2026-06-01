@@ -51,9 +51,13 @@ async function getProfileMetadata(handle: string, imageUrl: string): Promise<Met
   cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');
 
-  const { archetype, percentile, profile } = await computeCronotype(handle, '90d');
-  const title = `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
-  const description = `${archetype.tagline} ${percentile}th percentile.`;
+  const { archetype, percentile, profile, stats } = await computeCronotype(handle, '90d');
+  const title =
+    stats.total === 0 ? `${profile.name ?? '@' + profile.login} is quiet lately` : `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
+  const description =
+    stats.total === 0
+      ? `@${profile.login} has a profile, but no public commits in the last 90 days to classify a current rhythm.`
+      : `${archetype.tagline} ${percentile}th percentile.`;
   return {
     description,
     openGraph: {

@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
+import type { ProfileSummary } from '@/types/cronotype';
 
 export const alt = 'Cronotype profile';
 export const contentType = 'image/png';
@@ -64,9 +65,9 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   const result = await computeCronotype(handle, '90d');
   const { profile, stats, archetype, percentile } = result;
 
-  if (stats.total === 0) return fallback(await loadGeist());
-
   const fonts = await loadGeist();
+
+  if (stats.total === 0) return quietImage(profile, fonts);
 
   const { theme } = archetype;
   const max = Math.max(1, ...stats.hourly);
@@ -359,6 +360,119 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
         {value}
       </div>
     </div>
+  );
+}
+
+function quietImage(profile: ProfileSummary, fonts?: Awaited<ReturnType<typeof loadGeist>>) {
+  return new ImageResponse(
+    <div
+      style={{
+        alignItems: 'center',
+        background: COLORS.ink2,
+        color: COLORS.paper,
+        display: 'flex',
+        fontFamily: 'GeistSans, sans-serif',
+        gap: 56,
+        height: '100%',
+        padding: 64,
+        width: '100%',
+      }}
+    >
+      <div
+        style={{
+          alignItems: 'center',
+          border: `1.5px solid ${COLORS.mutedDark}`,
+          borderRadius: '50%',
+          display: 'flex',
+          height: 176,
+          justifyContent: 'center',
+          overflow: 'hidden',
+          width: 176,
+        }}
+      >
+        <img
+          src={profile.avatarUrl}
+          alt=""
+          width={176}
+          height={176}
+          style={{
+            borderRadius: '50%',
+            display: 'block',
+            height: 176,
+            objectFit: 'cover',
+            width: 176,
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 14, minWidth: 0 }}>
+        <div style={{ alignItems: 'baseline', color: COLORS.mutedDark, display: 'flex', gap: 10 }}>
+          <span style={{ fontSize: 24 }}>@{profile.login}</span>
+          <span style={{ color: COLORS.mutedDivider, fontSize: 28 }}>·</span>
+          <span style={{ fontSize: 20 }}>{formatFollowers(profile.followers)}</span>
+        </div>
+        <div
+          style={{
+            color: COLORS.paper80,
+            display: 'flex',
+            fontSize: 92,
+            fontWeight: 600,
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
+          }}
+        >
+          Quiet lately
+        </div>
+        <div
+          style={{
+            color: COLORS.mutedDark,
+            display: 'flex',
+            fontSize: 30,
+            lineHeight: 1.35,
+            maxWidth: 620,
+          }}
+        >
+          This profile is here. There just are not public commits in the last 90 days to classify a current rhythm.
+        </div>
+      </div>
+
+      <div
+        style={{
+          border: `1px solid ${COLORS.white20}`,
+          borderRadius: 6,
+          background: COLORS.white10,
+          color: COLORS.paper80,
+          display: 'flex',
+          fontFamily: 'GeistMono, monospace',
+          fontSize: 18,
+          fontWeight: 500,
+          letterSpacing: '0.08em',
+          padding: '10px 14px',
+          position: 'absolute',
+          right: 64,
+          textTransform: 'uppercase',
+          top: 40,
+        }}
+      >
+        No 90d signal
+      </div>
+
+      <div
+        style={{
+          color: COLORS.mutedDark,
+          display: 'flex',
+          fontFamily: 'GeistMono, monospace',
+          fontSize: 22,
+          left: 64,
+          letterSpacing: '-0.01em',
+          position: 'absolute',
+          bottom: 36,
+        }}
+      >
+        cronotype.vercel.app/{profile.login}
+      </div>
+    </div>,
+    { ...size, fonts },
   );
 }
 
