@@ -16,18 +16,18 @@ function getClient(): Redis | null {
   });
 }
 
-export async function recordReveal(login: string): Promise<void> {
+export async function recordReveal(handle: string): Promise<void> {
   const kv = getClient();
   if (!kv) return;
-  const lower = login.toLowerCase();
-  await kv.set(revealKey(lower), lower);
+  const normalized = handle.toLowerCase();
+  await kv.set(revealKey(normalized), normalized);
 }
 
-export async function recordFeaturedReveal(login: string): Promise<void> {
+export async function recordFeaturedReveal(handle: string): Promise<void> {
   const kv = getClient();
   if (!kv) return;
-  const lower = login.toLowerCase();
-  await kv.zadd(FEATURED_REVEALS_KEY, { member: lower, score: Date.now() });
+  const normalized = handle.toLowerCase();
+  await kv.zadd(FEATURED_REVEALS_KEY, { member: normalized, score: Date.now() });
   await kv.zremrangebyrank(FEATURED_REVEALS_KEY, 0, -MAX_REVEALS - 1);
 }
 
@@ -38,13 +38,13 @@ export async function listFeaturedReveals(limit = MAX_REVEALS): Promise<string[]
   return raw ?? [];
 }
 
-export async function hasBeenRevealed(login: string): Promise<boolean> {
+export async function hasBeenRevealed(handle: string): Promise<boolean> {
   const kv = getClient();
   if (!kv) return false;
-  const value = await kv.get(revealKey(login.toLowerCase()));
+  const value = await kv.get(revealKey(handle.toLowerCase()));
   return value !== null;
 }
 
-function revealKey(login: string): string {
-  return `${REVEAL_KEY_PREFIX}:${login}`;
+function revealKey(handle: string): string {
+  return `${REVEAL_KEY_PREFIX}:${handle}`;
 }

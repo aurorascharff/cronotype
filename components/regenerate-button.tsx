@@ -5,10 +5,10 @@ import { toast } from 'sonner';
 import { regenerateUser } from '@/features/profile/profile-actions';
 
 type Props = {
-  login: string;
+  handle: string;
 };
 
-export function RegenerateButton({ login }: Props) {
+export function RegenerateButton({ handle }: Props) {
   const [isWorking, setIsWorking] = useState(false);
   const [isPending, startTransition] = useTransition();
   const busy = isWorking || isPending;
@@ -18,7 +18,7 @@ export function RegenerateButton({ login }: Props) {
     setIsWorking(true);
     startTransition(async () => {
       try {
-        await regenerateUser(login);
+        await regenerateUser(handle);
         toast.success('Regenerated from fresh data.');
       } catch {
         toast.error("Couldn't regenerate right now. Try again in a moment.");

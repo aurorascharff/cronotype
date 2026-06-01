@@ -1,19 +1,19 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { FEATURED } from '@/features/leaderboard/featured';
-import { getRecentLogins } from '@/features/leaderboard/leaderboard-queries';
+import { getRecentHandles } from '@/features/leaderboard/leaderboard-queries';
 import { connection } from 'next/server';
 
 type Props = {
-  excludeLogin?: string;
+  excludeHandle?: string;
 };
 
-export async function RecentRevealed({ excludeLogin }: Props) {
+export async function RecentRevealed({ excludeHandle }: Props) {
   await connection();
 
-  const all = await getRecentLogins();
-  const logins = excludeLogin ? all.filter(l => l.toLowerCase() !== excludeLogin.toLowerCase()) : all;
+  const all = await getRecentHandles();
+  const handles = excludeHandle ? all.filter(handle => handle.toLowerCase() !== excludeHandle.toLowerCase()) : all;
 
-  if (logins.length === 0) {
+  if (handles.length === 0) {
     return (
       <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-black/10 p-8 text-center text-sm dark:border-white/10">
         Couldn&apos;t reach GitHub just now. Refresh in a minute.
@@ -23,9 +23,9 @@ export async function RecentRevealed({ excludeLogin }: Props) {
 
   return (
     <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-      {logins.map(login => (
-        <li key={login}>
-          <ProfileCardSlot login={login} />
+      {handles.map(handle => (
+        <li key={handle}>
+          <ProfileCardSlot handle={handle} />
         </li>
       ))}
     </ul>

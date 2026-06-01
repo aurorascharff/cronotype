@@ -7,13 +7,13 @@ type Props = {
   shareUrl: string;
   archetypeName: string;
   accent: string;
-  login: string;
+  handle: string;
   className?: string;
 };
 
 const SHARE_TAGLINE = 'Find your developer type';
 
-export function ShareActions({ shareUrl, archetypeName, accent, login, className }: Props) {
+export function ShareActions({ shareUrl, archetypeName, accent, handle, className }: Props) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -32,13 +32,13 @@ export function ShareActions({ shareUrl, archetypeName, accent, login, className
     if (downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/u/${login}/opengraph-image`);
+      const res = await fetch(`/${handle}/opengraph-image`);
       if (!res.ok) throw new Error(`status ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `cronotype-${login}.png`;
+      a.download = `cronotype-${handle}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();

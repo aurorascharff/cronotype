@@ -5,18 +5,18 @@ import { ClassifyingRing } from '@/components/classifying-ring';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
 
-export function ProfileCardSlot({ login }: { login: string }) {
-  const avatarUrl = `https://github.com/${login}.png?size=96`;
+export function ProfileCardSlot({ handle }: { handle: string }) {
+  const avatarUrl = `https://github.com/${handle}.png?size=96`;
   return (
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
       <Link
-        href={{ pathname: `/u/${login}` }}
+        href={{ pathname: `/${handle}` }}
         className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4"
       >
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
             <Suspense fallback={<ClassifyingRing />}>
-              <CardChip login={login} />
+              <CardChip handle={handle} />
             </Suspense>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -28,15 +28,15 @@ export function ProfileCardSlot({ login }: { login: string }) {
             className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
           />
         </div>
-        <Suspense fallback={<CardMetaSkeleton login={login} />}>
-          <CardMeta login={login} />
+        <Suspense fallback={<CardMetaSkeleton handle={handle} />}>
+          <CardMeta handle={handle} />
         </Suspense>
       </Link>
       <a
-        href={`https://github.com/${login}`}
+        href={`https://github.com/${handle}`}
         target="_blank"
         rel="noreferrer noopener"
-        aria-label={`Open ${login} on GitHub`}
+        aria-label={`Open ${handle} on GitHub`}
         className="text-muted/70 dark:text-muted-dark/70 hover:text-ink dark:hover:text-paper absolute top-2 right-2 rounded-md p-1.5 transition-colors"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
@@ -47,15 +47,15 @@ export function ProfileCardSlot({ login }: { login: string }) {
   );
 }
 
-async function CardChip({ login }: { login: string }) {
-  const result = await getCardClassification(login);
+async function CardChip({ handle }: { handle: string }) {
+  const result = await getCardClassification(handle);
   if (!result) return <ClassifyingRing failed />;
   return <RadialChip stats={result.stats} color={result.archetype.theme.accent} size={112} />;
 }
 
-async function CardMeta({ login }: { login: string }) {
-  const [profile, classification] = await Promise.all([getCardProfile(login), getCardClassification(login)]);
-  if (!profile) return <CardMetaFallback login={login} />;
+async function CardMeta({ handle }: { handle: string }) {
+  const [profile, classification] = await Promise.all([getCardProfile(handle), getCardClassification(handle)]);
+  if (!profile) return <CardMetaFallback handle={handle} />;
   return (
     <div className="min-w-0 space-y-1">
       <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
@@ -77,12 +77,12 @@ async function CardMeta({ login }: { login: string }) {
   );
 }
 
-function CardMetaSkeleton({ login }: { login: string }) {
+function CardMetaSkeleton({ handle }: { handle: string }) {
   return (
     <div className="min-w-0 space-y-1">
       <div className="skeleton h-5 w-3/4 rounded" />
       <div className="text-muted dark:text-muted-dark flex items-baseline gap-1.5 truncate text-xs">
-        <span className="truncate">@{login}</span>
+        <span className="truncate">@{handle}</span>
         <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
           ·
         </span>
@@ -93,10 +93,10 @@ function CardMetaSkeleton({ login }: { login: string }) {
   );
 }
 
-function CardMetaFallback({ login }: { login: string }) {
+function CardMetaFallback({ handle }: { handle: string }) {
   return (
     <div className="min-w-0 space-y-1">
-      <div className="text-ink dark:text-paper truncate text-sm font-semibold">@{login}</div>
+      <div className="text-ink dark:text-paper truncate text-sm font-semibold">@{handle}</div>
       <div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs">Couldn&apos;t load profile</div>
       <div className="h-4" />
     </div>

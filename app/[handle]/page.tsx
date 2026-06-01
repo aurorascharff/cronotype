@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
 import { RegenerateButton } from '@/components/regenerate-button';
@@ -12,36 +13,36 @@ import { hasBeenRevealed } from '@/lib/reveals';
 import { cacheLife, cacheTag } from 'next/cache';
 import type { Metadata } from 'next';
 
-export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
-  const { login: rawLogin } = await params;
-  const login = rawLogin.toLowerCase();
+export async function generateMetadata({ params }: PageProps<'/[handle]'>): Promise<Metadata> {
+  const { handle: rawHandle } = await params;
+  const handle = rawHandle.toLowerCase();
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : 'http://localhost:3000');
-  const imageUrl = `${baseUrl.replace(/\/$/, '')}/u/${login}/opengraph-image`;
+  const imageUrl = `${baseUrl.replace(/\/$/, '')}/${handle}/opengraph-image`;
   try {
-    if (!(await hasBeenRevealed(login))) {
-      return { title: `Reveal @${login}` };
+    if (!(await hasBeenRevealed(handle))) {
+      return { title: `Reveal @${handle}` };
     }
-    return await getProfileMetadata(login, imageUrl);
+    return await getProfileMetadata(handle, imageUrl);
   } catch (err) {
     if (err instanceof GitHubError && err.status === 404) {
-      return { title: `@${login} not found` };
+      return { title: `@${handle} not found` };
     }
-    return { title: `@${login}` };
+    return { title: `@${handle}` };
   }
 }
 
-async function getProfileMetadata(login: string, imageUrl: string): Promise<Metadata> {
+async function getProfileMetadata(handle: string, imageUrl: string): Promise<Metadata> {
   'use cache';
-  cacheTag(`profile-page-${login}`);
-  cacheTag(`profile-${login}`);
-  cacheTag(`cronotype-${login}-90d`);
+  cacheTag(`profile-page-${handle}`);
+  cacheTag(`profile-${handle}`);
+  cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');
 
-  const { archetype, percentile, profile } = await computeCronotype(login, '90d');
+  const { archetype, percentile, profile } = await computeCronotype(handle, '90d');
   const title = `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
   const description = `${archetype.tagline} ${percentile}th percentile.`;
   return {
@@ -69,13 +70,25 @@ async function getProfileMetadata(login: string, imageUrl: string): Promise<Meta
   };
 }
 
-export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
+export default function ProfilePage({ params }: PageProps<'/[handle]'>) {
   return (
-    <Suspense fallback={<ProfilePageSkeleton />}>
-      {params.then(({ login }) => (
-        <ProfileContent login={login.toLowerCase()} />
-      ))}
-    </Suspense>
+    <div className="space-y-10">
+      <header>
+        <Link
+          href="/"
+          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
+        >
+          ← Reveal another
+        </Link>
+      </header>
+      <div className="space-y-10">
+        <Suspense fallback={<ProfilePageSkeleton />}>
+          {params.then(({ handle }) => (
+            <ProfileContent handle={handle.toLowerCase()} />
+          ))}
+        </Suspense>
+      </div>
+    </div>
   );
 }
 
@@ -91,20 +104,20 @@ function ProfilePageSkeleton() {
   );
 }
 
-async function ProfileContent({ login }: { login: string }) {
-  const revealed = await hasBeenRevealed(login);
-  if (!revealed) return <RevealGate login={login} />;
+async function ProfileContent({ handle }: { handle: string }) {
+  const revealed = await hasBeenRevealed(handle);
+  if (!revealed) return <RevealGate handle={handle} />;
 
-  return <GeneratedProfile login={login} />;
+  return <GeneratedProfile handle={handle} />;
 }
 
-function GeneratedProfile({ login }: { login: string }) {
+function GeneratedProfile({ handle }: { handle: string }) {
   return (
     <>
       <section className="space-y-4">
         <header className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
-          <RegenerateButton login={login} />
+          <RegenerateButton handle={handle} />
         </header>
         <Crossfade>
           <Suspense fallback={<CronotypeProfileSkeleton />}>
@@ -112,7 +125,7 @@ function GeneratedProfile({ login }: { login: string }) {
               title="We couldn't reveal this developer."
               body="GitHub is rate-limited right now. Give it a minute and try again."
             >
-              <CronotypeProfile login={login} />
+              <CronotypeProfile handle={handle} />
             </InlineErrorBoundary>
           </Suspense>
         </Crossfade>
@@ -124,7 +137,7 @@ function GeneratedProfile({ login }: { login: string }) {
               title="We couldn't load this history right now."
               body="GitHub is being moody. Try again in a minute."
             >
-              <EvolutionStrip login={login} />
+              <EvolutionStrip handle={handle} />
             </InlineErrorBoundary>
           </Suspense>
         </Crossfade>
@@ -133,7 +146,7 @@ function GeneratedProfile({ login }: { login: string }) {
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
         <Crossfade>
           <Suspense fallback={<RecentRevealedSkeleton />}>
-            <RecentRevealed excludeLogin={login} />
+            <RecentRevealed excludeHandle={handle} />
           </Suspense>
         </Crossfade>
       </section>

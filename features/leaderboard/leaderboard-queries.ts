@@ -12,7 +12,7 @@ export type LeaderboardEntry = {
   stats: HourStats;
 };
 
-export async function getRecentLogins(): Promise<string[]> {
+export async function getRecentHandles(): Promise<string[]> {
   'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
@@ -22,17 +22,17 @@ export async function getRecentLogins(): Promise<string[]> {
   if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(
-    revealed.map(async login => {
+    revealed.map(async handle => {
       try {
-        return { login, profile: await getProfile(login) };
+        return { handle, profile: await getProfile(handle) };
       } catch {
-        return { login, profile: null };
+        return { handle, profile: null };
       }
     }),
   );
   profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
 
-  return profiles.map(p => p.login);
+  return profiles.map(p => p.handle);
 }
 
 export async function getCardProfile(login: string): Promise<ProfileSummary | null> {

@@ -3,7 +3,7 @@ import { getTimelineChart } from '@/features/profile/timeline-chart';
 
 const size = { width: 1200, height: 630 };
 
-type RouteContext = { params: Promise<{ login: string }> };
+type RouteContext = { params: Promise<{ handle: string }> };
 
 async function loadGeist() {
   const baseUrl =
@@ -32,9 +32,9 @@ const PAD_TOP = 24;
 const PAD_BOT = 8;
 
 export async function GET(_req: Request, { params }: RouteContext) {
-  const { login } = await params;
+  const { handle } = await params;
 
-  const { archetype, areaPath, eras, hasData, linePath, months, profile, yearMarkers } = await getTimelineChart(login, {
+  const { archetype, areaPath, eras, hasData, linePath, months, profile, yearMarkers } = await getTimelineChart(handle, {
     height: H,
     padBottom: PAD_BOT,
     padTop: PAD_TOP,
@@ -170,7 +170,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
           position: 'absolute',
         }}
       >
-        cronotype.vercel.app/u/{profile.login}
+        cronotype.vercel.app/{profile.login}
       </div>
     </div>,
     { ...size, fonts },

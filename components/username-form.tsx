@@ -15,12 +15,12 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   function go(raw: string) {
     if (busy) return;
 
-    const login = raw.trim().replace(/^@/, '').replace(/\/+$/, '').toLowerCase();
-    if (!login) {
+    const handle = raw.trim().replace(/^@/, '').replace(/\/+$/, '').toLowerCase();
+    if (!handle) {
       toast.error('Type a GitHub username.');
       return;
     }
-    if (!/^[a-zA-Z0-9-]{1,39}$/.test(login)) {
+    if (!/^[a-zA-Z0-9-]{1,39}$/.test(handle)) {
       toast.error("That doesn't look like a GitHub username.");
       return;
     }
@@ -28,8 +28,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
     setIsSubmitting(true);
     startTransition(async () => {
       try {
-        await revealUser(login);
-        router.push(`/u/${login}`);
+        await revealUser(handle);
+        router.push(`/${handle}`);
       } catch {
         setIsSubmitting(false);
         toast.error("Couldn't start the reveal. Try again in a moment.");
@@ -56,7 +56,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
 
   return (
     <form onSubmit={submit} onKeyDownCapture={onKeyDown} className="flex w-full gap-1.5" aria-busy={busy}>
-      <label htmlFor="login" className="sr-only">
+      <label htmlFor="handle" className="sr-only">
         GitHub username
       </label>
       <div
@@ -77,8 +77,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
           @
         </span>
         <input
-          id="login"
-          name="login"
+          id="handle"
+          name="handle"
           type="text"
           placeholder="github-handle"
           value={value}

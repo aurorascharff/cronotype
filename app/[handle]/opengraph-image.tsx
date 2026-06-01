@@ -7,7 +7,7 @@ export const alt = 'Cronotype profile';
 export const contentType = 'image/png';
 export const size = { width: 1200, height: 630 };
 
-type Params = { login: string };
+type Params = { handle: string };
 
 async function loadGeist() {
   const baseUrl =
@@ -31,9 +31,9 @@ async function loadGeist() {
 }
 
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
-  const { login } = await params;
+  const { handle } = await params;
 
-  const result = await computeCronotype(login, '90d');
+  const result = await computeCronotype(handle, '90d');
   const { profile, stats, archetype, percentile } = result;
 
   if (stats.total === 0) return fallback(await loadGeist());
@@ -295,7 +295,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           bottom: 36,
         }}
       >
-        cronotype.vercel.app/u/{profile.login}
+        cronotype.vercel.app/{profile.login}
       </div>
     </div>,
     { ...size, fonts },

@@ -5,7 +5,7 @@ import { formatCount } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
-  login: string;
+  handle: string;
 };
 
 const W = 1000;
@@ -13,10 +13,10 @@ const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
 
-export async function EvolutionStrip({ login }: Props) {
+export async function EvolutionStrip({ handle }: Props) {
   'use cache';
-  cacheTag(`history-${login}`);
-  cacheTag(`cronotype-${login}-90d`);
+  cacheTag(`history-${handle}`);
+  cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');
 
   const {
@@ -31,7 +31,7 @@ export async function EvolutionStrip({ login }: Props) {
     partial,
     yTicks,
     yearMarkers,
-  } = await getTimelineChart(login, {
+  } = await getTimelineChart(handle, {
     height: H,
     padBottom: PAD_BOT,
     padTop: PAD_TOP,
@@ -47,7 +47,7 @@ export async function EvolutionStrip({ login }: Props) {
             active={partial}
             failedArchetypeYears={failedArchetypeYears}
             failedMonthlyYears={failedMonthlyYears}
-            login={login}
+            handle={handle}
           />
         </header>
         <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
@@ -76,9 +76,9 @@ export async function EvolutionStrip({ login }: Props) {
             active={partial}
             failedArchetypeYears={failedArchetypeYears}
             failedMonthlyYears={failedMonthlyYears}
-            login={login}
+            handle={handle}
           />
-          <DownloadTimeline login={login} />
+          <DownloadTimeline handle={handle} />
         </div>
       </header>
       <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10">

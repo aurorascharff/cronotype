@@ -40,6 +40,6 @@ export const FEATURED: string[] = [
 
 const FEATURED_SET = new Set(FEATURED);
 
-export function isFeaturedLogin(login: string): boolean {
-  return FEATURED_SET.has(login.toLowerCase());
+export function isFeaturedHandle(handle: string): boolean {
+  return FEATURED_SET.has(handle.toLowerCase());
 }

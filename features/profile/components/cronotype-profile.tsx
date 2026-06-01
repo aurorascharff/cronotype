@@ -11,18 +11,18 @@ import { cacheLife, cacheTag } from 'next/cache';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
-  login: string;
+  handle: string;
 };
 
-export async function CronotypeProfile({ login }: Props) {
+export async function CronotypeProfile({ handle }: Props) {
   'use cache';
-  cacheTag(`profile-${login}`);
-  cacheTag(`cronotype-${login}-90d`);
+  cacheTag(`profile-${handle}`);
+  cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');
 
   let result;
   try {
-    result = await computeCronotype(login, '90d');
+    result = await computeCronotype(handle, '90d');
   } catch (err) {
     if (err instanceof GitHubError && err.status === 404) notFound();
     throw err;
@@ -31,7 +31,7 @@ export async function CronotypeProfile({ login }: Props) {
   const { profile, archetype, stats, percentile } = result;
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.vercel.app';
-  const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;
+  const shareUrl = `${base.replace(/\/$/, '')}/${profile.login}`;
 
   return (
     <div className="relative">
@@ -49,7 +49,7 @@ export async function CronotypeProfile({ login }: Props) {
             shareUrl={shareUrl}
             archetypeName={stats.total === 0 ? 'quiet lately' : archetype.name}
             accent={archetype.theme.accent}
-            login={profile.login}
+            handle={profile.login}
           />
         </div>
       </div>

@@ -8,10 +8,10 @@ type Props = {
   active: boolean;
   failedArchetypeYears?: number[];
   failedMonthlyYears?: number[];
-  login: string;
+  handle: string;
 };
 
-export function PartialTimelineRefresh({ active, failedArchetypeYears = [], failedMonthlyYears = [], login }: Props) {
+export function PartialTimelineRefresh({ active, failedArchetypeYears = [], failedMonthlyYears = [], handle }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -22,7 +22,7 @@ export function PartialTimelineRefresh({ active, failedArchetypeYears = [], fail
       type="button"
       onClick={() =>
         startTransition(async () => {
-          await refreshPartialTimeline(login, failedMonthlyYears, failedArchetypeYears);
+          await refreshPartialTimeline(handle, failedMonthlyYears, failedArchetypeYears);
           router.refresh();
         })
       }

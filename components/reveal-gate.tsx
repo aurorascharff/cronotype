@@ -5,10 +5,10 @@ import { useState, useTransition } from 'react';
 import { revealUser } from '@/features/profile/profile-actions';
 
 type Props = {
-  login: string;
+  handle: string;
 };
 
-export function RevealGate({ login }: Props) {
+export function RevealGate({ handle }: Props) {
   const [isWorking, setIsWorking] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -19,8 +19,8 @@ export function RevealGate({ login }: Props) {
     setIsWorking(true);
     startTransition(async () => {
       try {
-        await revealUser(login);
-        router.replace(`/u/${login.toLowerCase()}`);
+        await revealUser(handle);
+        router.replace(`/${handle.toLowerCase()}`);
         router.refresh();
       } catch {
         setIsWorking(false);
@@ -43,12 +43,12 @@ export function RevealGate({ login }: Props) {
             className={`border-brand absolute inset-2 rounded-full border-t-2 border-r-2 border-b-2 border-l-transparent ${busy ? 'animate-spin' : 'transition-transform group-hover/reveal:rotate-45'}`}
           />
           <span className="bg-brand/10 text-brand flex h-14 w-14 items-center justify-center rounded-full font-mono text-sm font-semibold sm:h-16 sm:w-16">
-            @{login.slice(0, 2).toUpperCase()}
+            @{handle.slice(0, 2).toUpperCase()}
           </span>
         </span>
         <span className="flex max-w-md flex-col gap-2">
           <span className="text-xl font-semibold tracking-tight break-words sm:text-2xl">
-            {busy ? `Revealing @${login}` : `Ready to reveal @${login}?`}
+            {busy ? `Revealing @${handle}` : `Ready to reveal @${handle}?`}
           </span>
           <span className="text-muted dark:text-muted-dark text-sm">
             {busy

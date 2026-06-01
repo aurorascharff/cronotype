@@ -4,23 +4,23 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 type Props = {
-  login: string;
+  handle: string;
 };
 
-export function DownloadTimeline({ login }: Props) {
+export function DownloadTimeline({ handle }: Props) {
   const [downloading, setDownloading] = useState(false);
 
   async function download() {
     if (downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/u/${login}/timeline-image`);
+      const res = await fetch(`/${handle}/timeline-image`);
       if (!res.ok) throw new Error(`status ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `cronotype-${login}-timeline.png`;
+      a.download = `cronotype-${handle}-timeline.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
