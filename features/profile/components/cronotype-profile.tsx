@@ -61,11 +61,38 @@ function EmptyProfile({ login }: { login: string }) {
 export function CronotypeProfileSkeleton() {
   return (
     <div className="space-y-3">
+      {/* Hero card — mirrors the two-column halo + verdict layout. */}
       <div
-        className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white dark:border-white/10"
+        className="dark:bg-ink-2 relative overflow-hidden rounded-xl border border-black/10 bg-white dark:border-white/10"
         style={{ aspectRatio: '1200 / 630' }}
-      />
-      <div className="skeleton h-9 rounded-md" />
+      >
+        <div className="grid h-full grid-cols-[auto_1fr] items-center gap-6 p-6 sm:gap-10 sm:p-10">
+          {/* Halo placeholder */}
+          <div className="flex items-center justify-center">
+            <div className="skeleton h-[180px] w-[180px] rounded-full sm:h-[260px] sm:w-[260px]" />
+          </div>
+
+          {/* Verdict + stats placeholder */}
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="skeleton h-3 w-24" />
+            <div className="skeleton h-10 w-3/4 sm:h-14" />
+            <div className="mt-2 flex flex-wrap items-end gap-x-6 gap-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className="skeleton h-2 w-12" />
+                  <div className="skeleton h-5 w-14" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Share row — matches the real component's height and layout. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="skeleton h-4 w-64" />
+        <div className="skeleton h-8 w-32 rounded-md" />
+      </div>
     </div>
   );
 }

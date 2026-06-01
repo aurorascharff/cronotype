@@ -68,14 +68,37 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
       <button
         type="submit"
         disabled={pending}
+        aria-label="Diagnose this developer"
         className={
           large
-            ? 'bg-ink text-paper dark:bg-paper dark:text-ink inline-flex shrink-0 items-center justify-center rounded-md px-5 text-sm font-medium transition-opacity hover:opacity-85 disabled:opacity-50'
-            : 'bg-ink text-paper dark:bg-paper dark:text-ink inline-flex shrink-0 items-center justify-center rounded-md px-4 text-xs font-medium transition-opacity hover:opacity-85 disabled:opacity-50'
+            ? 'bg-ink text-paper dark:bg-paper dark:text-ink inline-flex w-28 shrink-0 items-center justify-center rounded-md text-sm font-medium transition-opacity hover:opacity-85 disabled:opacity-70'
+            : 'bg-ink text-paper dark:bg-paper dark:text-ink inline-flex w-20 shrink-0 items-center justify-center rounded-md text-xs font-medium transition-opacity hover:opacity-85 disabled:opacity-70'
         }
       >
-        {pending ? '…' : 'Go'}
+        {pending ? <Spinner /> : 'Diagnose'}
       </button>
     </form>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      aria-label="Loading"
+      role="img"
+      className="animate-spin"
+    >
+      <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeOpacity="0.25" strokeWidth="1.5" />
+      <path
+        d="M12.5 7a5.5 5.5 0 0 0-5.5-5.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

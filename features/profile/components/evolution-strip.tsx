@@ -36,7 +36,9 @@ export async function EvolutionStrip({ login }: Props) {
             <li key={year} className="flex flex-col items-center gap-2 text-center">
               <RadialChip stats={stats} color={def.theme.accent} size={56} />
               <div className="text-muted dark:text-muted-dark text-xs tabular-nums">{year}</div>
-              <div className="text-ink dark:text-paper w-full truncate text-xs font-medium">{def.name}</div>
+              <div className="text-ink dark:text-paper w-full text-xs leading-tight font-medium text-balance">
+                {def.name}
+              </div>
               <div className="text-muted dark:text-muted-dark text-[10px] tabular-nums">{formatCount(stats.total)}</div>
             </li>
           );

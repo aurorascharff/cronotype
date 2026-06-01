@@ -21,8 +21,10 @@ export type ArchetypeTheme = {
 export type Archetype = {
   id: ArchetypeId;
   name: string;
-  /** One sentence, second person, slightly mean. */
+  /** What the classifier saw. One sentence, descriptive. */
   tagline: string;
+  /** What it says about the person. One sentence, dry. */
+  meaning: string;
   /** Visual theme. */
   theme: ArchetypeTheme;
 };

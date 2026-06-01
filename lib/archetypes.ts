@@ -1,11 +1,19 @@
 import type { Archetype, ArchetypeId, ArchetypeTheme, HourStats } from '@/types/cronotype';
 
-/** One shared theme — cyan. Used only on the verdict word, halo, and percentile. */
-const BRAND: ArchetypeTheme = {
-  accent: '#06b6d4',
-  accent2: '#22d3ee',
-  bgDark: '#08090b',
-  bgLight: '#fafafa',
+/**
+ * Each archetype gets its own accent. Picked for type-meaning (vampires are
+ * purple, sunrise is amber, etc.) but kept at consistent saturation so the
+ * brand still reads as one design system.
+ */
+const THEMES: Record<ArchetypeId, ArchetypeTheme> = {
+  drifter: { accent: '#94a3b8', accent2: '#cbd5e1', bgDark: '#08090b', bgLight: '#fafafa' }, // slate
+  'insomniac-maintainer': { accent: '#ec4899', accent2: '#f472b6', bgDark: '#08090b', bgLight: '#fafafa' }, // pink
+  'lunch-bandit': { accent: '#ef4444', accent2: '#f87171', bgDark: '#08090b', bgLight: '#fafafa' }, // red
+  'nine-to-fiver': { accent: '#06b6d4', accent2: '#22d3ee', bgDark: '#08090b', bgLight: '#fafafa' }, // cyan
+  'sunrise-sniper': { accent: '#f59e0b', accent2: '#fbbf24', bgDark: '#08090b', bgLight: '#fafafa' }, // amber
+  'touch-grass': { accent: '#84cc16', accent2: '#a3e635', bgDark: '#08090b', bgLight: '#fafafa' }, // lime
+  vampire: { accent: '#a855f7', accent2: '#c084fc', bgDark: '#08090b', bgLight: '#fafafa' }, // purple
+  'weekend-warrior': { accent: '#10b981', accent2: '#34d399', bgDark: '#08090b', bgLight: '#fafafa' }, // emerald
 };
 
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
@@ -13,49 +21,57 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     id: 'drifter',
     name: 'Drifter',
     tagline: 'No clear pattern. Commits scattered across the day.',
-    theme: BRAND,
+    meaning: 'You work whenever you can. Probably context-switching a lot.',
+    theme: THEMES.drifter,
   },
   'insomniac-maintainer': {
     id: 'insomniac-maintainer',
     name: 'Insomniac Maintainer',
     tagline: 'Two distinct peaks: business hours and late night.',
-    theme: BRAND,
+    meaning: 'A day job, plus a side project (or an on-call rotation) at night.',
+    theme: THEMES['insomniac-maintainer'],
   },
   'lunch-bandit': {
     id: 'lunch-bandit',
     name: 'Lunch Bandit',
     tagline: 'Disproportionate spike between noon and 1pm.',
-    theme: BRAND,
+    meaning: 'Your best focus block is when nobody is messaging you.',
+    theme: THEMES['lunch-bandit'],
   },
   'nine-to-fiver': {
     id: 'nine-to-fiver',
     name: 'Nine-to-Fiver',
     tagline: 'Tight distribution between 9am and 6pm. Low variance.',
-    theme: BRAND,
+    meaning: 'You treat coding like a job. Boundaries intact.',
+    theme: THEMES['nine-to-fiver'],
   },
   'sunrise-sniper': {
     id: 'sunrise-sniper',
     name: 'Sunrise Sniper',
     tagline: 'Most commits land between 5am and 8am.',
-    theme: BRAND,
+    meaning: 'You ship before the rest of your team is awake.',
+    theme: THEMES['sunrise-sniper'],
   },
   'touch-grass': {
     id: 'touch-grass',
     name: 'Grass Toucher',
     tagline: 'Low commit volume in the last 90 days.',
-    theme: BRAND,
+    meaning: 'You have a life, or you commit somewhere private.',
+    theme: THEMES['touch-grass'],
   },
   vampire: {
     id: 'vampire',
     name: 'Vampire',
     tagline: 'Most commits land between midnight and 4am.',
-    theme: BRAND,
+    meaning: 'The world is quiet then. So is your inbox.',
+    theme: THEMES.vampire,
   },
   'weekend-warrior': {
     id: 'weekend-warrior',
     name: 'Weekend Warrior',
     tagline: 'Weekends out-commit weekdays.',
-    theme: BRAND,
+    meaning: 'The day job pays for the work that actually interests you.',
+    theme: THEMES['weekend-warrior'],
   },
 };
 

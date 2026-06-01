@@ -43,6 +43,7 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
           >
             {archetype.name}
           </h1>
+          <p className="text-muted dark:text-muted-dark max-w-md text-sm sm:text-base">{archetype.meaning}</p>
 
           <dl className="mt-2 flex flex-wrap items-end gap-x-6 gap-y-2 text-sm">
             <Stat label="Peak" value={formatHour(stats.peakHour)} />
