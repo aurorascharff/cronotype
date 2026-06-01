@@ -169,26 +169,87 @@ export async function EvolutionStrip({ login }: Props) {
 }
 
 export function EvolutionStripSkeleton() {
+  // Estimate a year-grid scaffold so the loading state matches the resolved
+  // chart's structure (year dividers + bottom-axis labels). We don't know the
+  // user's start year yet, so we render the most common shape: ~12 years.
+  const thisYear = new Date().getUTCFullYear();
+  const years = 12;
+  const startYear = thisYear - years + 1;
+
   return (
     <section className="space-y-4" aria-hidden>
       <header>
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
       </header>
       <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-        <div className="mb-4 flex gap-3">
-          <div className="skeleton h-4 w-24" />
-          <div className="skeleton h-4 w-20" />
-          <div className="skeleton h-4 w-28" />
+        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+          <li className="flex items-center gap-1.5">
+            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
+            <span className="skeleton h-3 w-20" />
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
+            <span className="skeleton h-3 w-16" />
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
+            <span className="skeleton h-3 w-24" />
+          </li>
+        </ul>
+
+        <div
+          role="status"
+          aria-label="Loading timeline"
+          className="border-muted/15 dark:border-muted-dark/15 relative h-32 overflow-hidden rounded-md border sm:h-40"
+        >
+          {/* Dotted year dividers — same density and treatment as the resolved chart. */}
+          {Array.from({ length: years - 1 }).map((_, i) => (
+            <div
+              key={i}
+              className="border-muted/20 dark:border-muted-dark/20 absolute inset-y-2 border-l border-dashed"
+              style={{ left: `${((i + 1) / years) * 100}%` }}
+            />
+          ))}
+
+          {/* Subtle inline loading pulse — keeps the silhouette empty since we
+              don't yet know the line shape, but gestures at activity. */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Spinner />
+          </div>
         </div>
-        <div className="skeleton h-32 sm:h-40" />
-        <div className="mt-2 flex justify-between">
-          <div className="skeleton h-2.5 w-8" />
-          <div className="skeleton h-2.5 w-8" />
-          <div className="skeleton h-2.5 w-8" />
-          <div className="skeleton h-2.5 w-8" />
+
+        <div className="text-muted/60 dark:text-muted-dark/60 relative mt-2 h-4 text-[10px] tabular-nums">
+          {[startYear, startYear + Math.floor(years / 3), startYear + Math.floor((years * 2) / 3), thisYear].map(
+            (year, i, arr) => (
+              <span
+                key={year}
+                className="absolute -translate-x-1/2"
+                style={{ left: `${(i / (arr.length - 1)) * 100}%` }}
+              >
+                {year}
+              </span>
+            ),
+          )}
         </div>
       </div>
     </section>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className="text-muted/40 dark:text-muted-dark/40 h-5 w-5 animate-spin"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" strokeOpacity="0.25" />
+      <path d="M21 12a9 9 0 0 0-9-9" />
+    </svg>
   );
 }
 
