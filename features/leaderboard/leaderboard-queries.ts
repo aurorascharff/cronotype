@@ -43,19 +43,15 @@ export const FEATURED: string[] = [
 ];
 
 export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardEntry[]> => {
-  const entries = await Promise.all(
-    FEATURED.map(async login => {
-      try {
-        const { profile, archetype, stats } = await computeCronotype(login.toLowerCase(), '90d');
-        return { archetype, profile, stats } satisfies LeaderboardEntry;
-      } catch {
-        return null;
-      }
-    }),
-  );
+  const entries: LeaderboardEntry[] = [];
+  for (const login of FEATURED) {
+    try {
+      const { profile, archetype, stats } = await computeCronotype(login.toLowerCase(), '90d');
+      entries.push({ archetype, profile, stats });
+    } catch {
+      // Skip rate-limited or failed users; their cached entries fill in on later requests.
+    }
+  }
 
-  return entries
-    .filter((e): e is LeaderboardEntry => e !== null)
-    .sort((a, b) => b.profile.followers - a.profile.followers)
-    .slice(0, limit);
+  return entries.sort((a, b) => b.profile.followers - a.profile.followers).slice(0, limit);
 });
