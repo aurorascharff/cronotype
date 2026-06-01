@@ -1,4 +1,4 @@
-import { cacheLife, cacheTag } from 'next/cache';
+import { connection } from 'next/server';
 import { ProfileCardGrid, ProfileCardGridSkeleton } from '@/features/leaderboard/components/profile-card-grid';
 import { getRecentClassified } from '@/features/leaderboard/leaderboard-queries';
 
@@ -8,9 +8,9 @@ type Props = {
 };
 
 export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
-  'use cache';
-  cacheTag('leaderboard');
-  cacheLife('hours');
+  // Defer to runtime so a build-time rate limit doesn't fail the prerender.
+  // Inner getFeaturedEntries() is still 'use cache' so requests share results.
+  await connection();
 
   const all = await getRecentClassified(limit + 1);
   const entries = excludeLogin
