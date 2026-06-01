@@ -1,10 +1,32 @@
 import Link from 'next/link';
 import { FEATURED } from '@/features/leaderboard/featured';
+import { hasBeenRevealed } from '@/lib/reveals';
+import { connection } from 'next/server';
 
-export function SuggestedUsers() {
+type Props = {
+  limit?: number;
+};
+
+export async function SuggestedUsers({ limit = 6 }: Props) {
+  await connection();
+
+  const revealStates = await Promise.all(FEATURED.map(async login => [login, await hasBeenRevealed(login)] as const));
+  const logins = revealStates
+    .filter(([, revealed]) => !revealed)
+    .map(([login]) => login)
+    .slice(0, limit);
+
+  if (logins.length === 0) {
+    return (
+      <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-black/10 p-8 text-center text-sm dark:border-white/10">
+        All suggested users have been revealed.
+      </p>
+    );
+  }
+
   return (
     <ul className="grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
-      {FEATURED.map(login => (
+      {logins.map(login => (
         <li key={login}>
           <Link
             href={{ pathname: `/u/${login}` }}
@@ -24,6 +46,20 @@ export function SuggestedUsers() {
               Reveal →
             </span>
           </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function SuggestedUsersSkeleton({ limit = 6 }: { limit?: number }) {
+  return (
+    <ul className="grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
+      {Array.from({ length: limit }).map((_, i) => (
+        <li key={i} className="dark:bg-ink-2 flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 sm:p-4 dark:border-white/10">
+          <div className="skeleton h-12 w-12 rounded-full" />
+          <div className="skeleton h-3 w-16 rounded" />
+          <div className="skeleton h-3 w-12 rounded" />
         </li>
       ))}
     </ul>

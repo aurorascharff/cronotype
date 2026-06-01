@@ -13,15 +13,15 @@ export type TimelineGeometry = {
 export async function getTimelineChart(login: string, geometry: TimelineGeometry) {
   const lower = login.toLowerCase();
 
-  const [{ months, yearlyArchetypes, partial }, { archetype, profile }] = await Promise.all([
-    getMonthlyHistory(lower),
-    computeCronotype(lower, '90d'),
-  ]);
+  const [{ failedArchetypeYears, failedMonthlyYears, months, yearlyArchetypes, partial }, { archetype, profile }] =
+    await Promise.all([getMonthlyHistory(lower), computeCronotype(lower, '90d')]);
 
   if (months.length < 2) {
     return {
       archetype,
       eras: [],
+      failedArchetypeYears,
+      failedMonthlyYears,
       hasData: false,
       months,
       partial,
@@ -48,16 +48,23 @@ export async function getTimelineChart(login: string, geometry: TimelineGeometry
   const yearMarkers = computeYearMarkers(months, geometry.width);
   const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
   const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
+  const yTicks = [max, max / 2].map(value => ({
+    value: Math.round(value),
+    y: geometry.padTop + usableH - (value / max) * usableH,
+  }));
 
   return {
     archetype,
     areaPath,
     eras,
+    failedArchetypeYears,
+    failedMonthlyYears,
     hasData: true,
     linePath,
     months,
     partial,
     profile,
+    yTicks,
     yearMarkers,
     yearlyArchetypes,
   };

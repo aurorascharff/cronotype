@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { revealUser } from '@/features/profile/profile-actions';
 
 type Props = {
@@ -9,27 +9,55 @@ type Props = {
 };
 
 export function RevealGate({ login }: Props) {
+  const [isWorking, setIsWorking] = useState(false);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const busy = isWorking || isPending;
+
+  function reveal() {
+    if (busy) return;
+    setIsWorking(true);
+    startTransition(async () => {
+      try {
+        await revealUser(login);
+        router.refresh();
+      } catch {
+        setIsWorking(false);
+      }
+    });
+  }
 
   return (
-    <div className="dark:bg-ink-2 flex flex-col items-center gap-4 rounded-xl border border-black/10 bg-white p-6 text-center sm:p-10 dark:border-white/10">
-      <h2 className="text-xl font-semibold tracking-tight break-words sm:text-2xl">Ready to reveal @{login}?</h2>
-      <p className="text-muted dark:text-muted-dark max-w-md text-sm">
-        Hit the button to classify their commit rhythm.
-      </p>
+    <div className="dark:bg-ink-2 overflow-hidden rounded-xl border border-black/10 bg-white dark:border-white/10">
       <button
         type="button"
-        onClick={() =>
-          startTransition(async () => {
-            await revealUser(login);
-            router.refresh();
-          })
-        }
-        disabled={isPending}
-        className="bg-brand text-on-brand dark:text-ink mt-2 inline-flex min-w-24 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-60"
+        onClick={reveal}
+        disabled={busy}
+        aria-busy={busy}
+        className="group/reveal flex w-full flex-col items-center gap-5 p-6 text-center transition-colors hover:bg-black/[0.02] disabled:cursor-wait sm:p-10 dark:hover:bg-white/[0.03]"
       >
-        {isPending ? 'Revealing…' : 'Reveal'}
+        <span className="relative flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
+          <span className="border-brand/20 absolute inset-0 rounded-full border" />
+          <span
+            className={`border-brand absolute inset-2 rounded-full border-t-2 border-r-2 border-b-2 border-l-transparent ${busy ? 'animate-spin' : 'transition-transform group-hover/reveal:rotate-45'}`}
+          />
+          <span className="bg-brand/10 text-brand flex h-14 w-14 items-center justify-center rounded-full font-mono text-sm font-semibold sm:h-16 sm:w-16">
+            @{login.slice(0, 2).toUpperCase()}
+          </span>
+        </span>
+        <span className="flex max-w-md flex-col gap-2">
+          <span className="text-xl font-semibold tracking-tight break-words sm:text-2xl">
+            {busy ? `Revealing @${login}` : `Ready to reveal @${login}?`}
+          </span>
+          <span className="text-muted dark:text-muted-dark text-sm">
+            {busy
+              ? 'Fetching GitHub activity, caching the result, and preparing the timeline. This can take a little while.'
+              : 'Start the profile generation. The page will update when the reveal has been recorded.'}
+          </span>
+        </span>
+        <span className="text-brand text-xs font-medium tracking-wide uppercase">
+          {busy ? 'Working...' : 'Start reveal'}
+        </span>
       </button>
     </div>
   );

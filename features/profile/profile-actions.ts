@@ -30,4 +30,23 @@ export async function revealUser(login: string) {
 export async function regenerateUser(login: string) {
   const lower = login.toLowerCase();
   invalidateAllForLogin(lower);
+  if (isFeaturedLogin(lower)) {
+    await recordFeaturedReveal(lower);
+    updateTag('reveals');
+  }
+}
+
+export async function refreshPartialTimeline(
+  login: string,
+  failedMonthlyYears: number[] = [],
+  failedArchetypeYears: number[] = [],
+) {
+  const lower = login.toLowerCase();
+  updateTag(`history-${lower}`);
+  for (const year of failedMonthlyYears) {
+    updateTag(`monthly-${lower}-${year}`);
+  }
+  for (const year of failedArchetypeYears) {
+    updateTag(`year-archetype-${lower}-${year}`);
+  }
 }

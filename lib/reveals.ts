@@ -44,7 +44,7 @@ export async function hasBeenRevealed(login: string): Promise<boolean> {
 }
 
 async function hasBeenRevealedCached(login: string): Promise<boolean> {
-  'use cache';
+  'use cache: remote';
   cacheTag(`reveal-${login}`);
   cacheLife('cronotype');
 

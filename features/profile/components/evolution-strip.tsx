@@ -1,6 +1,7 @@
 import { DownloadTimeline } from '@/components/download-timeline';
 import { PartialTimelineRefresh } from '@/features/profile/components/partial-timeline-refresh';
 import { getTimelineChart } from '@/features/profile/timeline-chart';
+import { formatCount } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
@@ -18,7 +19,19 @@ export async function EvolutionStrip({ login }: Props) {
   cacheTag(`cronotype-${login}-90d`);
   cacheLife('cronotype');
 
-  const { archetype, areaPath, eras, hasData, linePath, months, partial, yearMarkers } = await getTimelineChart(login, {
+  const {
+    archetype,
+    areaPath,
+    eras,
+    failedArchetypeYears,
+    failedMonthlyYears,
+    hasData,
+    linePath,
+    months,
+    partial,
+    yTicks,
+    yearMarkers,
+  } = await getTimelineChart(login, {
     height: H,
     padBottom: PAD_BOT,
     padTop: PAD_TOP,
@@ -28,9 +41,14 @@ export async function EvolutionStrip({ login }: Props) {
   if (!hasData) {
     return (
       <>
-        <PartialTimelineRefresh active={partial} />
         <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
           <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
+          <PartialTimelineRefresh
+            active={partial}
+            failedArchetypeYears={failedArchetypeYears}
+            failedMonthlyYears={failedMonthlyYears}
+            login={login}
+          />
         </header>
         <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
           {partial ? 'Couldn\u2019t load the timeline right now.' : 'Not enough commit history yet.'}
@@ -46,7 +64,6 @@ export async function EvolutionStrip({ login }: Props) {
 
   return (
     <>
-      <PartialTimelineRefresh active={partial} />
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         <div className="flex items-center gap-2">
@@ -55,6 +72,12 @@ export async function EvolutionStrip({ login }: Props) {
               Partial · GitHub rate limit
             </span>
           )}
+          <PartialTimelineRefresh
+            active={partial}
+            failedArchetypeYears={failedArchetypeYears}
+            failedMonthlyYears={failedMonthlyYears}
+            login={login}
+          />
           <DownloadTimeline login={login} />
         </div>
       </header>
@@ -109,6 +132,33 @@ export async function EvolutionStrip({ login }: Props) {
                 );
               })}
             </defs>
+
+            {yTicks.map(tick => (
+              <g key={tick.value}>
+                <line
+                  x1={0}
+                  y1={tick.y}
+                  x2={W}
+                  y2={tick.y}
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  opacity="0.06"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <text
+                  x={W - 2}
+                  y={tick.y - 4}
+                  fill="currentColor"
+                  textAnchor="end"
+                  className="text-muted dark:text-muted-dark"
+                  fontSize="10"
+                  fontFamily="var(--font-mono)"
+                  opacity="0.62"
+                >
+                  {formatCount(tick.value)}
+                </text>
+              </g>
+            ))}
 
             {eras.map((e, i) =>
               e.unknown ? null : (

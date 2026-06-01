@@ -7,10 +7,14 @@ import { revealUser } from '@/features/profile/profile-actions';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const [value, setValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const busy = isSubmitting || pending;
 
   function go(raw: string) {
+    if (busy) return;
+
     const login = raw.trim().replace(/^@/, '').replace(/\/+$/, '').toLowerCase();
     if (!login) {
       toast.error('Type a GitHub username.');
@@ -21,9 +25,15 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
       return;
     }
     setValue('');
+    setIsSubmitting(true);
     startTransition(async () => {
-      await revealUser(login);
-      router.push(`/u/${login}`);
+      try {
+        await revealUser(login);
+        router.push(`/u/${login}`);
+      } catch {
+        setIsSubmitting(false);
+        toast.error("Couldn't start the reveal. Try again in a moment.");
+      }
     });
   }
 
@@ -45,7 +55,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const large = size === 'lg';
 
   return (
-    <form onSubmit={submit} onKeyDownCapture={onKeyDown} className="flex w-full gap-1.5" aria-busy={pending}>
+    <form onSubmit={submit} onKeyDownCapture={onKeyDown} className="flex w-full gap-1.5" aria-busy={busy}>
       <label htmlFor="login" className="sr-only">
         GitHub username
       </label>
@@ -55,7 +65,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
             ? 'dark:bg-ink-2 flex flex-1 items-stretch overflow-hidden rounded-lg border border-black/10 bg-white transition-opacity focus-within:border-black/40 dark:border-white/10 dark:focus-within:border-white/40'
             : 'dark:bg-ink-2 flex flex-1 items-stretch overflow-hidden rounded-lg border border-black/10 bg-white transition-opacity dark:border-white/10'
         }
-        style={{ opacity: pending ? 0.6 : 1 }}
+        style={{ opacity: busy ? 0.6 : 1 }}
       >
         <span
           className={
@@ -76,7 +86,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
-          disabled={pending}
+          disabled={busy}
           className={
             large
               ? 'placeholder-muted/50 dark:placeholder-muted-dark/50 dark:text-paper flex-1 border-0 bg-transparent px-1 py-2 text-sm outline-none focus:ring-0'
@@ -86,7 +96,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
       </div>
       <button
         type="submit"
-        disabled={pending}
+        disabled={busy}
         aria-label="Reveal this developer"
         className={
           large
@@ -94,8 +104,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
             : 'bg-brand text-on-brand dark:text-ink group/btn ring-brand/20 hover:ring-brand/40 inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:opacity-60'
         }
       >
-        <span>Reveal</span>
-        {pending ? <Spinner /> : <Arrow />}
+        <span>{busy ? 'Revealing' : 'Reveal'}</span>
+        {busy ? <Spinner /> : <Arrow />}
       </button>
     </form>
   );

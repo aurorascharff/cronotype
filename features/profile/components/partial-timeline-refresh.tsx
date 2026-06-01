@@ -1,35 +1,35 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
-
-const REFRESH_INTERVAL_MS = 60_000;
-const MAX_REFRESHES = 8;
+import { useTransition } from 'react';
+import { refreshPartialTimeline } from '@/features/profile/profile-actions';
 
 type Props = {
   active: boolean;
+  failedArchetypeYears?: number[];
+  failedMonthlyYears?: number[];
+  login: string;
 };
 
-export function PartialTimelineRefresh({ active }: Props) {
+export function PartialTimelineRefresh({ active, failedArchetypeYears = [], failedMonthlyYears = [], login }: Props) {
   const router = useRouter();
-  const refreshes = useRef(0);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!active) return;
+  if (!active) return null;
 
-    const id = window.setInterval(() => {
-      if (document.visibilityState === 'hidden') return;
-      if (refreshes.current >= MAX_REFRESHES) {
-        window.clearInterval(id);
-        return;
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        startTransition(async () => {
+          await refreshPartialTimeline(login, failedMonthlyYears, failedArchetypeYears);
+          router.refresh();
+        })
       }
-
-      refreshes.current += 1;
-      router.refresh();
-    }, REFRESH_INTERVAL_MS);
-
-    return () => window.clearInterval(id);
-  }, [active, router]);
-
-  return null;
+      disabled={isPending}
+      className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex min-w-24 items-center justify-center rounded-lg border border-black/10 bg-white/85 px-2.5 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12]"
+    >
+      {isPending ? 'Updating' : 'Update chart'}
+    </button>
+  );
 }
