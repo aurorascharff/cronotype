@@ -12,9 +12,9 @@ import { updateTag } from 'next/cache';
  * `'use cache'` entry continues serving from cache and stays untouched.
  */
 export async function refreshPartialYears(login: string, years: number[]) {
- const lower = login.toLowerCase();
- for (const year of years) {
-  updateTag(`monthly-${lower}-${year}`);
-  updateTag(`year-archetype-${lower}-${year}`);
- }
+  const lower = login.toLowerCase();
+  for (const year of years) {
+    updateTag(`monthly-${lower}-${year}`);
+    updateTag(`year-archetype-${lower}-${year}`);
+  }
 }

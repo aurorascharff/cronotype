@@ -15,7 +15,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  description: 'What type of developer are you? Type a GitHub handle and get a commit-time archetype, year-by-year timeline, and a shareable card.',
+  description:
+    'What type of developer are you? Type a GitHub handle and get a commit-time archetype, year-by-year timeline, and a shareable card.',
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL ??
       (process.env.VERCEL_PROJECT_PRODUCTION_URL

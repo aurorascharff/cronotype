@@ -5,9 +5,9 @@ import { ViewTransition } from 'react';
  * so the animation only fires when suspended content streams in - not during unrelated transitions.
  */
 export function Crossfade({ children }: { children: React.ReactNode }) {
- return (
-  <ViewTransition enter="auto" default="none">
-   {children}
-  </ViewTransition>
- );
+  return (
+    <ViewTransition enter="auto" default="none">
+      {children}
+    </ViewTransition>
+  );
 }

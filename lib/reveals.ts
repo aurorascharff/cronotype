@@ -18,28 +18,28 @@ const REVEALS_KEY = 'reveals:v1';
 const MAX_REVEALS = 100;
 
 function getClient(): Redis | null {
- // Lazy so unit tests / build don't fail on missing env.
- if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
- return new Redis({
-  token: process.env.KV_REST_API_TOKEN,
-  url: process.env.KV_REST_API_URL,
- });
+  // Lazy so unit tests / build don't fail on missing env.
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
+  return new Redis({
+    token: process.env.KV_REST_API_TOKEN,
+    url: process.env.KV_REST_API_URL,
+  });
 }
 
 /** Record a reveal. Safe to call concurrently. */
 export async function recordReveal(login: string): Promise<void> {
- const kv = getClient();
- if (!kv) return;
- const lower = login.toLowerCase();
- await kv.zadd(REVEALS_KEY, { member: lower, score: Date.now() });
- // Keep only the most recent MAX_REVEALS entries.
- await kv.zremrangebyrank(REVEALS_KEY, 0, -MAX_REVEALS - 1);
+  const kv = getClient();
+  if (!kv) return;
+  const lower = login.toLowerCase();
+  await kv.zadd(REVEALS_KEY, { member: lower, score: Date.now() });
+  // Keep only the most recent MAX_REVEALS entries.
+  await kv.zremrangebyrank(REVEALS_KEY, 0, -MAX_REVEALS - 1);
 }
 
 /** List recent reveals, most recent first. */
 export async function listReveals(limit: number): Promise<string[]> {
- const kv = getClient();
- if (!kv) return [];
- const raw = await kv.zrange<string[]>(REVEALS_KEY, 0, limit - 1, { rev: true });
- return raw ?? [];
+  const kv = getClient();
+  if (!kv) return [];
+  const raw = await kv.zrange<string[]>(REVEALS_KEY, 0, limit - 1, { rev: true });
+  return raw ?? [];
 }
