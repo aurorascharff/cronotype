@@ -155,17 +155,11 @@ export async function EvolutionStrip({ login }: Props) {
 
 export function EvolutionStripSkeleton() {
   return (
-    <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
-      <div className="skeleton mb-4 h-2.5 w-32" />
-      <div className="relative">
-        <div className="skeleton h-32 w-full sm:h-40" />
-        <div className="mt-2 flex h-4 justify-between">
-          <div className="skeleton h-2.5 w-8" />
-          <div className="skeleton h-2.5 w-8" />
-          <div className="skeleton h-2.5 w-8" />
-          <div className="skeleton h-2.5 w-8" />
-        </div>
-      </div>
+    <section
+      className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white dark:border-white/10"
+      aria-hidden
+    >
+      <div className="h-[260px] sm:h-[320px]" />
     </section>
   );
 }

@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   openGraph: {
     description: 'What kind of developer are you? Find out in one chart.',
     siteName: 'Cronotype',
-    title: 'Cronotype — your commit fingerprint',
+    title: 'Cronotype: your commit fingerprint',
     type: 'website',
   },
   title: {
-    default: 'Cronotype — your commit fingerprint',
+    default: 'Cronotype: your commit fingerprint',
     template: '%s · Cronotype',
   },
 };

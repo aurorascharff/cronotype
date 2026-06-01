@@ -63,17 +63,13 @@ export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <li
           key={i}
-          className="dark:bg-ink-2 flex h-full flex-col gap-4 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
+          className="dark:bg-ink-2 flex h-full flex-col items-center gap-4 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
+          aria-hidden
         >
-          <div className="relative flex h-28 items-center justify-center">
-            <div className="skeleton h-24 w-24 rounded-full" />
-            <div className="bg-paper dark:bg-ink-2 absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10" />
+          <div className="flex h-28 items-center justify-center">
+            <div className="h-24 w-24 rounded-full border border-black/10 dark:border-white/10" />
           </div>
-          <div className="space-y-1.5">
-            <div className="skeleton h-3 w-24 rounded" />
-            <div className="skeleton h-2.5 w-16 rounded" />
-            <div className="skeleton h-2.5 w-20 rounded" />
-          </div>
+          <div className="h-16 w-full" />
         </li>
       ))}
     </ul>

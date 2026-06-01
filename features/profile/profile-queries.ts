@@ -356,21 +356,32 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     .map(y => y.year)
     .sort((a, b) => a - b);
 
-  const archetypeResults = await Promise.allSettled(
-    yearsWithCommits.map(year => getYearArchetype(login, year)),
-  );
+  const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
+  for (const year of yearsWithCommits) {
+    try {
+      const value = await getYearArchetype(login, year);
+      archetypeResults.push({ status: 'fulfilled', value });
+    } catch (reason) {
+      archetypeResults.push({ status: 'rejected', reason });
+    }
+  }
 
   const yearlyArchetypes: YearArchetypeBucket[] = [];
+  let failed = 0;
   archetypeResults.forEach((r, i) => {
     const year = yearsWithCommits[i];
     const yearData = byYear.find(y => y.year === year);
     if (!yearData) return;
     if (r.status === 'fulfilled' && r.value) {
       yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
-    } else if (r.status === 'rejected') {
-      partial = true;
+    } else {
+      failed++;
     }
   });
+
+  if (yearsWithCommits.length > 0 && failed / yearsWithCommits.length > 0.5) {
+    partial = true;
+  }
 
   return { months, partial, yearlyArchetypes };
 }

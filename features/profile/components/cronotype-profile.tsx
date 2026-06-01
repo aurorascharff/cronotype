@@ -77,37 +77,11 @@ function EmptyProfile({ login }: { login: string }) {
 
 export function CronotypeProfileSkeleton() {
   return (
-    <div className="space-y-2">
-      <div className="dark:bg-ink-2 relative w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]">
-        <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-          <div className="flex items-center justify-center sm:justify-start sm:pl-3">
-            <HaloSkeleton />
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-3">
-            <div className="skeleton h-3.5 w-24 sm:h-4" />
-            <div className="skeleton h-12 w-2/3 sm:h-14" />
-            <div className="skeleton h-4 w-3/4 sm:w-2/3" />
-
-            <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
-              {[0, 1, 2, 3].map(i => (
-                <div key={i} className="flex flex-col gap-1.5">
-                  <div className="skeleton h-2.5 w-10" />
-                  <div className="skeleton h-6 w-12 sm:h-7" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="skeleton h-2.5 w-52" />
+    <div
+      className="dark:bg-ink-2 w-full rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]"
+      aria-hidden
+    >
+      <div className="h-[380px] sm:h-auto" />
     </div>
-  );
-}
-
-function HaloSkeleton() {
-  return (
-    <div className="skeleton h-[140px] w-[140px] rounded-full sm:h-[220px] sm:w-[220px]" />
   );
 }
