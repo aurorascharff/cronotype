@@ -1,6 +1,7 @@
 import { DownloadTimeline } from '@/components/download-timeline';
 import { PartialTimelineRefresh } from '@/features/profile/components/partial-timeline-refresh';
 import { getTimelineChart } from '@/features/profile/timeline-chart';
+import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
   login: string;
@@ -12,6 +13,11 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
+  'use cache';
+  cacheTag(`history-${login}`);
+  cacheTag(`cronotype-${login}-90d`);
+  cacheLife('cronotype');
+
   const { archetype, areaPath, eras, hasData, linePath, months, partial, yearMarkers } = await getTimelineChart(login, {
     height: H,
     padBottom: PAD_BOT,

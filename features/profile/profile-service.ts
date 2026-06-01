@@ -13,7 +13,7 @@ export const computeCronotype = cache(async (login: string, window: Window = '90
 async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
   'use cache';
   cacheTag(`cronotype-${login}-${window}`);
-  cacheLife('hours');
+  cacheLife('cronotype');
 
   const [profile, stats] = await Promise.all([getProfile(login), getStatsFor(login, window)]);
 

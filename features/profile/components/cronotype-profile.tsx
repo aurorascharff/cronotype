@@ -5,12 +5,18 @@ import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
+import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
   login: string;
 };
 
 export async function CronotypeProfile({ login }: Props) {
+  'use cache';
+  cacheTag(`profile-${login}`);
+  cacheTag(`cronotype-${login}-90d`);
+  cacheLife('cronotype');
+
   let result;
   try {
     result = await computeCronotype(login, '90d');

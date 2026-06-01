@@ -387,7 +387,7 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
   'use cache';
   cacheTag(`history-${login}`);
   cacheTag(`history-${login}-${today}`);
-  cacheLife({ expire: 3600, revalidate: 60, stale: 30 });
+  cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
     const years = [2026, 2025, 2024, 2023, 2022];
