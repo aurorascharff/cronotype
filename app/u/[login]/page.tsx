@@ -107,7 +107,7 @@ async function ProfileContent({ login }: { login: string }) {
           <Suspense fallback={<EvolutionStripSkeleton />}>
             <InlineErrorBoundary
               title="We couldn't load this history right now."
-              body="Your main reading is still visible. Try again to fetch the full timeline."
+              body="GitHub is being moody. Try again in a minute."
             >
               <EvolutionStrip login={login} />
             </InlineErrorBoundary>

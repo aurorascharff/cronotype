@@ -11,10 +11,12 @@ export async function revealUser(login: string) {
   updateTag(`stats-${lower}-90d`);
 }
 
-export async function refreshPartialYears(login: string, years: number[]) {
+export async function refreshPartialYears(login: string, monthlyYears: number[], archetypeYears: number[]) {
   const lower = login.toLowerCase();
-  for (const year of years) {
+  for (const year of monthlyYears) {
     updateTag(`monthly-${lower}-${year}`);
+  }
+  for (const year of archetypeYears) {
     updateTag(`year-archetype-${lower}-${year}`);
   }
 }

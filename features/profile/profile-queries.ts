@@ -277,8 +277,10 @@ export type MonthlyHistory = {
   months: MonthBucket[];
   yearlyArchetypes: YearArchetypeBucket[];
   partial: boolean;
-  /** Years whose monthly OR archetype fetch failed - the only ones worth re-fetching. */
-  failedYears: number[];
+  /** Years whose monthly fetch failed - only these get monthly tags invalidated on refresh. */
+  failedMonthlyYears: number[];
+  /** Years whose archetype fetch failed - only these get archetype tags invalidated on refresh. */
+  failedArchetypeYears: number[];
 };
 
 type YearMonthly = {
@@ -367,7 +369,8 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     const rawResults = await Promise.all(years.map(y => getYearMonthly(lower, y)));
     const results = rawResults.filter((r): r is YearMonthly => r !== null);
     return {
-      failedYears: [],
+      failedArchetypeYears: [],
+      failedMonthlyYears: [],
       months: results.flatMap(r => r.months).sort((a, b) => a.month.localeCompare(b.month)),
       partial: false,
       yearlyArchetypes: results.map(r => ({
@@ -379,7 +382,9 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   }
 
   const profile = await getProfile(lower);
-  if (!profile) return { failedYears: [], months: [], partial: true, yearlyArchetypes: [] };
+  if (!profile) {
+    return { failedArchetypeYears: [], failedMonthlyYears: [], months: [], partial: true, yearlyArchetypes: [] };
+  }
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const now = new Date();
   const thisYear = now.getUTCFullYear();
@@ -391,19 +396,26 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   const results = await Promise.allSettled(years.map(year => getYearMonthly(login, year)));
 
   const byYear: YearMonthly[] = [];
-  const failedYearsSet = new Set<number>();
+  const failedMonthlySet = new Set<number>();
+  const failedArchetypeSet = new Set<number>();
   let partial = false;
   results.forEach((r, i) => {
     if (r.status === 'fulfilled' && r.value !== null) {
       byYear.push(r.value);
     } else {
       partial = true;
-      failedYearsSet.add(years[i]);
+      failedMonthlySet.add(years[i]);
     }
   });
 
   if (byYear.length === 0) {
-    return { failedYears: [...failedYearsSet], months: [], partial: true, yearlyArchetypes: [] };
+    return {
+      failedArchetypeYears: [],
+      failedMonthlyYears: [...failedMonthlySet],
+      months: [],
+      partial: true,
+      yearlyArchetypes: [],
+    };
   }
 
   const out = byYear.flatMap(y => y.months).sort((a, b) => a.month.localeCompare(b.month));
@@ -421,7 +433,13 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
 
   const months = out.slice(start, end);
   if (months.length === 0) {
-    return { failedYears: [...failedYearsSet], months: [], partial, yearlyArchetypes: [] };
+    return {
+      failedArchetypeYears: [],
+      failedMonthlyYears: [...failedMonthlySet],
+      months: [],
+      partial,
+      yearlyArchetypes: [],
+    };
   }
 
   const startYear = Number(months[0].month.slice(0, 4));
@@ -452,7 +470,7 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
       yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
     } else {
       failed++;
-      failedYearsSet.add(year);
+      failedArchetypeSet.add(year);
     }
   });
 
@@ -460,7 +478,13 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     partial = true;
   }
 
-  return { failedYears: [...failedYearsSet].sort((a, b) => b - a), months, partial, yearlyArchetypes };
+  return {
+    failedArchetypeYears: [...failedArchetypeSet].sort((a, b) => b - a),
+    failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
+    months,
+    partial,
+    yearlyArchetypes,
+  };
 }
 
 function mockProfile(login: string): ProfileSummary {

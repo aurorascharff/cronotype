@@ -5,21 +5,23 @@ import { refreshPartialYears } from '@/features/profile/profile-actions';
 
 type Props = {
   login: string;
-  years: number[];
+  monthlyYears: number[];
+  archetypeYears: number[];
 };
 
-export function RefreshPartial({ login, years }: Props) {
+export function RefreshPartial({ login, monthlyYears, archetypeYears }: Props) {
   const [isPending, startTransition] = useTransition();
+  const disabled = isPending || (monthlyYears.length === 0 && archetypeYears.length === 0);
 
   return (
     <button
       type="button"
       onClick={() =>
         startTransition(async () => {
-          await refreshPartialYears(login, years);
+          await refreshPartialYears(login, monthlyYears, archetypeYears);
         })
       }
-      disabled={isPending || years.length === 0}
+      disabled={disabled}
       className="text-muted/70 dark:text-muted-dark/70 hover:text-ink dark:hover:text-paper inline-flex items-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-[10.5px] tracking-wide uppercase transition-colors hover:border-black/10 disabled:opacity-60 dark:hover:border-white/10"
     >
       <span aria-hidden className={`inline-block h-2.5 w-2.5 ${isPending ? 'animate-spin' : ''}`}>
