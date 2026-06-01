@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { ProfileCardGrid, ProfileCardGridSkeleton } from '@/features/leaderboard/components/profile-card-grid';
 import { getRecentClassified } from '@/features/leaderboard/leaderboard-queries';
 
@@ -7,6 +8,7 @@ type Props = {
 };
 
 export async function RecentDiagnosed({ excludeLogin, limit = 16 }: Props) {
+  await connection();
   const all = await getRecentClassified(limit + 1);
   const entries = excludeLogin
     ? all.filter(e => e.profile.login.toLowerCase() !== excludeLogin.toLowerCase()).slice(0, limit)
