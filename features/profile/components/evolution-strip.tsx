@@ -1,5 +1,4 @@
 import { DownloadTimeline } from '@/components/download-timeline';
-import { RefreshPartial } from '@/components/refresh-partial';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory } from '@/features/profile/profile-queries';
 import { buildEras, buildSmoothPath, buildYearMarks, computeYearMarkers, smooth } from '@/lib/timeline';
@@ -14,7 +13,7 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
-  const [{ months, yearlyArchetypes, partial, failedMonthlyYears, failedArchetypeYears }, { archetype }] =
+  const [{ months, yearlyArchetypes, partial }, { archetype }] =
     await Promise.all([getMonthlyHistory(login), computeCronotype(login, '90d')]);
 
   const hasData = months.length >= 2;
@@ -24,12 +23,9 @@ export async function EvolutionStrip({ login }: Props) {
       <>
         <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
           <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-          {(failedMonthlyYears.length > 0 || failedArchetypeYears.length > 0) && (
-            <RefreshPartial login={login} monthlyYears={failedMonthlyYears} archetypeYears={failedArchetypeYears} />
-          )}
         </header>
         <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
-          {partial ? 'Couldn\u2019t load the timeline. Hit refresh to try again.' : 'Not enough commit history yet.'}
+          {partial ? 'Couldn\u2019t load the timeline right now.' : 'Not enough commit history yet.'}
         </div>
       </>
     );
@@ -62,12 +58,9 @@ export async function EvolutionStrip({ login }: Props) {
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         <div className="flex items-center gap-2">
           {partial && (
-            <>
-              <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
-                Partial · GitHub rate limit
-              </span>
-              <RefreshPartial login={login} monthlyYears={failedMonthlyYears} archetypeYears={failedArchetypeYears} />
-            </>
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+              Partial · GitHub rate limit
+            </span>
           )}
           <DownloadTimeline login={login} />
         </div>

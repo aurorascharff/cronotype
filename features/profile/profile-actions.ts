@@ -24,13 +24,3 @@ export async function regenerateUser(login: string) {
   const lower = login.toLowerCase();
   invalidateAllForLogin(lower);
 }
-
-export async function refreshPartialYears(login: string, monthlyYears: number[], archetypeYears: number[]) {
-  const lower = login.toLowerCase();
-  for (const year of monthlyYears) {
-    updateTag(`monthly-${lower}-${year}`);
-  }
-  for (const year of archetypeYears) {
-    updateTag(`year-archetype-${lower}-${year}`);
-  }
-}
