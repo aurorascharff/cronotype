@@ -1,20 +1,10 @@
 type Props = {
-  /** Show the failed state with a retry button. */
   failed?: boolean;
-  /** Retry callback. Required when failed. */
   onRetry?: () => void;
-  /** Diameter behavior: 'inset' (absolute inset-2) or 'fixed' (uses px size). */
   variant?: 'inset' | 'fixed';
-  /** Used when variant='fixed'. */
   size?: number;
 };
 
-/**
- * Animated ring that signals "classifying in progress" without showing any data.
- * Falls back to a static dotted ring + retry button if classification failed.
- *
- * Used by both the leaderboard card skeleton and the hero card skeleton.
- */
 export function ClassifyingRing({ failed = false, onRetry, variant = 'inset', size }: Props) {
   const positionClass = variant === 'inset' ? 'absolute inset-0' : '';
   const fixedStyle = variant === 'fixed' && size ? { height: size, width: size } : undefined;

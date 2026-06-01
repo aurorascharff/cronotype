@@ -66,15 +66,6 @@ function EmptyProfile({ login }: { login: string }) {
   );
 }
 
-/**
- * Skeleton mirrors the resolved HeroCard exactly:
- * - Same outer aspect ratio (1200/630 on desktop, fluid on mobile)
- * - Same chip area: 220px halo container with the avatar disk overlaid
- * - Same right column: handle row, archetype headline, meaning paragraph, stats
- *
- * Uses ClassifyingRing instead of a flat skeleton circle so the loading state
- * reads as "working" not "blank".
- */
 export function CronotypeProfileSkeleton() {
   return (
     <div

@@ -56,7 +56,6 @@ async function getRecentLoginsCached(limit: number): Promise<string[]> {
   return logins;
 }
 
-/** Cheap GET /users/:login. Cached per-login for 60 days via `getProfile`. */
 export const getCardProfile = cache(async (login: string): Promise<ProfileSummary | null> => {
   try {
     return await getProfile(login);
@@ -65,11 +64,6 @@ export const getCardProfile = cache(async (login: string): Promise<ProfileSummar
   }
 });
 
-/**
- * Expensive Search Commits fetch. Throws on failure so the caller can wrap it
- * in an error boundary and offer a retry. Cached per-login for 60 days via
- * `getStatsFor` - once it succeeds it stays put.
- */
 export const getCardClassification = cache(
   async (login: string): Promise<{ archetype: Archetype; stats: HourStats }> => {
     const stats = await getStatsFor(login, '90d');

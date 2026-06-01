@@ -6,13 +6,7 @@ import { ClassifyingRing } from '@/components/classifying-ring';
 import { refreshCardStats } from '@/features/profile/profile-actions';
 
 type Props = {
-  /** Login this card represents - used to target just its cache entry on retry. */
   login: string;
-  /**
-   * Which fallback to render on error.
-   * - 'ring': failed ClassifyingRing with a retry button (for the chip area)
-   * - 'em-dash': em-dash text (for the archetype name slot)
-   */
   variant: 'ring' | 'em-dash';
 };
 
@@ -21,9 +15,6 @@ function CardErrorFallback({ login, variant }: Props, _info: ErrorInfo) {
 
   function retry() {
     startTransition(async () => {
-      // updateTag invalidates only the stats tag for this login; the server
-      // action settling triggers an automatic re-render of the current segment
-      // so we don't need router.refresh() or unstable_retry.
       await refreshCardStats(login);
     });
   }
@@ -50,11 +41,4 @@ function CardErrorFallback({ login, variant }: Props, _info: ErrorInfo) {
   );
 }
 
-/**
- * Compact retry boundary for individual card sub-fetches.
- *
- * Retry calls the targeted server action `refreshCardStats(login)`, which
- * invalidates only that login's stats cache. Other cards retain their cached
- * data - no full route refresh.
- */
 export default catchError(CardErrorFallback);

@@ -23,8 +23,6 @@ export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
     );
   }
 
-  // No outer Suspense per card - ProfileCardSlot renders the avatar + handle
-  // synchronously and suspends only on the parts that need data.
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {logins.map(login => (

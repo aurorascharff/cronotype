@@ -6,16 +6,6 @@ import { ClassifyingRing } from '@/components/classifying-ring';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
 
-/**
- * Server component for a single card. Renders in three stages:
- *
- *   1. Avatar + handle: deterministic, no fetch.
- *   2. Profile (name + followers): cheap GET /users/:login.
- *   3. Classification (radial chip + archetype): Search Commits API.
- *
- * Each stage has its own Suspense + error boundary. Stage 3 throws on failure
- * so the boundary can show a retry button instead of leaving an empty ring.
- */
 export function ProfileCardSlot({ login }: { login: string }) {
   const avatarUrl = `https://github.com/${login}.png?size=96`;
   return (
@@ -95,9 +85,6 @@ async function ArchetypeName({ login }: { login: string }) {
 }
 
 function CardMetaSkeleton({ login }: { login: string }) {
-  // Mirrors the resolved `CardMeta` layout exactly: same outer container,
-  // same row count, same row heights, same alignment. The handle line uses
-  // real text so the typography metrics match across the swap.
   return (
     <div className="min-w-0 space-y-1">
       <div className="skeleton h-5 w-3/4 rounded" />
@@ -111,7 +98,6 @@ function CardMetaSkeleton({ login }: { login: string }) {
 }
 
 function CardMetaFallback({ login }: { login: string }) {
-  // Same 3-row shape as the resolved card so the failure mode doesn't shift either.
   return (
     <div className="min-w-0 space-y-1">
       <div className="text-ink dark:text-paper truncate text-sm font-semibold">@{login}</div>
@@ -122,8 +108,6 @@ function CardMetaFallback({ login }: { login: string }) {
 }
 
 export function ProfileCardSkeleton() {
-  // Identical to the resolved ProfileCardSlot layout: same padding, gap,
-  // chip area height, and meta-block shape. Eliminates layout shift on Suspense reveal.
   return (
     <div
       className="dark:bg-ink-2 relative h-full rounded-xl border border-black/10 bg-white dark:border-white/10"
