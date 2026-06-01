@@ -2,6 +2,7 @@
 
 import { updateTag } from 'next/cache';
 import { isFeaturedHandle } from '@/features/leaderboard/featured';
+import { isValidGitHubHandle } from '@/lib/github-handle';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
 function invalidateAllForHandle(handle: string) {
@@ -29,6 +30,7 @@ async function recordFeaturedRevealIfNeeded(handle: string) {
 
 export async function revealUser(handle: string) {
   const lower = handle.toLowerCase();
+  if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
@@ -36,6 +38,7 @@ export async function revealUser(handle: string) {
 
 export async function regenerateUser(handle: string) {
   const lower = handle.toLowerCase();
+  if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   invalidateAllForHandle(lower);
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
@@ -48,6 +51,7 @@ export async function refreshPartialTimeline(
   failedArchetypeYears: number[] = [],
 ) {
   const lower = handle.toLowerCase();
+  if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   updateTag(`history-${lower}`);
   for (const year of failedMonthlyYears) {
     updateTag(`monthly-${lower}-${year}`);

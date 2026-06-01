@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
 import { RegenerateButton } from '@/components/regenerate-button';
@@ -9,6 +10,7 @@ import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/c
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
+import { isValidGitHubHandle } from '@/lib/github-handle';
 import { hasBeenRevealed } from '@/lib/reveals';
 import { cacheLife, cacheTag } from 'next/cache';
 import type { Metadata } from 'next';
@@ -16,6 +18,13 @@ import type { Metadata } from 'next';
 export async function generateMetadata({ params }: PageProps<'/[handle]'>): Promise<Metadata> {
   const { handle: rawHandle } = await params;
   const handle = rawHandle.toLowerCase();
+  if (!isValidGitHubHandle(handle)) {
+    return {
+      openGraph: { images: [] },
+      title: 'Nothing here',
+      twitter: { images: [] },
+    };
+  }
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -105,6 +114,8 @@ function ProfilePageSkeleton() {
 }
 
 async function ProfileContent({ handle }: { handle: string }) {
+  if (!isValidGitHubHandle(handle)) notFound();
+
   const revealed = await hasBeenRevealed(handle);
   if (!revealed) return <RevealGate handle={handle} />;
 

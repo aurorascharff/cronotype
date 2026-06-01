@@ -6,17 +6,8 @@ const size = { width: 1200, height: 630 };
 type RouteContext = { params: Promise<{ handle: string }> };
 
 async function loadGeist() {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : 'http://localhost:3000');
-  const base = baseUrl.replace(/\/$/, '');
   try {
-    const [regular, semibold] = await Promise.all([
-      fetch(`${base}/fonts/Geist-Regular.ttf`).then(r => r.arrayBuffer()),
-      fetch(`${base}/fonts/Geist-SemiBold.ttf`).then(r => r.arrayBuffer()),
-    ]);
+    const [regular, semibold] = await Promise.all([loadFont('Geist-Regular.ttf'), loadFont('Geist-SemiBold.ttf')]);
     return [
       { data: regular, name: 'Geist', style: 'normal' as const, weight: 400 as const },
       { data: semibold, name: 'Geist', style: 'normal' as const, weight: 600 as const },
@@ -24,6 +15,15 @@ async function loadGeist() {
   } catch {
     return undefined;
   }
+}
+
+async function loadFont(name: string) {
+  const res = await fetch(new URL(`../../../public/fonts/${name}`, import.meta.url));
+  if (!res.ok) throw new Error(`Failed to load ${name}`);
+  const data = await res.arrayBuffer();
+  const signature = String.fromCharCode(...new Uint8Array(data.slice(0, 4)));
+  if (signature.startsWith('<')) throw new Error(`Invalid font response for ${name}`);
+  return data;
 }
 
 const W = 1080;

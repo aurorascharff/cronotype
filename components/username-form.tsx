@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { revealUser } from '@/features/profile/profile-actions';
+import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const [value, setValue] = useState('');
@@ -15,12 +16,12 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   function go(raw: string) {
     if (busy) return;
 
-    const handle = raw.trim().replace(/^@/, '').replace(/\/+$/, '').toLowerCase();
+    const handle = normalizeHandle(raw);
     if (!handle) {
       toast.error('Type a GitHub username.');
       return;
     }
-    if (!/^[a-zA-Z0-9-]{1,39}$/.test(handle)) {
+    if (!isValidGitHubHandle(handle)) {
       toast.error("That doesn't look like a GitHub username.");
       return;
     }

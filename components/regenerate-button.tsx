@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { regenerateUser } from '@/features/profile/profile-actions';
@@ -11,6 +12,7 @@ type Props = {
 export function RegenerateButton({ handle }: Props) {
   const [isWorking, setIsWorking] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const busy = isWorking || isPending;
 
   function regenerate() {
@@ -19,6 +21,7 @@ export function RegenerateButton({ handle }: Props) {
     startTransition(async () => {
       try {
         await regenerateUser(handle);
+        router.refresh();
         toast.success('Regenerated from fresh data.');
       } catch {
         toast.error("Couldn't regenerate right now. Try again in a moment.");
