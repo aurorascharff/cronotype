@@ -6,7 +6,6 @@ import { recordReveal } from '@/lib/reveals';
 function invalidateAllForLogin(login: string) {
   updateTag(`profile-${login}`);
   updateTag(`stats-${login}-90d`);
-  updateTag(`timeline-${login}`);
   const thisYear = new Date().getUTCFullYear();
   for (let year = 2008; year <= thisYear; year++) {
     updateTag(`monthly-${login}-${year}`);

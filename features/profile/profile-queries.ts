@@ -143,7 +143,7 @@ export async function getProfile(login: string): Promise<ProfileSummary> {
 }
 
 async function getProfileCached(login: string): Promise<ProfileSummary> {
-  'use cache';
+  'use cache: remote';
   cacheTag(`profile-${login}`);
   cacheLife('cronotype');
 
@@ -242,7 +242,7 @@ function dedupe(commits: Commit[]): Commit[] {
 }
 
 async function getTodayKey(): Promise<string> {
-  'use cache';
+  'use cache: remote';
   cacheTag('today');
   cacheLife('hours');
   const now = new Date();
@@ -268,7 +268,7 @@ async function getStatsForCached(
   fromISO: string,
   toISO: string,
 ): Promise<ReturnType<typeof buildStats>> {
-  'use cache';
+  'use cache: remote';
   cacheTag(`stats-${login}-${window}`);
   cacheTag(`stats-${login}-${window}-${toISO}`);
   cacheLife('cronotype');
@@ -305,7 +305,7 @@ async function getYearMonthly(login: string, year: number, currentYear: number):
 }
 
 async function getYearMonthlyCached(login: string, year: number, currentYear: number): Promise<YearMonthly | null> {
-  'use cache';
+  'use cache: remote';
   cacheTag(`monthly-${login}-${year}`);
   if (year === currentYear) {
     cacheLife('hours');
@@ -358,7 +358,7 @@ async function getYearMonthlyCached(login: string, year: number, currentYear: nu
 }
 
 async function getYearArchetype(login: string, year: number, currentYear: number): Promise<ArchetypeId | null> {
-  'use cache';
+  'use cache: remote';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   if (year === currentYear) {
     cacheLife('hours');

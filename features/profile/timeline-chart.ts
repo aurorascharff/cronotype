@@ -1,5 +1,4 @@
 import 'server-only';
-import { cacheLife, cacheTag } from 'next/cache';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory } from '@/features/profile/profile-queries';
 import { buildEras, buildSmoothPath, buildYearMarks, computeYearMarkers, smooth } from '@/lib/timeline';
@@ -12,10 +11,7 @@ export type TimelineGeometry = {
 };
 
 export async function getTimelineChart(login: string, geometry: TimelineGeometry) {
-  'use cache';
   const lower = login.toLowerCase();
-  cacheTag(`timeline-${lower}`);
-  cacheLife('hours');
 
   const [{ months, yearlyArchetypes, partial }, { archetype, profile }] = await Promise.all([
     getMonthlyHistory(lower),
