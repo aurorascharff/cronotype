@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps<'/[handle]'>): Prom
       description,
       images: [
         {
-          alt: `${profile.login} cronotype chart`,
+          alt: `${handle} cronotype profile`,
           height: 630,
           url: imageUrl,
           width: 1200,
