@@ -3,15 +3,10 @@ import { FEATURED } from '@/features/leaderboard/featured';
 import { getRecentHandles } from '@/features/leaderboard/leaderboard-queries';
 import { connection } from 'next/server';
 
-type Props = {
-  excludeHandle?: string;
-};
-
-export async function RecentRevealed({ excludeHandle }: Props) {
+export async function RecentRevealed() {
   await connection();
 
-  const all = await getRecentHandles();
-  const handles = excludeHandle ? all.filter(handle => handle.toLowerCase() !== excludeHandle.toLowerCase()) : all;
+  const handles = await getRecentHandles();
 
   if (handles.length === 0) {
     return (

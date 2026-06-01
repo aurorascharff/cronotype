@@ -6,7 +6,6 @@ import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
 import { RegenerateButton } from '@/components/regenerate-button';
 import { RevealGate } from '@/components/reveal-gate';
-import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { isValidGitHubHandle } from '@/lib/github-handle';
@@ -128,14 +127,6 @@ function GeneratedProfile({ handle }: { handle: string }) {
             >
               <EvolutionStrip handle={handle} />
             </InlineErrorBoundary>
-          </Suspense>
-        </Crossfade>
-      </section>
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
-        <Crossfade>
-          <Suspense fallback={<RecentRevealedSkeleton />}>
-            <RecentRevealed excludeHandle={handle} />
           </Suspense>
         </Crossfade>
       </section>
