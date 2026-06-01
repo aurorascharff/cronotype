@@ -8,7 +8,7 @@ Live at [cronotype.vercel.app](https://cronotype.vercel.app).
 
 Reads the last 90 days of public commits for a GitHub user and sorts them into one of eight rhythms (Vampire, Sunrise Sniper, Nine-to-Fiver, Lunch Bandit, Weekend Warrior, Insomniac Maintainer, Drifter, Grass Toucher). Then draws a multicolor line chart of how the archetype shifted year over year.
 
-Every profile has a dynamic Open Graph image, a "Recently diagnosed" feed, and a [types page](https://cronotype.vercel.app/types) explaining each rhythm and the exact rule that triggers it.
+Every profile has a dynamic Open Graph image, a leaderboard of well-known developers ranked by GitHub followers, and a [types page](https://cronotype.vercel.app/types) explaining each rhythm and the exact rule that triggers it.
 
 ## Stack
 

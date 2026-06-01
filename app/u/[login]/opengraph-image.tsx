@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { ARCHETYPES } from '@/lib/archetypes';
+import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 
 export const alt = 'Cronotype profile';
 export const contentType = 'image/png';
@@ -219,7 +220,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
       </div>
 
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12 }}>
-        <div style={{ color: '#8b8d96', display: 'flex', fontSize: 28 }}>@{profile.login}</div>
+        <div style={{ alignItems: 'baseline', color: '#8b8d96', display: 'flex', gap: 16 }}>
+          <span style={{ fontSize: 28 }}>@{profile.login}</span>
+          <span style={{ fontSize: 20 }}>{formatFollowers(profile.followers)}</span>
+        </div>
         <div
           style={{
             backgroundClip: 'text',
@@ -348,16 +352,4 @@ function fallback(fonts?: Awaited<ReturnType<typeof loadGeist>>) {
     </div>,
     { ...size, fonts },
   );
-}
-
-function formatHour(h: number) {
-  if (h === 0) return '12am';
-  if (h === 12) return '12pm';
-  if (h < 12) return `${h}am`;
-  return `${h - 12}pm`;
-}
-
-function formatCount(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return String(n);
 }

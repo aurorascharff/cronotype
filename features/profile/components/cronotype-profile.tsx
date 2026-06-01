@@ -66,7 +66,7 @@ function EmptyProfile({ login }: { login: string }) {
 export function CronotypeProfileSkeleton() {
   return (
     <div
-      className="dark:bg-ink-2 w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] sm:[aspect-ratio:1200/630] dark:border-white/10"
+      className="dark:bg-ink-2 [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10"
       aria-hidden
     >
       <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">

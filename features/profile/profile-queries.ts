@@ -201,11 +201,9 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-export const getStatsFor = cache(
-  async (login: string, window: Window): Promise<ReturnType<typeof buildStats>> => {
-    return getStatsForCached(login.toLowerCase(), window);
-  },
-);
+export const getStatsFor = cache(async (login: string, window: Window): Promise<ReturnType<typeof buildStats>> => {
+  return getStatsForCached(login.toLowerCase(), window);
+});
 
 async function getStatsForCached(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
   'use cache';

@@ -58,111 +58,111 @@ export async function EvolutionStrip({ login }: Props) {
       </header>
       <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
         <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
-        {eras
-          .filter(e => e.label)
-          .map((e, i) => (
-            <li key={`legend-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="h-2 w-2 rounded-full" style={{ background: e.color }} />
-              <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
-                {e.label}
-              </span>
-              <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
-            </li>
-          ))}
-        {hasUnknown && (
-          <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
-            <span
-              className="inline-block h-px w-4 align-middle"
-              style={{
-                backgroundImage: 'repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 8px)',
-              }}
-            />
-            <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
-          </li>
-        )}
-      </ul>
-
-      <div className="relative">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          className="h-32 w-full sm:h-40"
-          role="img"
-          aria-label={`Archetype evolution from ${months[0].month.slice(0, 4)} to ${months[months.length - 1].month.slice(0, 4)}`}
-        >
-          <defs>
-            {eras.map((e, i) => (
-              <linearGradient key={`${fillId}-${i}`} id={`${fillId}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={e.color} stopOpacity="0.28" />
-                <stop offset="100%" stopColor={e.color} stopOpacity="0" />
-              </linearGradient>
+          {eras
+            .filter(e => e.label)
+            .map((e, i) => (
+              <li key={`legend-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="h-2 w-2 rounded-full" style={{ background: e.color }} />
+                <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
+                  {e.label}
+                </span>
+                <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
+              </li>
             ))}
+          {hasUnknown && (
+            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+              <span
+                className="inline-block h-px w-4 align-middle"
+                style={{
+                  backgroundImage: 'repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 8px)',
+                }}
+              />
+              <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
+            </li>
+          )}
+        </ul>
+
+        <div className="relative">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            className="h-32 w-full sm:h-40"
+            role="img"
+            aria-label={`Archetype evolution from ${months[0].month.slice(0, 4)} to ${months[months.length - 1].month.slice(0, 4)}`}
+          >
+            <defs>
+              {eras.map((e, i) => (
+                <linearGradient key={`${fillId}-${i}`} id={`${fillId}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={e.color} stopOpacity="0.28" />
+                  <stop offset="100%" stopColor={e.color} stopOpacity="0" />
+                </linearGradient>
+              ))}
+              {eras.map((e, i) => {
+                const x1 = (e.startPct / 100) * W;
+                const x2 = (e.endPct / 100) * W;
+                return (
+                  <clipPath key={`${fillId}-clip-${i}`} id={`${fillId}-clip-${i}`}>
+                    <rect x={x1} y={0} width={Math.max(0.5, x2 - x1)} height={H} />
+                  </clipPath>
+                );
+              })}
+            </defs>
+
+            {eras.map((e, i) =>
+              e.unknown ? null : (
+                <path
+                  key={`era-fill-${i}`}
+                  d={areaPath}
+                  fill={`url(#${fillId}-${i})`}
+                  clipPath={`url(#${fillId}-clip-${i})`}
+                />
+              ),
+            )}
+
             {eras.map((e, i) => {
-              const x1 = (e.startPct / 100) * W;
-              const x2 = (e.endPct / 100) * W;
+              if (i === 0) return null;
+              const x = (e.startPct / 100) * W;
               return (
-                <clipPath key={`${fillId}-clip-${i}`} id={`${fillId}-clip-${i}`}>
-                  <rect x={x1} y={0} width={Math.max(0.5, x2 - x1)} height={H} />
-                </clipPath>
+                <line
+                  key={`era-divider-${i}`}
+                  x1={x}
+                  y1={PAD_TOP}
+                  x2={x}
+                  y2={H - PAD_BOT}
+                  stroke={e.color}
+                  strokeWidth="1"
+                  strokeDasharray="2 3"
+                  opacity="0.35"
+                  vectorEffect="non-scaling-stroke"
+                />
               );
             })}
-          </defs>
 
-          {eras.map((e, i) =>
-            e.unknown ? null : (
+            {eras.map((e, i) => (
               <path
-                key={`era-fill-${i}`}
-                d={areaPath}
-                fill={`url(#${fillId}-${i})`}
-                clipPath={`url(#${fillId}-clip-${i})`}
-              />
-            ),
-          )}
-
-          {eras.map((e, i) => {
-            if (i === 0) return null;
-            const x = (e.startPct / 100) * W;
-            return (
-              <line
-                key={`era-divider-${i}`}
-                x1={x}
-                y1={PAD_TOP}
-                x2={x}
-                y2={H - PAD_BOT}
+                key={`era-line-${i}`}
+                d={linePath}
+                fill="none"
                 stroke={e.color}
-                strokeWidth="1"
-                strokeDasharray="2 3"
-                opacity="0.35"
+                strokeWidth="2.5"
+                strokeDasharray={e.unknown ? '4 4' : undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={e.unknown ? 0.55 : 1}
+                clipPath={`url(#${fillId}-clip-${i})`}
                 vectorEffect="non-scaling-stroke"
               />
-            );
-          })}
+            ))}
+          </svg>
+        </div>
 
-          {eras.map((e, i) => (
-            <path
-              key={`era-line-${i}`}
-              d={linePath}
-              fill="none"
-              stroke={e.color}
-              strokeWidth="2.5"
-              strokeDasharray={e.unknown ? '4 4' : undefined}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={e.unknown ? 0.55 : 1}
-              clipPath={`url(#${fillId}-clip-${i})`}
-              vectorEffect="non-scaling-stroke"
-            />
+        <div className="text-muted dark:text-muted-dark relative mt-2 h-4 text-[10px] tabular-nums">
+          {yearMarkers.map(yr => (
+            <span key={yr.label} className="absolute -translate-x-1/2" style={{ left: `${(yr.x / W) * 100}%` }}>
+              {yr.label}
+            </span>
           ))}
-        </svg>
-      </div>
-
-      <div className="text-muted dark:text-muted-dark relative mt-2 h-4 text-[10px] tabular-nums">
-        {yearMarkers.map(yr => (
-          <span key={yr.label} className="absolute -translate-x-1/2" style={{ left: `${(yr.x / W) * 100}%` }}>
-            {yr.label}
-          </span>
-        ))}
-      </div>
+        </div>
       </div>
     </section>
   );

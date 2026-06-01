@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
+import { formatFollowers } from '@/lib/format';
 import type { LeaderboardEntry } from '@/features/leaderboard/leaderboard-queries';
 
 type Props = {
@@ -91,10 +92,4 @@ export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
       ))}
     </ul>
   );
-}
-
-function formatFollowers(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m followers`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k followers`;
-  return `${n} followers`;
 }

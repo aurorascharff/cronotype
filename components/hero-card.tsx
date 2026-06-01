@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HaloChart } from '@/components/halo-chart';
+import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
@@ -29,7 +30,19 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         </div>
 
         <div className="flex min-w-0 flex-col gap-3">
-          <div className="text-muted dark:text-muted-dark text-xs sm:text-sm">@{profile.login}</div>
+          <div className="text-muted dark:text-muted-dark flex flex-wrap items-baseline gap-x-2 text-xs sm:text-sm">
+            <a
+              href={`https://github.com/${profile.login}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="hover:text-ink dark:hover:text-paper transition-colors"
+            >
+              @{profile.login}
+            </a>
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tabular-nums sm:text-[11px]">
+              {formatFollowers(profile.followers)}
+            </span>
+          </div>
           <h1
             className="tracking-tightest text-5xl leading-[0.95] font-semibold sm:text-6xl"
             style={{
@@ -74,16 +87,4 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
       </dd>
     </div>
   );
-}
-
-function formatHour(h: number) {
-  if (h === 0) return '12am';
-  if (h === 12) return '12pm';
-  if (h < 12) return `${h}am`;
-  return `${h - 12}pm`;
-}
-
-function formatCount(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return String(n);
 }
