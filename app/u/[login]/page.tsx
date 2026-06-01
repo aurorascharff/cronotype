@@ -100,17 +100,10 @@ async function ProfileContent({ login }: { login: string }) {
     if (!revealed) return <RevealGate login={login} />;
   }
 
-  return <CachedGeneratedProfile login={login} />;
+  return <GeneratedProfile login={login} />;
 }
 
-async function CachedGeneratedProfile({ login }: { login: string }) {
-  'use cache';
-  cacheTag(`profile-page-${login}`);
-  cacheTag(`profile-${login}`);
-  cacheTag(`cronotype-${login}-90d`);
-  cacheTag(`history-${login}`);
-  cacheLife('cronotype');
-
+function GeneratedProfile({ login }: { login: string }) {
   return (
     <>
       <section className="space-y-4">
