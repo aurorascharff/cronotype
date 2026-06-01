@@ -64,9 +64,14 @@ export async function getRecentLogins(limit: number): Promise<string[]> {
     if (seen.has(lower)) continue;
     seen.add(lower);
     logins.push(lower);
-    if (logins.length >= limit) break;
   }
-  return logins;
+
+  const profiles = await Promise.all(
+    logins.map(async login => ({ login, profile: await getProfile(login) })),
+  );
+  profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
+
+  return profiles.map(p => p.login).slice(0, limit);
 }
 
 export async function getCardProfile(login: string): Promise<ProfileSummary | null> {
