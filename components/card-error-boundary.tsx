@@ -10,18 +10,19 @@ type Props = {
   variant: 'ring' | 'em-dash';
 };
 
-function CardErrorFallback({ login, variant }: Props, _info: ErrorInfo) {
+function CardErrorFallback({ login, variant }: Props, { unstable_retry: retry }: ErrorInfo) {
   const [isPending, startTransition] = useTransition();
 
-  function retry() {
+  function handleRetry() {
     startTransition(async () => {
       await refreshCardStats(login);
+      retry();
     });
   }
 
   if (variant === 'ring') {
     if (isPending) return <ClassifyingRing />;
-    return <ClassifyingRing failed onRetry={retry} />;
+    return <ClassifyingRing failed onRetry={handleRetry} />;
   }
 
   return (
@@ -30,7 +31,7 @@ function CardErrorFallback({ login, variant }: Props, _info: ErrorInfo) {
       onClick={e => {
         e.preventDefault();
         e.stopPropagation();
-        retry();
+        handleRetry();
       }}
       disabled={isPending}
       className="text-muted/60 dark:text-muted-dark/60 hover:text-ink dark:hover:text-paper truncate text-left text-xs transition-colors disabled:opacity-60"
