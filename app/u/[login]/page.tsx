@@ -1,11 +1,13 @@
 import { Suspense } from 'react';
 import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
+import { RevealGate } from '@/components/reveal-gate';
 import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
+import { hasBeenRevealed } from '@/lib/reveals';
 import type { Metadata } from 'next';
 
 export const unstable_prefetch = 'force-runtime';
@@ -62,6 +64,21 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
+    <Suspense fallback={<CronotypeProfileSkeleton />}>
+      {params.then(({ login }) => (
+        <ProfileContent login={login.toLowerCase()} />
+      ))}
+    </Suspense>
+  );
+}
+
+async function ProfileContent({ login }: { login: string }) {
+  if (login !== SHELL_LOGIN) {
+    const revealed = await hasBeenRevealed(login);
+    if (!revealed) return <RevealGate login={login} />;
+  }
+
+  return (
     <>
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
@@ -71,9 +88,7 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
               title="We couldn't reveal this developer."
               body="GitHub is rate-limited right now. Give it a minute and try again."
             >
-              {params.then(({ login }) => (
-                <CronotypeProfile login={login.toLowerCase()} />
-              ))}
+              <CronotypeProfile login={login} />
             </InlineErrorBoundary>
           </Suspense>
         </Crossfade>
@@ -85,9 +100,7 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
               title="We couldn't load this history right now."
               body="Your main reading is still visible. Try again to fetch the full timeline."
             >
-              {params.then(({ login }) => (
-                <EvolutionStrip login={login.toLowerCase()} />
-              ))}
+              <EvolutionStrip login={login} />
             </InlineErrorBoundary>
           </Suspense>
         </Crossfade>
@@ -96,9 +109,7 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
         <Crossfade>
           <Suspense fallback={<RecentRevealedSkeleton limit={16} />}>
-            {params.then(({ login }) => (
-              <RecentRevealed excludeLogin={login.toLowerCase()} limit={16} />
-            ))}
+            <RecentRevealed excludeLogin={login} limit={16} />
           </Suspense>
         </Crossfade>
       </section>

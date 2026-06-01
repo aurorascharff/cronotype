@@ -2,22 +2,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { HeroCard } from '@/components/hero-card';
-import { RevealGate } from '@/components/reveal-gate';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
-import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
-import { hasBeenRevealed } from '@/lib/reveals';
+import { GitHubError } from '@/features/profile/profile-queries';
 
 type Props = {
   login: string;
 };
 
 export async function CronotypeProfile({ login }: Props) {
-  if (login !== SHELL_LOGIN) {
-    const revealed = await hasBeenRevealed(login);
-    if (!revealed) return <RevealGate login={login} />;
-  }
-
   let result;
   try {
     result = await computeCronotype(login, '90d');
