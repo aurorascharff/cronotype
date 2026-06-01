@@ -161,12 +161,13 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
   return buildStats(commits);
 }
 
-// ── Per-year stats for the evolution strip ────────────────────────────────
+// ── Monthly history for the evolution strip ──────────────────────────────────────
 
-export async function getYearStats(login: string, year: number) {
+export type MonthBucket = { month: string; count: number };
+
+export async function getYearMonthly(login: string, year: number): Promise<MonthBucket[]> {
   'use cache';
-  cacheTag(`year-${login.toLowerCase()}-${year}`);
-  // Past years never change; current year still accumulating.
+  cacheTag(`monthly-${login.toLowerCase()}-${year}`);
   if (year === new Date().getUTCFullYear()) {
     cacheLife('hours');
   } else {
@@ -174,46 +175,62 @@ export async function getYearStats(login: string, year: number) {
   }
 
   if (MOCK) {
-    // Walk through 3 archetypes across the years so the strip shows evolution.
-    const arc = mockArc(login);
-    const idx = Math.abs(year - new Date().getUTCFullYear() + 7) % arc.length;
-    return syntheticStatsFor(arc[idx], 150 + ((year + login.length) * 31) % 350);
+    // Deterministic synthetic monthly counts so the chart has texture.
+    const seed = login.length * 31 + year;
+    const months: MonthBucket[] = [];
+    for (let m = 0; m < 12; m++) {
+      const x = Math.sin(seed * 7 + m * 13) * 9999;
+      const wave = (Math.abs(x) % 1) * 0.7 + Math.sin(m / 2 + year) * 0.3 + 0.4;
+      months.push({ count: Math.max(0, Math.round(wave * 60)), month: `${year}-${String(m + 1).padStart(2, '0')}` });
+    }
+    return months;
   }
 
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
   const commits = await fetchCommitsInRange(login, from, to);
-  return buildStats(commits);
+
+  const counts = new Map<string, number>();
+  for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
+  for (const c of commits) {
+    const key = c.authoredAt.slice(0, 7); // YYYY-MM
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .map(([month, count]) => ({ count, month }))
+    .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 /**
- * Compose per-year stats into the evolution strip. NOT marked `'use cache'`:
- * the inner calls (`getProfile`, `getYearStats`) are each cached, and wrapping
- * the loop in another cache layer trips Next.js's "stuck on shared state"
- * detection because we're composing cached calls + iterating.
+ * Concatenate monthly buckets for every year of the user's account. NOT
+ * marked `'use cache'` — the inner `getYearMonthly` calls are each cached,
+ * wrapping the loop trips the "stuck on shared state" runtime error.
  */
-export async function getEvolution(login: string) {
+export async function getMonthlyHistory(login: string): Promise<MonthBucket[]> {
   const profile = await getProfile(login);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const thisYear = new Date().getUTCFullYear();
 
-  const startYear = Math.max(firstYear, thisYear - 7);
-  const years: number[] = [];
-  for (let y = startYear; y <= thisYear; y++) years.push(y);
-
-  // Sequence the year fetches. Search Commits is 30 req/min — parallel fan-out
-  // trips the secondary rate limit. If a fetch fails, return what we have.
-  const out: Array<{ year: number; stats: ReturnType<typeof buildStats> }> = [];
-  for (const year of years) {
+  const out: MonthBucket[] = [];
+  for (let year = firstYear; year <= thisYear; year++) {
     try {
-      const stats = await getYearStats(login, year);
-      out.push({ stats, year });
+      const months = await getYearMonthly(login, year);
+      out.push(...months);
     } catch (err) {
       if (err instanceof GitHubError && (err.status === 403 || err.status === 429)) break;
       throw err;
     }
   }
-  return out;
+
+  // Trim leading months with zero commits before the user's first commit.
+  let start = 0;
+  while (start < out.length && out[start].count === 0) start++;
+  // Also trim trailing zero months that haven't happened yet in current year.
+  let end = out.length;
+  while (end > start && out[end - 1].count === 0 && out[end - 1].month > `${thisYear}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`) {
+    end--;
+  }
+  return out.slice(start, end);
 }
 
 // ── Mock helpers (only used when MOCK_PROFILE=1) ──────────────────────────
@@ -237,14 +254,6 @@ function mockArchetypeFor(login: string): ArchetypeId {
   let h = 0;
   for (const c of login.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return ARCHETYPE_IDS[h % ARCHETYPE_IDS.length];
-}
-
-/** A small narrative arc of archetypes the user has "moved through" over the years. */
-function mockArc(login: string): ArchetypeId[] {
-  const current = mockArchetypeFor(login);
-  const earlier = mockArchetypeFor(login + '-past');
-  const middle = mockArchetypeFor(login + '-mid');
-  return [earlier, earlier, middle, middle, current, current, current, current];
 }
 
 function titleCase(s: string) {

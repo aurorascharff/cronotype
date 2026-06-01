@@ -1,6 +1,6 @@
 # Cronotype
 
-What kind of developer are you? Type a GitHub handle, get a verdict.
+What type of developer are you? Type a GitHub handle, get your commit-time archetype.
 
 ```bash
 pnpm install

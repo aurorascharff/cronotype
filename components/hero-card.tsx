@@ -24,6 +24,11 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         viewTransitionName: 'hero-card',
       }}
     >
+      {/* Window badge so it's obvious the diagnosis is based on recent activity. */}
+      <div className="text-muted dark:text-muted-dark absolute top-4 right-4 z-10 rounded-md border border-black/10 bg-white/80 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] sm:top-6 sm:right-6">
+        Last 90 days
+      </div>
+
       <div className="grid h-full grid-cols-[auto_1fr] items-center gap-6 p-6 sm:gap-10 sm:p-10">
         {/* Halo */}
         <div className="flex items-center justify-center">

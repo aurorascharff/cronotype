@@ -150,6 +150,26 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         >
           cronotype
         </div>
+
+        {/* Window badge */}
+        <div
+          style={{
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: 6,
+            color: '#8b8d96',
+            display: 'flex',
+            fontSize: 14,
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            padding: '6px 12px',
+            position: 'absolute',
+            right: 64,
+            textTransform: 'uppercase',
+            top: 40,
+          }}
+        >
+          Last 90 days
+        </div>
       </div>
     ),
     size,
