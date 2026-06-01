@@ -89,12 +89,37 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         aria-label="Reveal this developer"
         className={
           large
-            ? 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-60'
-            : 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-60'
+            ? 'bg-brand text-on-brand group/btn ring-brand/20 hover:ring-brand/40 inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:opacity-60'
+            : 'bg-brand text-on-brand group/btn ring-brand/20 hover:ring-brand/40 inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:opacity-60'
         }
       >
         <span>Reveal</span>
+        {pending ? <Spinner /> : <Arrow />}
       </button>
     </form>
+  );
+}
+
+function Arrow() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden
+      className="transition-transform duration-200 group-hover/btn:translate-x-0.5"
+    >
+      <path d="M2.5 6h7M6 2.5L9.5 6 6 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden className="animate-spin">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" />
+      <path d="M10.5 6a4.5 4.5 0 0 0-4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }
