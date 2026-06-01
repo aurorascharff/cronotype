@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { ProfileErrorCard } from '@/components/profile-error-card';
 import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
@@ -7,8 +8,11 @@ import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
 
+export const unstable_prefetch = 'force-runtime';
+
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
-  const { login } = await params;
+  const { login: rawLogin } = await params;
+  const login = rawLogin.toLowerCase();
   try {
     const { archetype, percentile, profile } = await computeCronotype(login, '90d');
     const title = `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
@@ -44,21 +48,35 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
 
       <Suspense fallback={<CronotypeProfileSkeleton />}>
         {params.then(({ login }) => (
-          <CronotypeProfile login={login} />
+          <CronotypeProfile login={login.toLowerCase()} />
         ))}
       </Suspense>
 
       <Suspense fallback={<EvolutionStripSkeleton />}>
         {params.then(({ login }) => (
-          <EvolutionStrip login={login} />
+          <SafeEvolutionStrip login={login.toLowerCase()} />
         ))}
       </Suspense>
 
       <Suspense fallback={<RecentDiagnosedSkeleton limit={8} />}>
         {params.then(({ login }) => (
-          <RecentDiagnosed excludeLogin={login} limit={8} />
+          <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={8} />
         ))}
       </Suspense>
     </div>
   );
+}
+
+async function SafeEvolutionStrip({ login }: { login: string }) {
+  try {
+    return <EvolutionStrip login={login} />;
+  } catch {
+    return (
+      <ProfileErrorCard
+        title="We couldn't load this history right now."
+        body="Your main diagnosis is still visible. Try reloading in a moment if you want the full timeline."
+        showHomeLink={false}
+      />
+    );
+  }
 }

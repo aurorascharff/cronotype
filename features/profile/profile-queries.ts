@@ -50,7 +50,11 @@ async function gh(url: string, init: RequestInit = {}): Promise<Response> {
 // ── Profile ────────────────────────────────────────────────────────────────
 
 export async function getProfile(login: string): Promise<ProfileSummary> {
-  'use cache';
+  return getProfileCached(login.toLowerCase());
+}
+
+async function getProfileCached(login: string): Promise<ProfileSummary> {
+  'use cache: remote';
   cacheTag(`profile-${login.toLowerCase()}`);
   cacheLife('hours');
 
@@ -145,7 +149,11 @@ function dedupe(commits: Commit[]): Commit[] {
 // ── 90-day "current" stats ────────────────────────────────────────────────
 
 export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
-  'use cache';
+  return getStatsForCached(login.toLowerCase(), window);
+}
+
+async function getStatsForCached(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
+  'use cache: remote';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 
@@ -180,7 +188,11 @@ type YearMonthly = {
 };
 
 export async function getYearMonthly(login: string, year: number): Promise<YearMonthly> {
-  'use cache';
+  return getYearMonthlyCached(login.toLowerCase(), year);
+}
+
+async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly> {
+  'use cache: remote';
   cacheTag(`monthly-${login.toLowerCase()}-${year}`);
   if (year === new Date().getUTCFullYear()) {
     cacheLife('hours');

@@ -37,6 +37,7 @@ export async function EvolutionStrip({ login }: Props) {
   const total = months.reduce((a, b) => a + b.count, 0);
   const yearMarkers = computeYearMarkers(months);
   const journey = buildArchetypeJourney(yearlyArchetypes, archetype.id);
+  const floaters = buildFloaters(smoothed, max, usableH);
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
@@ -97,6 +98,35 @@ export async function EvolutionStrip({ login }: Props) {
             strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
           />
+
+          {/* Ambient floating orbs that ride the curve. */}
+          {floaters.map((f, i) => (
+            <g key={`floater-${i}`}>
+              <circle
+                cx={f.x}
+                cy={f.y}
+                r={f.r}
+                fill={archetype.theme.accent2}
+                opacity={f.opacity}
+                vectorEffect="non-scaling-stroke"
+              >
+                <animate
+                  attributeName="cy"
+                  values={`${f.y};${f.y - f.drift};${f.y};${f.y + f.drift};${f.y}`}
+                  dur={`${f.duration}s`}
+                  begin={`${f.delay}s`}
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="opacity"
+                  values={`${f.opacity};${Math.min(0.65, f.opacity + 0.2)};${f.opacity}`}
+                  dur={`${Math.max(3.8, f.duration - 1.2)}s`}
+                  begin={`${f.delay / 2}s`}
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </g>
+          ))}
 
           {/* Peak marker — a single accent dot at the user's busiest month. */}
           {peak && (
@@ -273,4 +303,23 @@ function buildArchetypeJourney(
   }
 
   return collapsed.slice(Math.max(0, collapsed.length - 6));
+}
+
+function buildFloaters(smoothed: number[], max: number, usableH: number) {
+  const anchors = [0.08, 0.19, 0.33, 0.47, 0.62, 0.79, 0.91];
+  return anchors.map((a, i) => {
+    const idx = Math.min(smoothed.length - 1, Math.max(0, Math.round(a * (smoothed.length - 1))));
+    const x = (idx / (smoothed.length - 1)) * W;
+    const y = PAD_TOP + usableH - (smoothed[idx] / max) * usableH;
+
+    return {
+      delay: i * 0.45,
+      drift: i % 2 === 0 ? 8 : 6,
+      duration: 4.4 + (i % 3) * 1.1,
+      opacity: 0.25 + (i % 3) * 0.08,
+      r: i % 3 === 0 ? 4.4 : i % 2 === 0 ? 3.6 : 3,
+      x,
+      y,
+    };
+  });
 }

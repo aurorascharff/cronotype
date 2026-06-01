@@ -10,7 +10,11 @@ import type { CronotypeResult, Window } from '@/types/cronotype';
  * `recordCronotype` in the service).
  */
 export async function computeCronotype(login: string, window: Window = '90d'): Promise<CronotypeResult> {
-  'use cache';
+  return computeCronotypeCached(login.toLowerCase(), window);
+}
+
+async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
+  'use cache: remote';
   cacheTag(`cronotype-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 

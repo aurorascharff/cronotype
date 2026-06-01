@@ -11,7 +11,7 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const login = value.trim().replace(/^@/, '').replace(/\/+$/, '');
+    const login = value.trim().replace(/^@/, '').replace(/\/+$/, '').toLowerCase();
     if (!login) {
       toast.error('Type a GitHub username.');
       return;
