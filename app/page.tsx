@@ -16,8 +16,8 @@ export default function HomePage() {
           <UsernameForm />
         </div>
       </section>
-      <Suspense fallback={<RecentDiagnosedSkeleton limit={20} />}>
-        <RecentDiagnosed limit={20} />
+      <Suspense fallback={<RecentDiagnosedSkeleton limit={16} />}>
+        <RecentDiagnosed limit={16} />
       </Suspense>
     </div>
   );
