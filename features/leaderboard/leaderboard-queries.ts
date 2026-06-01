@@ -2,7 +2,7 @@ import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify } from '@/lib/archetypes';
-import { listReveals } from '@/lib/reveals';
+import { listFeaturedReveals } from '@/lib/reveals';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 export type LeaderboardEntry = {
@@ -11,52 +11,13 @@ export type LeaderboardEntry = {
   stats: HourStats;
 };
 
-export const FEATURED: string[] = [
-  'gaearon',
-  'sebmarkbage',
-  'acdlite',
-  'sophiebits',
-  'rickhanlonii',
-  'rauchg',
-  'leerob',
-  'shuding',
-  'timneutkens',
-  'styfle',
-  'sindresorhus',
-  'tj',
-  'addyosmani',
-  'paulirish',
-  'mjackson',
-  'ryanflorence',
-  'kentcdodds',
-  'wesbos',
-  'sdras',
-  'tannerlinsley',
-  'tkdodo',
-  'cassidoo',
-  'jaredpalmer',
-  'mxstbr',
-  'kettanaito',
-  'evanw',
-  'developit',
-  'antfu',
-  'yyx990803',
-  'rich-harris',
-  'torvalds',
-  'mitchellh',
-  'kelseyhightower',
-  'shadcn',
-  'pacocoursey',
-  'steveruizok',
-];
-
 export async function getRecentLogins(limit: number): Promise<string[]> {
   'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
   cacheLife('minutes');
 
-  const revealed = await listReveals(limit);
+  const revealed = await listFeaturedReveals(limit);
   if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(

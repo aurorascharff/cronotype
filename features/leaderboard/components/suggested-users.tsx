@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FEATURED } from '@/features/leaderboard/leaderboard-queries';
+import { FEATURED } from '@/features/leaderboard/featured';
 
 export function SuggestedUsers() {
   return (

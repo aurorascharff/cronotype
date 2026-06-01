@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidateTag, updateTag } from 'next/cache';
-import { recordReveal } from '@/lib/reveals';
+import { isFeaturedLogin } from '@/features/leaderboard/featured';
+import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
 function invalidateAllForLogin(login: string) {
   updateTag(`profile-${login}`);
@@ -16,7 +17,10 @@ function invalidateAllForLogin(login: string) {
 export async function revealUser(login: string) {
   const lower = login.toLowerCase();
   await recordReveal(lower);
-  revalidateTag('reveals', 'max');
+  if (isFeaturedLogin(lower)) {
+    await recordFeaturedReveal(lower);
+    revalidateTag('reveals', 'max');
+  }
 }
 
 export async function regenerateUser(login: string) {

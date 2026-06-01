@@ -14,7 +14,7 @@ export function RevealGate({ login }: Props) {
     <div className="dark:bg-ink-2 flex flex-col items-center gap-4 rounded-xl border border-black/10 bg-white p-10 text-center dark:border-white/10">
       <h2 className="text-2xl font-semibold tracking-tight">Ready to reveal @{login}?</h2>
       <p className="text-muted dark:text-muted-dark max-w-md text-sm">
-        Hit the button to classify their commit rhythm and add them to the board.
+        Hit the button to classify their commit rhythm.
       </p>
       <button
         type="button"
