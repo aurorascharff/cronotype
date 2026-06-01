@@ -83,9 +83,9 @@ export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
             <RadialChipSkeleton size={112} />
           </div>
           <div className="flex w-full flex-col items-center gap-1.5">
-            <div className="h-3 w-24 rounded-full border border-current" />
-            <div className="h-2 w-16 rounded-full border border-current" />
-            <div className="h-2.5 w-20 rounded-full border border-current" />
+            <div className="h-3 w-24 rounded-full border border-current bg-current/[0.08]" />
+            <div className="h-2 w-16 rounded-full border border-current bg-current/[0.08]" />
+            <div className="h-2.5 w-20 rounded-full border border-current bg-current/[0.08]" />
           </div>
         </li>
       ))}

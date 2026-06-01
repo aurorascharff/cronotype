@@ -69,14 +69,14 @@ export function CronotypeProfileSkeleton() {
           <HaloSkeleton />
         </div>
         <div className="flex min-w-0 flex-col gap-3">
-          <div className="h-3 w-20 rounded-full border border-current" />
-          <div className="h-10 w-2/3 rounded-md border border-current sm:h-14" />
-          <div className="h-3 w-3/4 rounded-full border border-current" />
+          <div className="h-3 w-20 rounded-full border border-current bg-current/[0.08]" />
+          <div className="h-10 w-2/3 rounded-md border border-current bg-current/[0.08] sm:h-14" />
+          <div className="h-3 w-3/4 rounded-full border border-current bg-current/[0.08]" />
           <div className="mt-2 flex gap-x-6">
             {[0, 1, 2, 3].map(i => (
               <div key={i} className="flex flex-col gap-1.5">
-                <div className="h-2 w-10 rounded-full border border-current" />
-                <div className="h-5 w-12 rounded-md border border-current sm:h-6" />
+                <div className="h-2 w-10 rounded-full border border-current bg-current/[0.08]" />
+                <div className="h-5 w-12 rounded-md border border-current bg-current/[0.08] sm:h-6" />
               </div>
             ))}
           </div>
