@@ -59,7 +59,15 @@ export async function getRecentLogins(limit: number): Promise<string[]> {
   const revealed = await listReveals(limit);
   if (revealed.length === 0) return [];
 
-  const profiles = await Promise.all(revealed.map(async login => ({ login, profile: await getProfile(login) })));
+  const profiles = await Promise.all(
+    revealed.map(async login => {
+      try {
+        return { login, profile: await getProfile(login) };
+      } catch {
+        return { login, profile: null };
+      }
+    }),
+  );
   profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
 
   return profiles.map(p => p.login).slice(0, limit);
@@ -74,7 +82,10 @@ export async function getCardProfile(login: string): Promise<ProfileSummary | nu
 }
 
 export async function getCardClassification(login: string): Promise<{ archetype: Archetype; stats: HourStats } | null> {
-  const stats = await getStatsFor(login, '90d');
-  if (!stats) return null;
-  return { archetype: classify(stats), stats };
+  try {
+    const stats = await getStatsFor(login, '90d');
+    return { archetype: classify(stats), stats };
+  } catch {
+    return null;
+  }
 }

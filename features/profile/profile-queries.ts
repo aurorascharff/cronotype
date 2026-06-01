@@ -138,7 +138,7 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
   return weeks.flatMap(w => w.contributionDays);
 }
 
-export async function getProfile(login: string): Promise<ProfileSummary | null> {
+export async function getProfile(login: string): Promise<ProfileSummary> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
   cacheLife('cronotype');
@@ -147,25 +147,19 @@ export async function getProfile(login: string): Promise<ProfileSummary | null> 
     return mockProfile(login);
   }
 
-  try {
-    const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
-    if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
-    if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
-    const j = await res.json();
-    return {
-      avatarUrl: j.avatar_url,
-      bio: j.bio ?? null,
-      createdAt: j.created_at,
-      followers: j.followers ?? 0,
-      login: j.login,
-      name: j.name ?? null,
-      publicRepos: j.public_repos ?? 0,
-    };
-  } catch (err) {
-    if (err instanceof GitHubError && err.status === 404) throw err;
-    cacheLife('hours');
-    return null;
-  }
+  const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
+  if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
+  if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
+  const j = await res.json();
+  return {
+    avatarUrl: j.avatar_url,
+    bio: j.bio ?? null,
+    createdAt: j.created_at,
+    followers: j.followers ?? 0,
+    login: j.login,
+    name: j.name ?? null,
+    publicRepos: j.public_repos ?? 0,
+  };
 }
 
 type SearchCommitItem = {
@@ -243,7 +237,7 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats> | null> {
+export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
   'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('cronotype');
@@ -258,19 +252,14 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
   const dateKey = to.toISOString().slice(0, 10);
   cacheTag(`stats-${login.toLowerCase()}-${window}-${dateKey}`);
   const from = new Date(to.getTime() - days * 24 * 3600_000);
-  try {
-    const commits = await fetchCommitsInRange(
-      login,
-      from.toISOString().slice(0, 10),
-      to.toISOString().slice(0, 10),
-      0,
-      1,
-    );
-    return buildStats(commits);
-  } catch {
-    cacheLife('hours');
-    return null;
-  }
+  const commits = await fetchCommitsInRange(
+    login,
+    from.toISOString().slice(0, 10),
+    to.toISOString().slice(0, 10),
+    0,
+    1,
+  );
+  return buildStats(commits);
 }
 
 export type MonthBucket = { month: string; count: number };
@@ -383,8 +372,10 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     };
   }
 
-  const profile = await getProfile(lower);
-  if (!profile) {
+  let profile;
+  try {
+    profile = await getProfile(lower);
+  } catch {
     return { failedArchetypeYears: [], failedMonthlyYears: [], months: [], partial: true, yearlyArchetypes: [] };
   }
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
