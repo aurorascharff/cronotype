@@ -169,7 +169,7 @@ When a client component needs server data but should own its loading state (a si
 1. Match the real component's layout: flex direction, gaps, padding, breakpoints
 2. Include all structural elements: avatar circles, action button placeholders, image squares
 3. Responsive visibility must match (`hidden sm:block` in real = same in skeleton)
-4. Show 2–5 placeholders for variable-length lists, not the real count
+4. Show 2-5 placeholders for variable-length lists, not the real count
 5. Don't include skeletons for inner Suspense content, those have their own boundaries
 
 If the entire component output can be cached, put `'use cache'` on the component directly instead of on the query:
@@ -336,7 +336,7 @@ Boundary placement:
 2. Section headings stay outside Suspense (in the static shell)
 3. Variable-height sections: group everything below them in the same Suspense
 4. Fixed-height sections: own boundary is safe
-5. Variable-length lists: show 2–5 skeleton items, not the real count
+5. Variable-length lists: show 2-5 skeleton items, not the real count
 6. Inner Suspense content stays out of the outer skeleton
 
 ### Layout-level Suspense

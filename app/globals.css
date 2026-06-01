@@ -1,111 +1,111 @@
 @import 'tailwindcss';
 
 @theme {
-  /* True neutrals — no color cast. Light is clean white, dark is near-black slate. */
-  --color-paper: #fafafa;
-  --color-paper-2: #f4f4f5;
-  --color-ink: #08090b; /* deep neutral near-black */
-  --color-ink-2: #0f1013;
-  --color-ink-3: #17181c;
-  --color-border: #e7e7ea;
-  --color-border-dark: #1f2024;
-  --color-muted: #6b7280;
-  --color-muted-dark: #8b8d96;
+ /* True neutrals - no color cast. Light is clean white, dark is near-black slate. */
+ --color-paper: #fafafa;
+ --color-paper-2: #f4f4f5;
+ --color-ink: #08090b; /* deep neutral near-black */
+ --color-ink-2: #0f1013;
+ --color-ink-3: #17181c;
+ --color-border: #e7e7ea;
+ --color-border-dark: #1f2024;
+ --color-muted: #6b7280;
+ --color-muted-dark: #8b8d96;
 
-  /* The accent. Used sparingly — on the verdict word, halo chart, percentile. */
-  --color-brand: #06b6d4;
-  --color-brand-2: #22d3ee;
-  --color-on-brand: #08090b;
+ /* The accent. Used sparingly - on the verdict word, halo chart, percentile. */
+ --color-brand: #06b6d4;
+ --color-brand-2: #22d3ee;
+ --color-on-brand: #08090b;
 
-  --font-mono: var(--font-geist-mono);
-  --font-sans: var(--font-geist-sans);
+ --font-mono: var(--font-geist-mono);
+ --font-sans: var(--font-geist-sans);
 
-  --tracking-tightest: -0.04em;
-  --tracking-tight: -0.02em;
+ --tracking-tightest: -0.04em;
+ --tracking-tight: -0.02em;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
+ --radius-sm: 4px;
+ --radius-md: 8px;
+ --radius-lg: 10px;
+ --radius-xl: 14px;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
-  :root {
-    color-scheme: light;
-  }
-  .dark {
-    color-scheme: dark;
-  }
+ :root {
+  color-scheme: light;
+ }
+ .dark {
+  color-scheme: dark;
+ }
 
-  body {
-    @apply text-ink dark:text-paper font-sans antialiased;
-    background-color: var(--color-paper);
-  }
+ body {
+  @apply text-ink dark:text-paper font-sans antialiased;
+  background-color: var(--color-paper);
+ }
 
-  .dark body {
-    background-color: var(--color-ink);
-    background-image: radial-gradient(ellipse 70% 50% at 10% -5%, rgba(255, 255, 255, 0.04), transparent 60%);
-    background-attachment: fixed;
-  }
+ .dark body {
+  background-color: var(--color-ink);
+  background-image: radial-gradient(ellipse 70% 50% at 10% -5%, rgba(255, 255, 255, 0.04), transparent 60%);
+  background-attachment: fixed;
+ }
 
-  h1,
-  h2,
-  h3 {
-    @apply font-sans font-semibold tracking-tight;
-  }
+ h1,
+ h2,
+ h3 {
+  @apply font-sans font-semibold tracking-tight;
+ }
 
-  a {
-    color: inherit;
-    text-decoration: inherit;
-  }
+ a {
+  color: inherit;
+  text-decoration: inherit;
+ }
 
-  input {
-    @apply border-border dark:border-border-dark placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors outline-none focus:ring-2 focus:ring-current/20 dark:bg-white/5;
-  }
+ input {
+  @apply border-border dark:border-border-dark placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors outline-none focus:ring-2 focus:ring-current/20 dark:bg-white/5;
+ }
 }
 
 @keyframes skeleton-breathe {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+ 0%,
+ 100% {
+  background-position: 0% 50%;
+ }
+ 50% {
+  background-position: 100% 50%;
+ }
 }
 
 .skeleton {
-  background-color: color-mix(in oklab, var(--color-muted) 14%, transparent);
-  background-image: linear-gradient(
-    100deg,
-    transparent 30%,
-    color-mix(in oklab, var(--color-muted) 10%, transparent) 50%,
-    transparent 70%
-  );
-  background-size: 220% 100%;
-  background-position: 0% 50%;
-  animation: skeleton-breathe 2.4s ease-in-out infinite;
-  border-radius: var(--radius-md);
+ background-color: color-mix(in oklab, var(--color-muted) 14%, transparent);
+ background-image: linear-gradient(
+  100deg,
+  transparent 30%,
+  color-mix(in oklab, var(--color-muted) 10%, transparent) 50%,
+  transparent 70%
+ );
+ background-size: 220% 100%;
+ background-position: 0% 50%;
+ animation: skeleton-breathe 2.4s ease-in-out infinite;
+ border-radius: var(--radius-md);
 }
 
 .dark .skeleton {
-  background-color: color-mix(in oklab, var(--color-muted-dark) 12%, transparent);
-  background-image: linear-gradient(
-    100deg,
-    transparent 30%,
-    color-mix(in oklab, var(--color-muted-dark) 12%, transparent) 50%,
-    transparent 70%
-  );
+ background-color: color-mix(in oklab, var(--color-muted-dark) 12%, transparent);
+ background-image: linear-gradient(
+  100deg,
+  transparent 30%,
+  color-mix(in oklab, var(--color-muted-dark) 12%, transparent) 50%,
+  transparent 70%
+ );
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.28s;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+ animation-duration: 0.28s;
+ animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 ::view-transition-group(hero-card) {
-  animation-duration: 0.35s;
+ animation-duration: 0.35s;
 }

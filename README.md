@@ -1,6 +1,8 @@
 # Cronotype
 
-Type a GitHub handle. Get a commit-time archetype, a year-by-year timeline of how it changed, and a shareable profile card.
+**What type of developer are you?**
+
+Type a GitHub handle and get a commit-time archetype, a year-by-year timeline of how it changed, and a shareable profile card.
 
 Live at [cronotype.vercel.app](https://cronotype.vercel.app).
 

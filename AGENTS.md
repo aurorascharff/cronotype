@@ -23,13 +23,13 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 
 ## GitHub data sources
 
-- **Search Commits API** for the 90-day hourly distribution. 30 requests/minute limit — the dominant cost. Capped to 1 page (100 commits) per profile in [features/profile/profile-queries.ts](features/profile/profile-queries.ts) to keep budget reasonable.
+- **Search Commits API** for the 90-day hourly distribution. 30 requests/minute limit - the dominant cost. Capped to 1 page (100 commits) per profile in [features/profile/profile-queries.ts](features/profile/profile-queries.ts) to keep budget reasonable.
 - **GraphQL contributions calendar** for the multi-year history. 5000/hr pool. One call per year, fanned out serially in [features/profile/profile-queries.ts](features/profile/profile-queries.ts).
 - The leaderboard (`getFeaturedEntries`) iterates 18 featured logins serially and caches the aggregate for `cacheLife('hours')`. On a cold cache it consumes ~18 Search Commits requests; subsequent visitors are served from cache.
 
 ## Cache discipline
 
-- Don't catch errors inside `'use cache'` functions — `try/catch → return null` pins the failure for the whole cacheLife window. Let errors reject; handle them at the call site with `Promise.allSettled` or an outer try/catch.
+- Don't catch errors inside `'use cache'` functions - `try/catch → return null` pins the failure for the whole cacheLife window. Let errors reject; handle them at the call site with `Promise.allSettled` or an outer try/catch.
 - Don't return `[]` from a `'use cache'` function when every item failed; throw instead so the empty result isn't materialized. The outer caller can catch and render an empty state for one render.
 - The OG image (`opengraph-image.tsx`) calls `computeCronotype` so it shares the page's cache entry. Never duplicate classify/format logic in the OG route.
 - Format helpers (`formatHour`, `formatCount`, `formatFollowers`) live in [lib/format.ts](lib/format.ts) and are shared between the hero card, leaderboard, and OG.
@@ -37,12 +37,12 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 ## Prerender hygiene
 
 - `new Date()` outside a `connection()` gate fails the build with "Next.js encountered the unstable value". The leaderboard, profile, and evolution components all gate.
-- Don't use `generateStaticParams` on routes that fan out to GitHub — a single rate-limit during build bakes the fallback PNG permanently as a static asset.
+- Don't use `generateStaticParams` on routes that fan out to GitHub - a single rate-limit during build bakes the fallback PNG permanently as a static asset.
 
 ## View Transitions
 
 - Use the `<Crossfade>` wrapper in [components/crossfade.tsx](components/crossfade.tsx) for Suspense reveals that benefit from a soft fade (`<CronotypeProfile>`, `<EvolutionStrip>`).
-- Don't wrap small, frequently-revalidating components like `<RecentRevealed>` — the crossfade flashes during refreshes. Hard swap is fine there.
+- Don't wrap small, frequently-revalidating components like `<RecentRevealed>` - the crossfade flashes during refreshes. Hard swap is fine there.
 
 ## Error boundaries
 
