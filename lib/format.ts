@@ -6,7 +6,10 @@ export function formatHour(h: number) {
 }
 
 export function formatCount(n: number) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  if (n >= 1000) {
+    const thousands = n / 1000;
+    return `${Number.isInteger(thousands) ? thousands.toFixed(0) : thousands.toFixed(1)}k`;
+  }
   return String(n);
 }
 
