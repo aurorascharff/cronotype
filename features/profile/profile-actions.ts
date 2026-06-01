@@ -1,6 +1,6 @@
 'use server';
 
-import { updateTag } from 'next/cache';
+import { revalidateTag, updateTag } from 'next/cache';
 import { recordReveal } from '@/lib/reveals';
 
 function invalidateAllForLogin(login: string) {
@@ -16,8 +16,7 @@ function invalidateAllForLogin(login: string) {
 export async function revealUser(login: string) {
   const lower = login.toLowerCase();
   await recordReveal(lower);
-  updateTag('reveals');
-  invalidateAllForLogin(lower);
+  revalidateTag('reveals', 'max');
 }
 
 export async function regenerateUser(login: string) {
