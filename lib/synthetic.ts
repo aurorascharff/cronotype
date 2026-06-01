@@ -1,4 +1,3 @@
-import { ARCHETYPES, classify } from '@/lib/archetypes';
 import type { ArchetypeId } from '@/types/cronotype';
 
 /**
@@ -86,12 +85,3 @@ const HOUR_PROFILES: Record<ArchetypeId, number[]> = {
     0.05, 0.04, 0.04, 0.03, 0.03,
   ],
 };
-
-// Sanity check: classify against a synthetic profile should return the right archetype.
-export function verify() {
-  return (Object.keys(HOUR_PROFILES) as ArchetypeId[]).map(id => {
-    const stats = syntheticStatsFor(id, 400);
-    const got = classify(stats);
-    return { expected: ARCHETYPES[id].name, got: got.name, match: got.id === id || id === 'drifter' };
-  });
-}

@@ -8,13 +8,9 @@ export type LeaderboardEntry = {
   profile: ProfileSummary;
   archetype: Archetype;
   stats: HourStats;
-  /** Score for the bucket this entry is in. */
-  score: number;
   /** ISO timestamp this entry was last classified. */
   classifiedAt: string;
 };
-
-export type Bucket = 'nocturnal' | 'sunrise' | 'disciplined' | 'weekend' | 'recent' | 'popular';
 
 type Store = {
   entries: Map<string, LeaderboardEntry>;
@@ -50,10 +46,9 @@ function seed(s: Store) {
   ];
 
   for (const { login, name, id } of seeds) {
-    const stats = syntheticStatsFor(id, 200 + (login.length % 7) * 30);
     s.entries.set(login.toLowerCase(), {
       archetype: ARCHETYPES[id],
-      classifiedAt: new Date(Date.now() - (login.length * 3600_000) % (30 * 24 * 3600_000)).toISOString(),
+      classifiedAt: new Date(Date.now() - ((login.length * 3600_000) % (30 * 24 * 3600_000))).toISOString(),
       profile: {
         avatarUrl: `https://avatars.githubusercontent.com/${login}`,
         bio: null,
@@ -63,46 +58,14 @@ function seed(s: Store) {
         name,
         publicRepos: 30,
       },
-      score: scoreFor('recent', stats, id),
-      stats,
+      stats: syntheticStatsFor(id, 200 + (login.length % 7) * 30),
     });
-  }
-}
-
-function scoreFor(bucket: Bucket, stats: HourStats, id: ArchetypeId, followers = 0): number {
-  switch (bucket) {
-    case 'nocturnal':
-      return stats.pctNocturnal;
-    case 'sunrise':
-      return stats.pctSunrise;
-    case 'disciplined':
-      return stats.pctBusiness / Math.max(0.5, stats.hourlyVariance);
-    case 'weekend':
-      return stats.pctWeekend;
-    case 'popular':
-      return followers;
-    case 'recent':
-    default:
-      return id === 'touch-grass' ? 0 : stats.total;
   }
 }
 
 /** Mutates the module-scoped store. NEVER call this from inside a `'use cache'` function. */
 export function recordEntry(entry: LeaderboardEntry) {
   store().entries.set(entry.profile.login.toLowerCase(), entry);
-}
-
-export async function getLeaderboard(bucket: Bucket, limit = 10): Promise<LeaderboardEntry[]> {
-  'use cache';
-  cacheTag(`leaderboard-${bucket}`);
-  cacheLife('minutes');
-
-  const all = Array.from(store().entries.values());
-  const scored = all
-    .map(e => ({ ...e, score: scoreFor(bucket, e.stats, e.archetype.id, e.profile.followers) }))
-    .filter(e => (bucket === 'recent' || bucket === 'popular' ? true : e.score > 0));
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, limit);
 }
 
 export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {

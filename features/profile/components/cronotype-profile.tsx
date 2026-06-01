@@ -30,7 +30,6 @@ export async function CronotypeProfile({ login }: Props) {
     archetype,
     classifiedAt: new Date().toISOString(),
     profile,
-    score: 0,
     stats,
   });
 
@@ -47,7 +46,7 @@ export async function CronotypeProfile({ login }: Props) {
 
 function EmptyProfile({ login }: { login: string }) {
   return (
-    <div className="rounded-2xl border border-black/5 bg-white/60 p-12 text-center backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.03]">
+    <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-10 text-center dark:border-white/10">
       <h2 className="text-2xl font-semibold tracking-tight">@{login} hasn&apos;t pushed in the last 90 days.</h2>
       <Link
         href="/"

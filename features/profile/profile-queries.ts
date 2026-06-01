@@ -186,11 +186,13 @@ export async function getYearStats(login: string, year: number) {
   return buildStats(commits);
 }
 
+/**
+ * Compose per-year stats into the evolution strip. NOT marked `'use cache'`:
+ * the inner calls (`getProfile`, `getYearStats`) are each cached, and wrapping
+ * the loop in another cache layer trips Next.js's "stuck on shared state"
+ * detection because we're composing cached calls + iterating.
+ */
 export async function getEvolution(login: string) {
-  'use cache';
-  cacheTag(`evolution-${login.toLowerCase()}`);
-  cacheLife('hours');
-
   const profile = await getProfile(login);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const thisYear = new Date().getUTCFullYear();

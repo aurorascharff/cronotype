@@ -16,7 +16,7 @@ export default function ProfileErrorBoundary({
   }, [error]);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/60 p-10 text-center backdrop-blur-sm dark:border-white/5 dark:bg-white/[0.03]">
+    <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-10 text-center dark:border-white/10">
       <h2 className="text-2xl font-semibold tracking-tight">We couldn&apos;t diagnose this developer.</h2>
       <p className="text-muted dark:text-muted-dark mx-auto mt-3 max-w-md">
         Their commit history might be private, or GitHub is being moody. Give it a minute and try again, or pick someone else.
