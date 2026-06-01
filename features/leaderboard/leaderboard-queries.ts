@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { computeCronotype } from '@/features/profile/profile-service';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
@@ -41,7 +42,7 @@ export const FEATURED: string[] = [
   'sarah-edo',
 ];
 
-export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {
+export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardEntry[]> => {
   const entries = await Promise.all(
     FEATURED.map(async login => {
       try {
@@ -57,4 +58,4 @@ export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]
     .filter((e): e is LeaderboardEntry => e !== null)
     .sort((a, b) => b.profile.followers - a.profile.followers)
     .slice(0, limit);
-}
+});

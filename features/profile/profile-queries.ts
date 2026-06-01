@@ -1,5 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
+import { cache } from 'react';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { classify } from '@/lib/archetypes';
 import { buildStats, type Commit } from '@/lib/stats';
@@ -99,9 +100,9 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
   return weeks.flatMap(w => w.contributionDays);
 }
 
-export async function getProfile(login: string): Promise<ProfileSummary> {
+export const getProfile = cache(async (login: string): Promise<ProfileSummary> => {
   return getProfileCached(login.toLowerCase());
-}
+});
 
 async function getProfileCached(login: string): Promise<ProfileSummary> {
   'use cache';
@@ -200,9 +201,11 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
-  return getStatsForCached(login.toLowerCase(), window);
-}
+export const getStatsFor = cache(
+  async (login: string, window: Window): Promise<ReturnType<typeof buildStats>> => {
+    return getStatsForCached(login.toLowerCase(), window);
+  },
+);
 
 async function getStatsForCached(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
   'use cache';
@@ -233,9 +236,9 @@ type YearMonthly = {
   year: number;
 };
 
-export async function getYearMonthly(login: string, year: number): Promise<YearMonthly> {
+export const getYearMonthly = cache(async (login: string, year: number): Promise<YearMonthly> => {
   return getYearMonthlyCached(login.toLowerCase(), year);
-}
+});
 
 async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly> {
   'use cache';
@@ -310,7 +313,11 @@ async function getYearArchetypeCached(login: string, year: number): Promise<Arch
   return classify(buildStats(sampleCommits)).id;
 }
 
-export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
+export const getMonthlyHistory = cache(
+  async (login: string): Promise<MonthlyHistory> => getMonthlyHistoryImpl(login.toLowerCase()),
+);
+
+async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
   const profile = await getProfile(login);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const thisYear = new Date().getUTCFullYear();
