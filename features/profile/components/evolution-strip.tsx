@@ -44,11 +44,9 @@ export async function EvolutionStrip({ login }: Props) {
   const fillId = `evolution-fill-${archetype.id}`;
 
   return (
-    <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
-          How you got here
-        </h2>
+    <section className="space-y-4">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         {partial && (
           <div className="flex items-center gap-2">
             <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
@@ -57,9 +55,9 @@ export async function EvolutionStrip({ login }: Props) {
             <RefreshPartial />
           </div>
         )}
-      </div>
-
-      <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+      </header>
+      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
+        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
         {eras
           .filter(e => e.label)
           .map((e, i) => (
@@ -165,28 +163,30 @@ export async function EvolutionStrip({ login }: Props) {
           </span>
         ))}
       </div>
+      </div>
     </section>
   );
 }
 
 export function EvolutionStripSkeleton() {
   return (
-    <section
-      className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10"
-      aria-hidden
-    >
-      <div className="skeleton mb-5 h-2.5 w-32" />
-      <div className="mb-4 flex gap-3">
-        <div className="skeleton h-4 w-24" />
-        <div className="skeleton h-4 w-20" />
-        <div className="skeleton h-4 w-28" />
-      </div>
-      <div className="skeleton h-32 sm:h-40" />
-      <div className="mt-2 flex justify-between">
-        <div className="skeleton h-2.5 w-8" />
-        <div className="skeleton h-2.5 w-8" />
-        <div className="skeleton h-2.5 w-8" />
-        <div className="skeleton h-2.5 w-8" />
+    <section className="space-y-4" aria-hidden>
+      <header>
+        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
+      </header>
+      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
+        <div className="mb-4 flex gap-3">
+          <div className="skeleton h-4 w-24" />
+          <div className="skeleton h-4 w-20" />
+          <div className="skeleton h-4 w-28" />
+        </div>
+        <div className="skeleton h-32 sm:h-40" />
+        <div className="mt-2 flex justify-between">
+          <div className="skeleton h-2.5 w-8" />
+          <div className="skeleton h-2.5 w-8" />
+          <div className="skeleton h-2.5 w-8" />
+          <div className="skeleton h-2.5 w-8" />
+        </div>
       </div>
     </section>
   );

@@ -30,7 +30,10 @@ export async function CronotypeProfile({ login }: Props) {
   const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;
 
   return (
-    <div className="space-y-2">
+    <section className="space-y-4">
+      <header>
+        <h2 className="text-lg font-semibold tracking-tight">The diagnosis</h2>
+      </header>
       <div className="relative">
         <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
         <div className="pointer-events-none absolute inset-x-4 bottom-3 z-20 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 sm:inset-x-6 sm:bottom-5">
@@ -42,7 +45,7 @@ export async function CronotypeProfile({ login }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 

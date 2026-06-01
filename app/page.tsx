@@ -16,9 +16,12 @@ export default function HomePage() {
           <UsernameForm />
         </div>
       </section>
-      <Suspense fallback={<RecentDiagnosedSkeleton limit={16} />}>
-        <RecentDiagnosed limit={16} />
-      </Suspense>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
+        <Suspense fallback={<RecentDiagnosedSkeleton limit={16} />}>
+          <RecentDiagnosed limit={16} />
+        </Suspense>
+      </section>
     </div>
   );
 }

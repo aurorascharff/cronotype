@@ -78,11 +78,14 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
         </InlineErrorBoundary>
       </Suspense>
 
-      <Suspense fallback={<RecentDiagnosedSkeleton limit={12} />}>
-        {params.then(({ login }) => (
-          <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={12} />
-        ))}
-      </Suspense>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
+        <Suspense fallback={<RecentDiagnosedSkeleton limit={12} />}>
+          {params.then(({ login }) => (
+            <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={12} />
+          ))}
+        </Suspense>
+      </section>
     </>
   );
 }
