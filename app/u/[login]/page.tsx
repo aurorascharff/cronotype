@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
+import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
@@ -41,6 +42,9 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
         {params.then(({ login }) => (
           <>
             <CronotypeProfile login={login} />
+            <Suspense fallback={<EvolutionStripSkeleton />}>
+              <EvolutionStrip login={login} />
+            </Suspense>
             <Suspense fallback={<RecentDiagnosedSkeleton limit={8} />}>
               <RecentDiagnosed excludeLogin={login} limit={8} />
             </Suspense>
