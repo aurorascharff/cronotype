@@ -1,5 +1,4 @@
 import { DownloadTimeline } from '@/components/download-timeline';
-import { PartialTimelineRefresh } from '@/features/profile/components/partial-timeline-refresh';
 import { getTimelineChart } from '@/features/profile/timeline-chart';
 import { formatCount } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
@@ -23,8 +22,6 @@ export async function EvolutionStrip({ handle }: Props) {
     archetype,
     areaPath,
     eras,
-    failedArchetypeYears,
-    failedMonthlyYears,
     hasData,
     linePath,
     months,
@@ -44,12 +41,11 @@ export async function EvolutionStrip({ handle }: Props) {
       <>
         <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
           <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-          <PartialTimelineRefresh
-            active={partial}
-            failedArchetypeYears={failedArchetypeYears}
-            failedMonthlyYears={failedMonthlyYears}
-            handle={handle}
-          />
+          {partial && (
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+              Partial · GitHub rate limit
+            </span>
+          )}
         </header>
         <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
           {partial ? 'Couldn\u2019t load the timeline right now.' : 'Not enough commit history yet.'}
@@ -76,12 +72,6 @@ export async function EvolutionStrip({ handle }: Props) {
               Partial · GitHub rate limit
             </span>
           )}
-          <PartialTimelineRefresh
-            active={partial}
-            failedArchetypeYears={failedArchetypeYears}
-            failedMonthlyYears={failedMonthlyYears}
-            handle={handle}
-          />
           <DownloadTimeline handle={handle} />
         </div>
       </header>

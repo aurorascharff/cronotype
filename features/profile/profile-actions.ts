@@ -69,19 +69,3 @@ export async function regenerateUser(handle: string) {
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
 }
-
-export async function refreshPartialTimeline(
-  handle: string,
-  failedMonthlyYears: number[] = [],
-  failedArchetypeYears: number[] = [],
-) {
-  const lower = handle.toLowerCase();
-  if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
-  updateTag(`history-${lower}`);
-  for (const year of failedMonthlyYears) {
-    updateTag(`monthly-${lower}-${year}`);
-  }
-  for (const year of failedArchetypeYears) {
-    updateTag(`year-archetype-${lower}-${year}`);
-  }
-}
