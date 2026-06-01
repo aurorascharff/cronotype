@@ -8,11 +8,6 @@ type Props = {
   percentile: number;
 };
 
-/**
- * The HeroCard — also the OG share preview. Sized at a 1200x630 aspect ratio
- * (the OG image standard) so what you see here is exactly what gets shared.
- * The same component will eventually render in `app/u/[login]/opengraph-image.tsx`.
- */
 export function HeroCard({ profile, archetype, stats, percentile }: Props) {
   const { theme } = archetype;
 
@@ -23,18 +18,15 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         viewTransitionName: 'hero-card',
       }}
     >
-      {/* Window badge so it's obvious the diagnosis is based on recent activity. */}
       <div className="text-muted dark:text-muted-dark absolute top-4 right-4 z-10 rounded-md border border-black/10 bg-white/80 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] sm:top-6 sm:right-6">
         Last 90 days
       </div>
 
       <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-        {/* Halo */}
         <div className="flex items-center justify-center sm:justify-start">
           <HaloChart stats={stats} theme={theme} avatarUrl={profile.avatarUrl} size={220} />
         </div>
 
-        {/* Verdict + minimal stats */}
         <div className="flex min-w-0 flex-col gap-3">
           <div className="text-muted dark:text-muted-dark text-xs sm:text-sm">@{profile.login}</div>
           <h1

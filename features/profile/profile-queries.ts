@@ -47,8 +47,6 @@ async function gh(url: string, init: RequestInit = {}): Promise<Response> {
   return res;
 }
 
-// ── Profile ────────────────────────────────────────────────────────────────
-
 export async function getProfile(login: string): Promise<ProfileSummary> {
   return getProfileCached(login.toLowerCase());
 }
@@ -74,8 +72,6 @@ async function getProfileCached(login: string): Promise<ProfileSummary> {
     publicRepos: j.public_repos ?? 0,
   };
 }
-
-// ── Search commits with real per-commit timezones ──────────────────────────
 
 type SearchCommitItem = {
   commit: {
@@ -146,8 +142,6 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-// ── 90-day "current" stats ────────────────────────────────────────────────
-
 export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
   return getStatsForCached(login.toLowerCase(), window);
 }
@@ -169,8 +163,6 @@ async function getStatsForCached(login: string, window: Window): Promise<ReturnT
   );
   return buildStats(commits);
 }
-
-// ── Monthly history for the evolution strip ──────────────────────────────────────
 
 export type MonthBucket = { month: string; count: number };
 export type YearArchetypeBucket = { year: number; archetypeId: ArchetypeId; commits: number };
@@ -201,7 +193,6 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   }
 
   if (MOCK) {
-    // Deterministic synthetic monthly counts so the chart has texture.
     const seed = login.length * 31 + year;
     const months: MonthBucket[] = [];
     for (let m = 0; m < 12; m++) {
@@ -225,7 +216,7 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   const counts = new Map<string, number>();
   for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
   for (const c of commits) {
-    const key = c.authoredAt.slice(0, 7); // YYYY-MM
+    const key = c.authoredAt.slice(0, 7);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   const months = Array.from(counts.entries())
@@ -243,11 +234,6 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   };
 }
 
-/**
- * Concatenate monthly buckets for every year of the user's account. NOT
- * marked `'use cache'` — the inner `getYearMonthly` calls are each cached,
- * wrapping the loop trips the "stuck on shared state" runtime error.
- */
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
   const profile = await getProfile(login);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
@@ -256,7 +242,6 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   const byYear: YearMonthly[] = [];
   let partial = false;
 
-  // Fetch newest years first so a rate limit still yields useful, current data.
   for (let year = thisYear; year >= firstYear; year--) {
     try {
       const result = await getYearMonthly(login, year);
@@ -274,10 +259,8 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     .flatMap(y => y.months)
     .sort((a, b) => a.month.localeCompare(b.month));
 
-  // Trim leading months with zero commits before the user's first commit.
   let start = 0;
   while (start < out.length && out[start].count === 0) start++;
-  // Also trim trailing zero months that haven't happened yet in current year.
   let end = out.length;
   while (end > start && out[end - 1].count === 0 && out[end - 1].month > `${thisYear}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`) {
     end--;
@@ -298,8 +281,6 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   return { months, partial, yearlyArchetypes };
 }
 
-// ── Mock helpers (only used when MOCK_PROFILE=1) ──────────────────────────
-
 function mockProfile(login: string): ProfileSummary {
   return {
     avatarUrl: `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`,
@@ -314,7 +295,6 @@ function mockProfile(login: string): ProfileSummary {
 
 const ARCHETYPE_IDS = Object.keys(ARCHETYPES) as ArchetypeId[];
 
-/** Deterministically pick an archetype for this login so the mock is stable. */
 function mockArchetypeFor(login: string): ArchetypeId {
   let h = 0;
   for (const c of login.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;

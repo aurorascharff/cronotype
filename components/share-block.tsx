@@ -7,7 +7,6 @@ type Props = {
   shareUrl: string;
 };
 
-/** A single inline action: copy the share URL. The hero card above doubles as the preview. */
 export function ShareBlock({ shareUrl }: Props) {
   const [copied, setCopied] = useState(false);
 

@@ -13,13 +13,12 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
-  const [{ months, yearlyArchetypes, partial }, { archetype }] = await Promise.all([
+  const [{ months, yearlyArchetypes, partial }, { archetype, stats }] = await Promise.all([
     getMonthlyHistory(login),
     computeCronotype(login, '90d'),
   ]);
   if (months.length < 6) return null;
 
-  // Smooth a tiny bit so the line doesn't jitter on noisy months.
   const smoothed = smooth(months.map(m => m.count), 2);
   const max = Math.max(1, ...smoothed);
   const usableH = H - PAD_TOP - PAD_BOT;
@@ -35,8 +34,9 @@ export async function EvolutionStrip({ login }: Props) {
   const peak = findPeak(months);
   const total = months.reduce((a, b) => a + b.count, 0);
   const yearMarkers = computeYearMarkers(months);
-  const aura = buildArchetypeAuras(months, yearlyArchetypes, archetype.id);
+  const transitions = buildArchetypeTransitions(months, yearlyArchetypes, archetype.id);
   const orbiters = buildOrbiters();
+  const clock = buildClock(stats.peakHour);
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
@@ -70,29 +70,34 @@ export async function EvolutionStrip({ login }: Props) {
             <filter id={`aura-blur-${archetype.id}`} x="-10%" y="-10%" width="120%" height="120%">
               <feGaussianBlur stdDeviation="5" />
             </filter>
-            {aura.bands.map((b, i) => (
-              <linearGradient key={`aura-grad-${i}`} id={`aura-grad-${archetype.id}-${i}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor={b.color} stopOpacity="0" />
-                <stop offset="50%" stopColor={b.color} stopOpacity="0.22" />
-                <stop offset="100%" stopColor={b.color} stopOpacity="0" />
-              </linearGradient>
-            ))}
           </defs>
 
-          {/* Archetype aura bands so the chart itself carries the evolution story. */}
-          {aura.bands.map((b, i) => (
-            <rect
-              key={`aura-band-${i}`}
-              x={b.x}
-              y={PAD_TOP}
-              width={b.width}
-              height={usableH}
-              fill={`url(#aura-grad-${archetype.id}-${i})`}
-              filter={`url(#aura-blur-${archetype.id})`}
+          <circle cx={clock.cx} cy={clock.cy} r={clock.r} fill="none" stroke={archetype.theme.accent} opacity="0.1" />
+          <circle cx={clock.cx} cy={clock.cy} r={clock.r * 0.82} fill="none" stroke={archetype.theme.accent} opacity="0.06" />
+          {clock.ticks.map((t, i) => (
+            <line
+              key={`clock-tick-${i}`}
+              x1={t.x1}
+              y1={t.y1}
+              x2={t.x2}
+              y2={t.y2}
+              stroke={archetype.theme.accent}
+              opacity={i % 6 === 0 ? 0.24 : 0.12}
+              strokeWidth={i % 6 === 0 ? 1.6 : 1}
             />
           ))}
+          <line
+            x1={clock.cx}
+            y1={clock.cy}
+            x2={clock.handX}
+            y2={clock.handY}
+            stroke={archetype.theme.accent2}
+            strokeWidth="2"
+            opacity="0.72"
+            strokeLinecap="round"
+          />
+          <circle cx={clock.cx} cy={clock.cy} r="3" fill={archetype.theme.accent2} opacity="0.8" />
 
-          {/* Year divider hairlines */}
           {yearMarkers.map(yr => (
             <line
               key={yr.x}
@@ -107,10 +112,8 @@ export async function EvolutionStrip({ login }: Props) {
             />
           ))}
 
-          {/* Gradient fill */}
           <path d={areaPath} fill={`url(#evolution-fill-${archetype.id})`} />
 
-          {/* Top line */}
           <path
             d={linePath}
             fill="none"
@@ -121,7 +124,6 @@ export async function EvolutionStrip({ login }: Props) {
             vectorEffect="non-scaling-stroke"
           />
 
-          {/* Orbiting markers that visibly move along the curve. */}
           {orbiters.map((o, i) => (
             <g key={`floater-${i}`}>
               <circle
@@ -150,8 +152,7 @@ export async function EvolutionStrip({ login }: Props) {
             </g>
           ))}
 
-          {/* Archetype transition markers along the curve. */}
-          {aura.transitions.map((t, i) => {
+          {transitions.map((t, i) => {
             const y = PAD_TOP + usableH - (smoothed[t.idx] / max) * usableH;
             const x = (t.idx / (smoothed.length - 1)) * W;
             return (
@@ -162,7 +163,6 @@ export async function EvolutionStrip({ login }: Props) {
             );
           })}
 
-          {/* Peak marker — a single accent dot at the user's busiest month. */}
           {peak && (
             <circle
               cx={(peak.index / (smoothed.length - 1)) * W}
@@ -174,7 +174,6 @@ export async function EvolutionStrip({ login }: Props) {
           )}
         </svg>
 
-        {/* Peak callout */}
         {peak && (
           <div
             className="text-muted dark:text-muted-dark pointer-events-none absolute -translate-x-1/2 text-[10px] tabular-nums"
@@ -187,7 +186,6 @@ export async function EvolutionStrip({ login }: Props) {
           </div>
         )}
 
-        {/* Year labels along the bottom */}
         <div className="text-muted dark:text-muted-dark relative mt-2 h-4 text-[10px] tabular-nums">
           {yearMarkers.map(yr => (
             <span
@@ -207,18 +205,11 @@ export async function EvolutionStrip({ login }: Props) {
 export function EvolutionStripSkeleton() {
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
-      <div className="mb-4 space-y-1.5">
-        <div className="skeleton h-4 w-32" />
-        <div className="skeleton h-3 w-52 opacity-60" />
-      </div>
       <div className="skeleton h-32 rounded-md sm:h-40" />
     </section>
   );
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-/** Tiny moving-average smoothing so the line reads as a trend, not jitter. */
 function smooth(values: number[], radius: number): number[] {
   if (radius <= 0) return values;
   const out: number[] = [];
@@ -234,10 +225,6 @@ function smooth(values: number[], radius: number): number[] {
   return out;
 }
 
-/**
- * Build a smooth cubic-bezier SVG path through the points. Uses a Catmull-Rom-
- * to-Bezier conversion so the curve passes through each data point exactly.
- */
 function buildSmoothPath(points: Array<{ x: number; y: number }>): string {
   if (points.length === 0) return '';
   if (points.length === 1) return `M${points[0].x},${points[0].y}`;
@@ -295,7 +282,7 @@ function computeYearMarkers(months: MonthBucket[]): Array<{ label: string; x: nu
   }));
 }
 
-function buildArchetypeAuras(
+function buildArchetypeTransitions(
   months: MonthBucket[],
   yearly: Array<{ year: number; archetypeId: ArchetypeId; commits: number }>,
   currentId: ArchetypeId,
@@ -324,28 +311,10 @@ function buildArchetypeAuras(
   }
 
   const firstIdxByYear = new Map<number, number>();
-  const lastIdxByYear = new Map<number, number>();
   months.forEach((m, i) => {
     const y = Number(m.month.slice(0, 4));
     if (!firstIdxByYear.has(y)) firstIdxByYear.set(y, i);
-    lastIdxByYear.set(y, i);
   });
-
-  const bands = collapsed
-    .map(run => {
-      const startIdx = firstIdxByYear.get(run.startYear);
-      const endIdx = lastIdxByYear.get(run.endYear);
-      if (startIdx == null || endIdx == null) return null;
-
-      const x1 = (startIdx / (months.length - 1)) * W;
-      const x2 = (endIdx / (months.length - 1)) * W;
-      return {
-        color: ARCHETYPES[run.archetypeId].theme.accent,
-        width: Math.max(24, x2 - x1 + 22),
-        x: Math.max(0, x1 - 11),
-      };
-    })
-    .filter(Boolean) as Array<{ color: string; x: number; width: number }>;
 
   const transitions = collapsed
     .slice(1)
@@ -359,10 +328,30 @@ function buildArchetypeAuras(
     })
     .filter(Boolean) as Array<{ color: string; idx: number }>;
 
-  return {
-    bands,
-    transitions,
-  };
+  return transitions;
+}
+
+function buildClock(peakHour: number) {
+  const cx = W * 0.86;
+  const cy = H * 0.5;
+  const r = H * 0.42;
+
+  const ticks = Array.from({ length: 24 }).map((_, i) => {
+    const theta = (i / 24) * Math.PI * 2 - Math.PI / 2;
+    const inner = i % 6 === 0 ? r * 0.83 : r * 0.89;
+    return {
+      x1: cx + Math.cos(theta) * inner,
+      x2: cx + Math.cos(theta) * r,
+      y1: cy + Math.sin(theta) * inner,
+      y2: cy + Math.sin(theta) * r,
+    };
+  });
+
+  const hourTheta = (peakHour / 24) * Math.PI * 2 - Math.PI / 2;
+  const handX = cx + Math.cos(hourTheta) * (r * 0.72);
+  const handY = cy + Math.sin(hourTheta) * (r * 0.72);
+
+  return { cx, cy, handX, handY, r, ticks };
 }
 
 function buildOrbiters() {

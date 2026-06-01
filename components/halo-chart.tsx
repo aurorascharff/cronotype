@@ -7,16 +7,6 @@ type Props = {
   size?: number;
 };
 
-/**
- * The HaloChart — avatar in the middle, 24 square-capped bars ringing it like
- * an Apple Watch activity ring. Midnight is at 12 o'clock. Reads as data, not
- * decoration.
- *
- * Each hour bar is a rectangle drawn upright at the top, then rotated around
- * the center by (h / 24) * 360° using SVG's `transform="rotate(angle, cx, cy)"`
- * attribute. CSS `transform-origin` must NOT be set on these — it conflicts
- * with the attribute-based rotation and scatters the bars.
- */
 export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
   const max = Math.max(1, ...stats.hourly);
   const cx = size / 2;
@@ -28,7 +18,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
   const outer = size * 0.46;
   const barWidth = Math.max(3, size * 0.018);
 
-  // Draw bars from `inner` outward, rotated around the center.
   const bars = stats.hourly.map((count, h) => {
     const len = (count / max) * (outer - inner);
     const isNight = h < 5 || h >= 22;
@@ -69,11 +58,9 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
         </clipPath>
       </defs>
 
-      {/* Inner + outer guide rings — drawn as hairlines to anchor the bars. */}
       <circle cx={cx} cy={cy} r={inner - 1} fill="none" stroke={theme.accent} opacity={0.15} strokeWidth={1} />
       <circle cx={cx} cy={cy} r={outer + 1} fill="none" stroke={theme.accent} opacity={0.08} strokeWidth={1} />
 
-      {/* Quarter-hour cardinal marks: a longer hairline at 00, 06, 12, 18. */}
       {[0, 6, 12, 18].map(q => {
         const a = (q / 24) * 360;
         return (
@@ -91,7 +78,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
         );
       })}
 
-      {/* The 24 data bars. */}
       {bars.map(b => (
         <rect
           key={b.h}
@@ -105,7 +91,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
         />
       ))}
 
-      {/* Avatar — circle frame, then the image clipped to a circle. */}
       <g>
         <circle cx={cx} cy={cy} r={avatarR + 2} fill={theme.accent} opacity={0.15} />
         <image
@@ -120,7 +105,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
         <circle cx={cx} cy={cy} r={avatarR} fill="none" stroke={theme.accent} strokeWidth={1.5} opacity={0.5} />
       </g>
 
-      {/* 24-hour cardinal labels. */}
       {ticks.map(t => (
         <text
           key={t.label}

@@ -2,12 +2,10 @@ import type { HourStats } from '@/types/cronotype';
 
 type Props = {
   stats: HourStats;
-  /** Hex color for the bars. */
   color: string;
   size?: number;
 };
 
-/** A tiny polar version of the halo chart. Same square-bar aesthetic as the hero. */
 export function RadialChip({ stats, color, size = 64 }: Props) {
   const max = Math.max(1, ...stats.hourly);
   const cx = size / 2;

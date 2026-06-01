@@ -25,7 +25,6 @@ export async function CronotypeProfile({ login }: Props) {
     return <EmptyProfile login={login} />;
   }
 
-  // Module-state mutation must happen outside `'use cache'`.
   recordEntry({
     archetype,
     classifiedAt: new Date().toISOString(),
@@ -66,21 +65,17 @@ export function CronotypeProfileSkeleton() {
       >
         <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
           <div className="flex items-center justify-center">
-            <div className="skeleton h-[140px] w-[140px] rounded-full sm:h-[220px] sm:w-[220px]" />
+            <div className="skeleton h-[120px] w-[120px] rounded-full sm:h-[190px] sm:w-[190px]" />
           </div>
 
-          <div className="flex min-w-0 flex-col gap-3">
-            <div className="skeleton h-3 w-20" />
-            <div className="skeleton h-10 w-2/3 sm:h-12" />
-            <div className="skeleton h-4 w-3/4 sm:w-2/3" />
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <div className="skeleton h-8 w-2/3 sm:h-10" />
+            <div className="skeleton h-3.5 w-3/4 sm:w-2/3" />
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="skeleton h-4 w-48" />
-        <div className="skeleton h-8 w-28 rounded-md" />
-      </div>
+      <div className="skeleton h-9 w-full rounded-md" />
     </div>
   );
 }

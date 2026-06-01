@@ -55,10 +55,6 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 }
 
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
-  // We use `params.then()` three times so each section's Suspense renders its
-  // own skeleton immediately on first paint. With a single outer Suspense,
-  // only the hero skeleton would show while params resolves; this way the
-  // user sees the full page shape (hero + evolution + recent) right away.
   return (
     <div className="space-y-10">
       <header>

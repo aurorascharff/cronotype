@@ -1,19 +1,14 @@
 import type { Archetype, ArchetypeId, ArchetypeTheme, HourStats } from '@/types/cronotype';
 
-/**
- * Each archetype gets its own accent. Picked for type-meaning (vampires are
- * purple, sunrise is amber, etc.) but kept at consistent saturation so the
- * brand still reads as one design system.
- */
 const THEMES: Record<ArchetypeId, ArchetypeTheme> = {
-  drifter: { accent: '#94a3b8', accent2: '#cbd5e1', bgDark: '#08090b', bgLight: '#fafafa' }, // slate
-  'insomniac-maintainer': { accent: '#ec4899', accent2: '#f472b6', bgDark: '#08090b', bgLight: '#fafafa' }, // pink
-  'lunch-bandit': { accent: '#ef4444', accent2: '#f87171', bgDark: '#08090b', bgLight: '#fafafa' }, // red
-  'nine-to-fiver': { accent: '#06b6d4', accent2: '#22d3ee', bgDark: '#08090b', bgLight: '#fafafa' }, // cyan
-  'sunrise-sniper': { accent: '#f59e0b', accent2: '#fbbf24', bgDark: '#08090b', bgLight: '#fafafa' }, // amber
-  'touch-grass': { accent: '#84cc16', accent2: '#a3e635', bgDark: '#08090b', bgLight: '#fafafa' }, // lime
-  vampire: { accent: '#a855f7', accent2: '#c084fc', bgDark: '#08090b', bgLight: '#fafafa' }, // purple
-  'weekend-warrior': { accent: '#10b981', accent2: '#34d399', bgDark: '#08090b', bgLight: '#fafafa' }, // emerald
+  drifter: { accent: '#94a3b8', accent2: '#cbd5e1', bgDark: '#08090b', bgLight: '#fafafa' },
+  'insomniac-maintainer': { accent: '#ec4899', accent2: '#f472b6', bgDark: '#08090b', bgLight: '#fafafa' },
+  'lunch-bandit': { accent: '#ef4444', accent2: '#f87171', bgDark: '#08090b', bgLight: '#fafafa' },
+  'nine-to-fiver': { accent: '#06b6d4', accent2: '#22d3ee', bgDark: '#08090b', bgLight: '#fafafa' },
+  'sunrise-sniper': { accent: '#f59e0b', accent2: '#fbbf24', bgDark: '#08090b', bgLight: '#fafafa' },
+  'touch-grass': { accent: '#84cc16', accent2: '#a3e635', bgDark: '#08090b', bgLight: '#fafafa' },
+  vampire: { accent: '#a855f7', accent2: '#c084fc', bgDark: '#08090b', bgLight: '#fafafa' },
+  'weekend-warrior': { accent: '#10b981', accent2: '#34d399', bgDark: '#08090b', bgLight: '#fafafa' },
 };
 
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
@@ -80,7 +75,6 @@ function midday(s: HourStats) {
   return ((s.hourly[12] ?? 0) / total) * 100;
 }
 
-/** Classify a user given their hour stats. Returns the dominant archetype. */
 export function classify(stats: HourStats): Archetype {
   if (stats.total < 25) return ARCHETYPES['touch-grass'];
 

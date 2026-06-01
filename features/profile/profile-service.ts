@@ -4,11 +4,6 @@ import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify, percentileFor } from '@/lib/archetypes';
 import type { CronotypeResult, Window } from '@/types/cronotype';
 
-/**
- * Fetch profile + 90-day stats, classify, compute percentile. Pure — the
- * leaderboard recording happens outside this cached function (see
- * `recordCronotype` in the service).
- */
 export async function computeCronotype(login: string, window: Window = '90d'): Promise<CronotypeResult> {
   return computeCronotypeCached(login.toLowerCase(), window);
 }
