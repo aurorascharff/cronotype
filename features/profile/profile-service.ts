@@ -11,7 +11,7 @@ export const computeCronotype = cache(async (login: string, window: Window = '90
 });
 
 async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
-  'use cache';
+  'use cache: remote';
   cacheTag(`cronotype-${login}-${window}`);
   cacheLife('cronotype');
 
