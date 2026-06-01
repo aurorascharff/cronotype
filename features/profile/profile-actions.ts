@@ -8,6 +8,7 @@ import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
 export type RevealFormState = {
   error: string | null;
+  errorId: number;
 };
 
 function invalidateAllForHandle(handle: string) {
@@ -42,17 +43,19 @@ export async function revealUser(handle: string) {
 }
 
 export async function revealUserFromForm(
-  _state: RevealFormState,
+  state: RevealFormState,
   formData: FormData,
 ): Promise<RevealFormState> {
   const handle = normalizeHandle(String(formData.get('handle') ?? ''));
-  if (!handle) return { error: 'Type a GitHub username.' };
-  if (!isValidGitHubHandle(handle)) return { error: "That doesn't look like a GitHub username." };
+  if (!handle) return { error: 'Type a GitHub username.', errorId: state.errorId + 1 };
+  if (!isValidGitHubHandle(handle)) {
+    return { error: "That doesn't look like a GitHub username.", errorId: state.errorId + 1 };
+  }
 
   try {
     await revealUser(handle);
   } catch {
-    return { error: "Couldn't start the reveal. Try again in a moment." };
+    return { error: "Couldn't start the reveal. Try again in a moment.", errorId: state.errorId + 1 };
   }
 
   redirect(`/${handle}`);

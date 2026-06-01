@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ArchetypeTheme, HourStats } from '@/types/cronotype';
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
+  const clipId = `halo-clip-${useId().replaceAll(':', '')}`;
   const max = Math.max(1, ...stats.hourly);
   const cx = size / 2;
   const cy = size / 2;
@@ -33,8 +35,6 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
     { anchor: 'middle' as const, label: '12pm', x: cx, y: cy + outer + 22 },
     { anchor: 'end' as const, label: '6pm', x: cx - outer - 14, y: cy + 5 },
   ];
-
-  const clipId = `halo-clip-${theme.accent.replace('#', '')}`;
 
   return (
     <svg

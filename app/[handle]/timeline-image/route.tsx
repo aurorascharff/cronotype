@@ -7,10 +7,11 @@ type RouteContext = { params: Promise<{ handle: string }> };
 
 async function loadGeist() {
   try {
-    const [regular, semibold] = await Promise.all([loadFont('Geist-Regular.ttf'), loadFont('Geist-SemiBold.ttf')]);
+    const [sans, mono] = await Promise.all([loadFont('Geist-Variable.ttf'), loadFont('GeistMono-Regular.ttf')]);
     return [
-      { data: regular, name: 'Geist', style: 'normal' as const, weight: 400 as const },
-      { data: semibold, name: 'Geist', style: 'normal' as const, weight: 600 as const },
+      { data: sans, name: 'GeistSans', style: 'normal' as const, weight: 400 as const },
+      { data: sans, name: 'GeistSans', style: 'normal' as const, weight: 600 as const },
+      { data: mono, name: 'GeistMono', style: 'normal' as const, weight: 400 as const },
     ];
   } catch {
     return undefined;
@@ -51,7 +52,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
           background: '#08090b',
           color: '#8b8d96',
           display: 'flex',
-          fontFamily: 'Geist, sans-serif',
+          fontFamily: 'GeistSans, sans-serif',
           fontSize: 36,
           height: '100%',
           justifyContent: 'center',
@@ -73,7 +74,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
         color: 'white',
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Geist, sans-serif',
+        fontFamily: 'GeistSans, sans-serif',
         height: '100%',
         padding: 64,
         position: 'relative',
@@ -163,7 +164,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
           bottom: 36,
           color: '#8b8d96',
           display: 'flex',
-          fontFamily: 'Geist, monospace',
+          fontFamily: 'GeistMono, monospace',
           fontSize: 22,
           left: 64,
           letterSpacing: '-0.01em',

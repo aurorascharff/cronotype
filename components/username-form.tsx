@@ -6,12 +6,12 @@ import { revealUserFromForm } from '@/features/profile/profile-actions';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, isSubmitting] = useActionState(revealUserFromForm, { error: null });
+  const [state, formAction, isSubmitting] = useActionState(revealUserFromForm, { error: null, errorId: 0 });
   const busy = isSubmitting;
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
-  }, [state.error]);
+  }, [state.error, state.errorId]);
 
   function onKeyDown(e: React.KeyboardEvent<HTMLFormElement>) {
     // Cmd/Ctrl+Enter - some browsers don't submit forms on this combo, so

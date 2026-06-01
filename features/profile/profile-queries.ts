@@ -396,12 +396,7 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
     };
   }
 
-  let profile;
-  try {
-    profile = await getProfile(login);
-  } catch {
-    return { failedArchetypeYears: [], failedMonthlyYears: [], months: [], partial: true, yearlyArchetypes: [] };
-  }
+  const profile = await getProfile(login);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const todayDate = new Date(`${today}T00:00:00Z`);
   const thisYear = todayDate.getUTCFullYear();
