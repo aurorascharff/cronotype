@@ -12,13 +12,14 @@ export type LeaderboardEntry = {
   stats: HourStats;
 };
 
-export async function getRecentHandles(): Promise<string[]> {
+export async function getRecentHandles(limit = 8): Promise<string[]> {
   'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
   cacheLife('cronotype');
 
-  const revealed = await listFeaturedReveals(FEATURED.length);
+  const candidateLimit = Math.min(FEATURED.length, Math.max(limit * 2, limit));
+  const revealed = await listFeaturedReveals(candidateLimit);
   if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(
@@ -32,7 +33,7 @@ export async function getRecentHandles(): Promise<string[]> {
   );
   profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
 
-  return profiles.map(p => p.handle);
+  return profiles.slice(0, limit).map(p => p.handle);
 }
 
 export async function getCardProfile(login: string): Promise<ProfileSummary | null> {

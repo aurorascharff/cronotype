@@ -3,10 +3,12 @@ import { FEATURED } from '@/features/leaderboard/featured';
 import { getRecentHandles } from '@/features/leaderboard/leaderboard-queries';
 import { connection } from 'next/server';
 
+const RECENT_LIMIT = 12;
+
 export async function RecentRevealed() {
   await connection();
 
-  const handles = await getRecentHandles();
+  const handles = await getRecentHandles(RECENT_LIMIT);
 
   if (handles.length === 0) {
     return (
@@ -28,7 +30,7 @@ export async function RecentRevealed() {
 }
 
 export function RecentRevealedSkeleton() {
-  const count = Math.ceil(FEATURED.length / 2);
+  const count = Math.min(RECENT_LIMIT, FEATURED.length);
 
   return (
     <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">

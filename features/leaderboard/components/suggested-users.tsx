@@ -3,12 +3,15 @@ import { FEATURED } from '@/features/leaderboard/featured';
 import { listFeaturedReveals } from '@/lib/reveals';
 import { connection } from 'next/server';
 
+const SUGGESTED_LIMIT = 12;
+
 export async function SuggestedUsers() {
   await connection();
 
   const revealed = new Set((await listFeaturedReveals(FEATURED.length)).map(handle => handle.toLowerCase()));
   const handles = FEATURED
-    .filter(handle => !revealed.has(handle.toLowerCase()));
+    .filter(handle => !revealed.has(handle.toLowerCase()))
+    .slice(0, SUGGESTED_LIMIT);
 
   if (handles.length === 0) {
     return (
@@ -47,7 +50,7 @@ export async function SuggestedUsers() {
 }
 
 export function SuggestedUsersSkeleton() {
-  const count = Math.ceil(FEATURED.length / 2);
+  const count = Math.min(SUGGESTED_LIMIT, FEATURED.length);
 
   return (
     <ul className="grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
