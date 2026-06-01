@@ -235,25 +235,33 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
+export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats> | null> {
   'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
-  cacheLife('cronotype');
 
-  if (MOCK || isShell(login)) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
+  if (MOCK || isShell(login)) {
+    cacheLife('cronotype');
+    return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
+  }
 
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
   const now = new Date();
   const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const from = new Date(to.getTime() - days * 24 * 3600_000);
-  const commits = await fetchCommitsInRange(
-    login,
-    from.toISOString().slice(0, 10),
-    to.toISOString().slice(0, 10),
-    0,
-    1,
-  );
-  return buildStats(commits);
+  try {
+    const commits = await fetchCommitsInRange(
+      login,
+      from.toISOString().slice(0, 10),
+      to.toISOString().slice(0, 10),
+      0,
+      1,
+    );
+    cacheLife('cronotype');
+    return buildStats(commits);
+  } catch {
+    cacheLife('minutes');
+    return null;
+  }
 }
 
 export type MonthBucket = { month: string; count: number };
