@@ -44,8 +44,12 @@ export const FEATURED: string[] = [
 ];
 
 export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardEntry[]> => {
-  const all = await getFeaturedEntries();
-  return all.slice(0, limit);
+  try {
+    const all = await getFeaturedEntries();
+    return all.slice(0, limit);
+  } catch {
+    return [];
+  }
 });
 
 async function getFeaturedEntries(): Promise<LeaderboardEntry[]> {
@@ -59,9 +63,14 @@ async function getFeaturedEntries(): Promise<LeaderboardEntry[]> {
       const { profile, archetype, stats } = await computeCronotype(login.toLowerCase(), '90d');
       entries.push({ archetype, profile, stats });
     } catch {
-      // Skip rate-limited or failed users; the next refresh fills them in.
+      // One user failing is fine; we skip them and keep going.
     }
   }
+
+  // Don't cache an empty list — that means every featured user failed
+  // (almost certainly rate-limited). Throwing prevents the empty result
+  // from being pinned for cacheLife. The caller catches and renders empty.
+  if (entries.length === 0) throw new Error('Leaderboard empty; not caching');
 
   return entries.sort((a, b) => b.profile.followers - a.profile.followers);
 }

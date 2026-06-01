@@ -10,7 +10,7 @@ export function ProfileCardGrid({ entries }: Props) {
   if (entries.length === 0) {
     return (
       <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-black/10 p-8 text-center text-sm dark:border-white/10">
-        No one diagnosed yet. Be the first.
+        Couldn&apos;t reach GitHub just now. Refresh in a minute.
       </p>
     );
   }
