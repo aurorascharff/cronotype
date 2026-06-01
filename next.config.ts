@@ -10,11 +10,6 @@ const nextConfig: NextConfig = {
       revalidate: 30 * DAY,
       stale: 60 * DAY,
     },
-    profile: {
-      expire: 7 * DAY,
-      revalidate: DAY,
-      stale: DAY,
-    },
   },
   experimental: {
     cachedNavigations: true,

@@ -4,8 +4,11 @@ import { updateTag } from 'next/cache';
 import { recordReveal } from '@/lib/reveals';
 
 export async function revealUser(login: string) {
-  await recordReveal(login);
+  const lower = login.toLowerCase();
+  await recordReveal(lower);
   updateTag('reveals');
+  updateTag(`profile-${lower}`);
+  updateTag(`stats-${lower}-90d`);
 }
 
 export async function refreshPartialYears(login: string, years: number[]) {
