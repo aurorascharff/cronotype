@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { ARCHETYPES, classify } from '@/lib/archetypes';
+import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 
 export const alt = 'Cronotype profile';
@@ -23,16 +23,37 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
   const archetype = classify(stats);
   const { theme } = archetype;
+  const percentile = percentileFor(archetype, stats);
   const max = Math.max(1, ...stats.hourly);
 
-  // Halo geometry — same proportions as <HaloChart size={320}> but scaled for OG.
-  const haloSize = 360;
+  const haloSize = 380;
   const cx = haloSize / 2;
   const avatarR = haloSize * 0.22;
   const gap = haloSize * 0.04;
   const inner = avatarR + gap;
   const outer = haloSize * 0.46;
-  const barWidth = haloSize * 0.018;
+  const barWidth = Math.max(4, haloSize * 0.018);
+
+  const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
+    <div
+      key={text}
+      style={{
+        color: theme.accent,
+        display: 'flex',
+        fontFamily: 'monospace',
+        fontSize: 22,
+        fontWeight: 600,
+        justifyContent: anchor === 'center' ? 'center' : anchor === 'right' ? 'flex-end' : 'flex-start',
+        left: cx + dx - 60,
+        letterSpacing: '0.04em',
+        position: 'absolute',
+        top: cx + dy - 14,
+        width: 120,
+      }}
+    >
+      {text}
+    </div>
+  );
 
   return new ImageResponse(
     (
@@ -49,7 +70,6 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           width: '100%',
         }}
       >
-        {/* Halo */}
         <div
           style={{
             alignItems: 'center',
@@ -60,7 +80,54 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
             width: haloSize,
           }}
         >
-          {/* Hour bars, rotated radially. */}
+          <div
+            style={{
+              border: `1px solid ${theme.accent}`,
+              borderRadius: '50%',
+              display: 'flex',
+              height: (outer + 1) * 2,
+              left: cx - (outer + 1),
+              opacity: 0.1,
+              position: 'absolute',
+              top: cx - (outer + 1),
+              width: (outer + 1) * 2,
+            }}
+          />
+          <div
+            style={{
+              border: `1px solid ${theme.accent}`,
+              borderRadius: '50%',
+              display: 'flex',
+              height: (inner - 1) * 2,
+              left: cx - (inner - 1),
+              opacity: 0.18,
+              position: 'absolute',
+              top: cx - (inner - 1),
+              width: (inner - 1) * 2,
+            }}
+          />
+
+          {[0, 6, 12, 18].map(q => {
+            const angle = (q / 24) * 360;
+            return (
+              <div
+                key={`q-${q}`}
+                style={{
+                  background: theme.accent,
+                  display: 'flex',
+                  height: 10,
+                  left: cx - 0.75,
+                  opacity: 0.4,
+                  position: 'absolute',
+                  top: cx - outer - 8,
+                  transform: `rotate(${angle}deg)`,
+                  transformOrigin: `0.75px ${outer + 8}px`,
+                  width: 1.5,
+                }}
+              />
+            );
+          })}
+
           {stats.hourly.map((count, h) => {
             const len = Math.max(2, (count / max) * (outer - inner));
             const angle = (h / 24) * 360;
@@ -84,11 +151,26 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
               />
             );
           })}
-          {/* Avatar circle */}
+
           <div
             style={{
               alignItems: 'center',
-              border: `2px solid ${theme.accent}`,
+              background: theme.accent,
+              borderRadius: '50%',
+              display: 'flex',
+              height: avatarR * 2 + 4,
+              justifyContent: 'center',
+              left: cx - avatarR - 2,
+              opacity: 0.15,
+              position: 'absolute',
+              top: cx - avatarR - 2,
+              width: avatarR * 2 + 4,
+            }}
+          />
+          <div
+            style={{
+              alignItems: 'center',
+              border: `1.5px solid ${theme.accent}`,
               borderRadius: '50%',
               display: 'flex',
               height: avatarR * 2,
@@ -107,35 +189,40 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
               style={{ display: 'block', objectFit: 'cover' }}
             />
           </div>
+
+          {tickLabel('12am', 0, -outer - 30, 'center')}
+          {tickLabel('6am', outer + 18, 0, 'left')}
+          {tickLabel('12pm', 0, outer + 18, 'center')}
+          {tickLabel('6pm', -outer - 18, 0, 'right')}
         </div>
 
-        {/* Verdict + stats */}
         <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12 }}>
-          <div style={{ color: '#8b8d96', display: 'flex', fontSize: 30 }}>@{profile.login}</div>
+          <div style={{ color: '#8b8d96', display: 'flex', fontSize: 28 }}>@{profile.login}</div>
           <div
             style={{
-              color: theme.accent,
+              backgroundClip: 'text',
+              backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
+              color: 'transparent',
               display: 'flex',
-              fontSize: 102,
+              fontSize: 108,
               fontWeight: 600,
               letterSpacing: '-0.04em',
-              lineHeight: 1,
+              lineHeight: 0.95,
             }}
           >
             {archetype.name}
           </div>
-          <div style={{ color: '#c8cad4', display: 'flex', fontSize: 34, marginTop: 10, maxWidth: 620 }}>
+          <div style={{ color: '#c8cad4', display: 'flex', fontSize: 32, marginTop: 8, maxWidth: 620 }}>
             {archetype.meaning}
           </div>
-          <div style={{ display: 'flex', gap: 44, marginTop: 30 }}>
+          <div style={{ display: 'flex', gap: 44, marginTop: 28 }}>
             <Stat label="PEAK" value={formatHour(stats.peakHour)} />
             <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
-            <Stat label="WEEKEND" value={`${Math.round(stats.pctWeekend)}%`} />
             <Stat label="COMMITS" value={formatCount(stats.total)} />
+            <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
           </div>
         </div>
 
-        {/* Wordmark */}
         <div
           style={{
             color: '#8b8d96',
@@ -151,7 +238,6 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           cronotype
         </div>
 
-        {/* Window badge */}
         <div
           style={{
             border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -176,11 +262,20 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ color: '#8b8d96', display: 'flex', fontSize: 18, letterSpacing: '0.08em' }}>{label}</div>
-      <div style={{ color: 'white', display: 'flex', fontSize: 40, fontWeight: 600 }}>{value}</div>
+      <div
+        style={{
+          color: accent ?? 'white',
+          display: 'flex',
+          fontSize: 40,
+          fontWeight: 600,
+        }}
+      >
+        {value}
+      </div>
     </div>
   );
 }

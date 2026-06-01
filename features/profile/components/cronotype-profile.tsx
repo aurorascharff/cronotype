@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 import { Suspense } from 'react';
 import { HeroCard } from '@/components/hero-card';
-import { ShareBlock } from '@/components/share-block';
+import { ShareButton, ShareUrl } from '@/components/share-block';
 import { recordEntry } from '@/features/leaderboard/leaderboard-queries';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
@@ -32,9 +32,17 @@ export async function CronotypeProfile({ login }: Props) {
   const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;
 
   return (
-    <div className="space-y-3">
-      <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
-      <ShareBlock shareUrl={shareUrl} />
+    <div className="space-y-2">
+      <div className="relative">
+        <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
+        <ShareButton
+          shareUrl={shareUrl}
+          accent={archetype.theme.accent}
+          accent2={archetype.theme.accent2}
+          className="absolute bottom-4 right-4 z-20 sm:bottom-6 sm:right-6"
+        />
+      </div>
+      <ShareUrl shareUrl={shareUrl} />
       <Suspense fallback={null}>
         <RecordLeaderboardEntry profile={profile} archetype={archetype} stats={stats} />
       </Suspense>
@@ -77,7 +85,7 @@ function EmptyProfile({ login }: { login: string }) {
 
 export function CronotypeProfileSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div
         className="dark:bg-ink-2 relative overflow-hidden rounded-xl border border-black/10 bg-white dark:border-white/10 [aspect-ratio:auto] sm:[aspect-ratio:1200/630]"
       >
@@ -93,7 +101,7 @@ export function CronotypeProfileSkeleton() {
         </div>
       </div>
 
-      <div className="skeleton h-9 w-full rounded-md" />
+      <div className="skeleton h-3 w-52 rounded" />
     </div>
   );
 }

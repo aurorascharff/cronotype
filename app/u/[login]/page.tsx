@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { ProfileErrorCard } from '@/components/profile-error-card';
+import { SectionErrorBoundary } from '@/components/section-error-boundary';
 import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
@@ -63,9 +64,19 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
       </Suspense>
 
       <Suspense fallback={<EvolutionStripSkeleton />}>
-        {params.then(({ login }) => (
-          <SafeEvolutionStrip login={login.toLowerCase()} />
-        ))}
+        <SectionErrorBoundary
+          fallback={
+            <ProfileErrorCard
+              title="We couldn't load this history right now."
+              body="Your main diagnosis is still visible. Try reloading in a moment if you want the full timeline."
+              showHomeLink={false}
+            />
+          }
+        >
+          {params.then(({ login }) => (
+            <EvolutionStrip login={login.toLowerCase()} />
+          ))}
+        </SectionErrorBoundary>
       </Suspense>
 
       <Suspense fallback={<RecentDiagnosedSkeleton limit={8} />}>
@@ -75,18 +86,4 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
       </Suspense>
     </>
   );
-}
-
-async function SafeEvolutionStrip({ login }: { login: string }) {
-  try {
-    return <EvolutionStrip login={login} />;
-  } catch {
-    return (
-      <ProfileErrorCard
-        title="We couldn't load this history right now."
-        body="Your main diagnosis is still visible. Try reloading in a moment if you want the full timeline."
-        showHomeLink={false}
-      />
-    );
-  }
 }

@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory, type MonthBucket } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
@@ -13,6 +14,7 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
+  await connection();
   const [{ months, yearlyArchetypes, partial }, { archetype }] = await Promise.all([
     getMonthlyHistory(login),
     computeCronotype(login, '90d'),
