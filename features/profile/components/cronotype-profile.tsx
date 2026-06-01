@@ -4,7 +4,6 @@ import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
-import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
   login: string;
@@ -107,7 +106,7 @@ function HaloSkeleton() {
     >
       <circle cx={cx} cy={cy} r={inner - 1} fill="none" stroke="currentColor" strokeWidth={1} />
       <circle cx={cx} cy={cy} r={outer + 1} fill="none" stroke="currentColor" strokeWidth={1} opacity={0.5} />
-      <circle cx={cx} cy={cy} r={avatarR} fill="none" stroke="currentColor" strokeWidth={1.5} />
+      <circle cx={cx} cy={cy} r={avatarR} fill="currentColor" fillOpacity={0.08} stroke="currentColor" strokeWidth={1.5} />
       {Array.from({ length: 24 }).map((_, h) => {
         const len = (outer - inner) * (0.35 + 0.4 * Math.abs(Math.sin((h / 24) * Math.PI * 2)));
         return (

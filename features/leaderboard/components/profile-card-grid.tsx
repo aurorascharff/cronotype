@@ -80,7 +80,7 @@ export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
           aria-hidden
         >
           <div className="flex h-28 items-center justify-center">
-            <RadialChipSkeleton size={96} />
+            <RadialChipSkeleton size={112} />
           </div>
           <div className="flex w-full flex-col items-center gap-1.5">
             <div className="h-3 w-24 rounded-full border border-current" />
@@ -108,7 +108,7 @@ function RadialChipSkeleton({ size }: { size: number }) {
       className="text-muted/40 dark:text-muted-dark/40 overflow-visible"
       aria-hidden
     >
-      <circle cx={cx} cy={cy} r={inner - 0.5} fill="none" stroke="currentColor" strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={inner - 0.5} fill="currentColor" fillOpacity={0.08} stroke="currentColor" strokeWidth={1} />
       {Array.from({ length: 24 }).map((_, h) => {
         const len = (outer - inner) * (0.35 + 0.4 * Math.abs(Math.sin((h / 24) * Math.PI * 2)));
         return (
