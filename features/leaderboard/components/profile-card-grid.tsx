@@ -1,56 +1,48 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
-import { getCardEntry, type LeaderboardEntry } from '@/features/leaderboard/leaderboard-queries';
+import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
 
 /**
- * Server component that fetches a single card's data and renders it.
- * Wrap in `<Suspense fallback={<ProfileCardSkeleton />}>` from the caller.
+ * Server component for a single card. Renders progressively:
  *
- * Each instance pulls from `computeCronotype(login)` which is cached per-login,
- * so rendering this 16 times on the homepage fans out to 16 independent cache
- * lookups. Navigating to /u/<login> shares the same cache entry.
+ *   1. Avatar + handle: deterministic, no fetch (GitHub serves an avatar at
+ *      `https://github.com/{login}.png` for any valid login).
+ *   2. Profile (name + followers): cheap GET /users/:login, cached 60 days.
+ *   3. Archetype + radial chip: Search Commits API, cached 60 days.
+ *
+ * Each stage has its own Suspense boundary so a rate-limit on one doesn't
+ * blank out the others. Once any data is cached, it survives subsequent
+ * rate-limited refreshes - the cache layer keeps serving it.
  */
-export async function ProfileCardSlot({ login }: { login: string }) {
-  const entry = await getCardEntry(login);
-  if (!entry) return <ProfileCardError login={login} />;
-  return <ProfileCard entry={entry} />;
-}
-
-export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
-  const { profile, archetype, stats } = entry;
+export function ProfileCardSlot({ login }: { login: string }) {
+  const avatarUrl = `https://github.com/${login}.png?size=96`;
   return (
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
-      <Link href={{ pathname: `/u/${profile.login}` }} className="flex h-full flex-col gap-4 p-4">
+      <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
-          <RadialChip stats={stats} color={archetype.theme.accent} size={112} />
+          <Suspense fallback={<RadialChipPlaceholder />}>
+            <CardChip login={login} />
+          </Suspense>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={profile.avatarUrl}
+            src={avatarUrl}
             alt=""
             width={48}
             height={48}
             className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
           />
         </div>
-        <div className="min-w-0 space-y-1">
-          <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
-          <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
-          <div className="flex items-center justify-between gap-2">
-            <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>
-              {archetype.name}
-            </div>
-            <div className="text-muted dark:text-muted-dark shrink-0 text-[10.5px] tabular-nums">
-              {formatFollowers(profile.followers)}
-            </div>
-          </div>
-        </div>
+        <Suspense fallback={<CardMetaSkeleton login={login} />}>
+          <CardMeta login={login} />
+        </Suspense>
       </Link>
       <a
-        href={`https://github.com/${profile.login}`}
+        href={`https://github.com/${login}`}
         target="_blank"
         rel="noreferrer noopener"
-        aria-label={`Open ${profile.login} on GitHub`}
+        aria-label={`Open ${login} on GitHub`}
         className="text-muted/70 dark:text-muted-dark/70 hover:text-ink dark:hover:text-paper absolute top-2 right-2 rounded-md p-1.5 transition-colors"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
@@ -61,29 +53,89 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
   );
 }
 
-export function ProfileCardSkeleton() {
+async function CardChip({ login }: { login: string }) {
+  const result = await getCardClassification(login);
+  if (!result) return <RadialChipPlaceholder />;
+  return <RadialChip stats={result.stats} color={result.archetype.theme.accent} size={112} />;
+}
+
+async function CardMeta({ login }: { login: string }) {
+  const [profile, classification] = await Promise.all([getCardProfile(login), getCardClassification(login)]);
+  if (!profile) return <CardMetaFallback login={login} />;
   return (
-    <div
-      className="dark:bg-ink-2 flex h-full flex-col items-center gap-3 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
-      aria-hidden
-    >
-      <div className="flex h-28 items-center justify-center">
-        <div className="skeleton h-24 w-24 rounded-full" />
-      </div>
-      <div className="flex w-full flex-col items-center gap-1.5">
-        <div className="skeleton h-3 w-24" />
-        <div className="skeleton h-2 w-16" />
-        <div className="skeleton h-2.5 w-20" />
+    <div className="min-w-0 space-y-1">
+      <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
+      <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
+      <div className="flex items-center justify-between gap-2">
+        {classification ? (
+          <div className="truncate text-xs font-medium" style={{ color: classification.archetype.theme.accent }}>
+            {classification.archetype.name}
+          </div>
+        ) : (
+          <div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs">Classifying…</div>
+        )}
+        <div className="text-muted dark:text-muted-dark shrink-0 text-[10.5px] tabular-nums">
+          {formatFollowers(profile.followers)}
+        </div>
       </div>
     </div>
   );
 }
 
-function ProfileCardError({ login }: { login: string }) {
+function RadialChipPlaceholder() {
+  return <div className="bg-muted/8 dark:bg-muted-dark/8 absolute inset-2 rounded-full" aria-hidden />;
+}
+
+function CardMetaSkeleton({ login }: { login: string }) {
+  // Mirrors the resolved `CardMeta` layout exactly: same outer container,
+  // same row count, same row heights, same alignment. The handle line uses
+  // real text so the typography metrics match across the swap.
   return (
-    <div className="dark:bg-ink-2 text-muted dark:text-muted-dark flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-black/10 bg-white p-4 text-center text-xs dark:border-white/10">
-      <span className="font-mono text-[11px]">@{login}</span>
-      <span className="text-[10.5px]">Couldn&apos;t load right now</span>
+    <div className="min-w-0 space-y-1">
+      <div className="skeleton h-5 w-3/4 rounded" />
+      <div className="text-muted dark:text-muted-dark truncate text-xs">@{login}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="skeleton h-4 w-1/2 rounded" />
+        <div className="skeleton h-3 w-10 shrink-0 rounded" />
+      </div>
+    </div>
+  );
+}
+
+function CardMetaFallback({ login }: { login: string }) {
+  // Same 3-row shape as the resolved card so the failure mode doesn't shift either.
+  return (
+    <div className="min-w-0 space-y-1">
+      <div className="text-ink dark:text-paper truncate text-sm font-semibold">@{login}</div>
+      <div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs">Couldn&apos;t load profile</div>
+      <div className="h-4" />
+    </div>
+  );
+}
+
+export function ProfileCardSkeleton() {
+  // Identical to the resolved ProfileCardSlot layout: same padding, gap,
+  // chip area height, and meta-block shape. Only difference: skeleton tiles
+  // instead of text/chip content. Eliminates any visible shift on Suspense reveal.
+  return (
+    <div
+      className="dark:bg-ink-2 relative h-full rounded-xl border border-black/10 bg-white dark:border-white/10"
+      aria-hidden
+    >
+      <div className="flex h-full flex-col gap-4 p-4">
+        <div className="relative flex h-28 items-center justify-center">
+          <div className="bg-muted/8 dark:bg-muted-dark/8 absolute inset-2 rounded-full" />
+          <div className="skeleton h-12 w-12 rounded-full" />
+        </div>
+        <div className="min-w-0 space-y-1">
+          <div className="skeleton h-5 w-3/4 rounded" />
+          <div className="skeleton h-4 w-1/2 rounded" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="skeleton h-4 w-1/2 rounded" />
+            <div className="skeleton h-3 w-10 shrink-0 rounded" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

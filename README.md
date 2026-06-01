@@ -10,7 +10,7 @@ Live at [cronotype.vercel.app](https://cronotype.vercel.app).
 
 Reads the last 90 days of public commits for a GitHub user and sorts them into one of eight rhythms (Vampire, Sunrise Sniper, Nine-to-Fiver, Lunch Bandit, Weekend Warrior, Insomniac Maintainer, Drifter, Grass Toucher). Then draws a multicolor line chart of how the archetype shifted year over year.
 
-Every profile has a dynamic Open Graph image, a leaderboard of well-known developers ranked by GitHub followers, and a [types page](https://cronotype.vercel.app/types) explaining each rhythm and the exact rule that triggers it.
+Every profile has a dynamic Open Graph image, a "Recently revealed" feed of people who've used the site (with a seed list for first-load), and a [types page](https://cronotype.vercel.app/types) explaining each rhythm and the exact rule that triggers it.
 
 ## Stack
 
@@ -18,19 +18,20 @@ Every profile has a dynamic Open Graph image, a leaderboard of well-known develo
 - GitHub Search Commits API for the 90-day hourly distribution
 - GitHub GraphQL contributions calendar for the multi-year history
 - `next/og` for the share image, rendered with Geist
+- Upstash Redis (via Vercel KV) for the recently-revealed feed
 
 ## Architecture
 
-- `'use cache'` per query with `cacheTag` and `cacheLife`. Profile, stats, and per-year archetype each cache independently
-- `connection()` to gate dynamic work into Suspense boundaries
-- `unstable_catchError` from `next/error` for retry-aware error boundaries
-- Server components everywhere. Only the form, share buttons, and theme toggle are client
+- Next.js 16 Cache Components with per-query `cacheTag` and `cacheLife`
+- Per-card Suspense in the grid, fetched in stages so one rate limit doesn't blank a card
+- `updateTag` action for partial refresh, `after()` for non-blocking writes to KV
+- Server components everywhere except the form, share buttons, and theme toggle
 
 ```
 app/                  Pages, layouts, OG images
-features/profile/     Queries, services, components for a single handle
-features/leaderboard/ Recently revealed list
-lib/archetypes.ts     Classifier and percentile math
+features/profile/     Queries, actions, components for a single handle
+features/leaderboard/ Recently revealed grid
+lib/                  Archetypes, KV reveal log, formatters
 ```
 
 ## Running it locally
@@ -43,3 +44,5 @@ pnpm dev
 ```
 
 Set `MOCK_PROFILE=1` to skip GitHub entirely while working on UI.
+
+The "Recently revealed" feed is optional locally — without `KV_REST_API_URL` + `KV_REST_API_TOKEN`, it falls back to a hardcoded seed list. To enable live reveals, provision a KV store in the Vercel dashboard and `vercel env pull` the credentials.
