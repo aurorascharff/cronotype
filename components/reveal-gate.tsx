@@ -29,37 +29,38 @@ export function RevealGate({ handle }: Props) {
   }
 
   return (
-    <div className="dark:bg-ink-2 overflow-hidden rounded-xl border border-black/10 bg-white dark:border-white/10">
-      <button
-        type="button"
-        onClick={reveal}
-        disabled={busy}
-        aria-busy={busy}
-        className="group/reveal flex w-full flex-col items-center gap-5 p-6 text-center transition-colors hover:bg-black/[0.02] disabled:cursor-wait sm:p-10 dark:hover:bg-white/[0.03]"
-      >
-        <span className="relative flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
-          <span className="border-brand/20 absolute inset-0 rounded-full border" />
-          <span
-            className={`border-brand absolute inset-2 rounded-full border-t-2 border-r-2 border-b-2 border-l-transparent ${busy ? 'animate-spin' : 'transition-transform group-hover/reveal:rotate-45'}`}
-          />
-          <span className="bg-brand/10 text-brand flex h-14 w-14 items-center justify-center rounded-full font-mono text-sm font-semibold sm:h-16 sm:w-16">
-            @{handle.slice(0, 2).toUpperCase()}
-          </span>
-        </span>
-        <span className="flex max-w-md flex-col gap-2">
-          <span className="text-xl font-semibold tracking-tight break-words sm:text-2xl">
-            {busy ? `Revealing @${handle}` : `Ready to reveal @${handle}?`}
-          </span>
-          <span className="text-muted dark:text-muted-dark text-sm">
+    <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10">
+      <div className="flex flex-col gap-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
+        <div className="min-w-0">
+          <p className="text-ink dark:text-paper text-sm font-semibold break-words">
+            {busy ? `Revealing @${handle}` : `Reveal @${handle}`}
+          </p>
+          <p className="text-muted dark:text-muted-dark mt-1 text-sm">
             {busy
-              ? 'Fetching GitHub activity, caching the result, and preparing the timeline. This can take a little while.'
-              : 'Start the profile generation. The page will update when the reveal has been recorded.'}
-          </span>
-        </span>
-        <span className="text-brand text-xs font-medium tracking-wide uppercase">
-          {busy ? 'Working...' : 'Start reveal'}
-        </span>
-      </button>
+              ? 'Fetching GitHub activity, caching the profile, and preparing the timeline.'
+              : 'This profile has not been generated here yet.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={reveal}
+          disabled={busy}
+          aria-busy={busy}
+          className="bg-brand text-on-brand dark:text-ink ring-brand/20 hover:ring-brand/40 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:cursor-wait disabled:opacity-70"
+        >
+          {busy ? <Spinner /> : null}
+          <span>{busy ? 'Revealing' : 'Reveal'}</span>
+        </button>
+      </div>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden className="animate-spin">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" />
+      <path d="M10.5 6a4.5 4.5 0 0 0-4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }

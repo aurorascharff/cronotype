@@ -32,8 +32,9 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         await revealUser(handle);
         router.push(`/${handle}`);
       } catch {
-        setIsSubmitting(false);
         toast.error("Couldn't start the reveal. Try again in a moment.");
+      } finally {
+        setIsSubmitting(false);
       }
     });
   }

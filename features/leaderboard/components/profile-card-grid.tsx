@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
+import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 
 export function ProfileCardSlot({ handle }: { handle: string }) {
@@ -50,7 +51,8 @@ export function ProfileCardSlot({ handle }: { handle: string }) {
 async function CardChip({ handle }: { handle: string }) {
   const result = await getCardClassification(handle);
   if (!result) return <ClassifyingRing failed />;
-  return <RadialChip stats={result.stats} color={result.archetype.theme.accent} size={112} />;
+  const color = result.stats.total === 0 ? QUIET_THEME.accent : result.archetype.theme.accent;
+  return <RadialChip stats={result.stats} color={color} size={112} />;
 }
 
 async function CardMeta({ handle }: { handle: string }) {
@@ -67,8 +69,13 @@ async function CardMeta({ handle }: { handle: string }) {
         <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
       </div>
       {classification ? (
-        <div className="truncate text-xs font-medium" style={{ color: classification.archetype.theme.accent }}>
-          {classification.archetype.name}
+        <div
+          className="truncate text-xs font-medium"
+          style={{
+            color: classification.stats.total === 0 ? QUIET_THEME.accent : classification.archetype.theme.accent,
+          }}
+        >
+          {classification.stats.total === 0 ? 'Quiet lately' : classification.archetype.name}
         </div>
       ) : (
         <span className="text-muted/40 dark:text-muted-dark/40 truncate text-xs">—</span>

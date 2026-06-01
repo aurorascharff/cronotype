@@ -252,8 +252,9 @@ export function EvolutionStripSkeleton() {
         </ul>
 
         <div className="relative h-32 sm:h-40">
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-muted/60 dark:text-muted-dark/60 absolute inset-0 flex flex-col items-center justify-center gap-2">
             <Spinner />
+            <span className="text-[11px] font-medium tracking-wide uppercase">Loading, crunching your history</span>
           </div>
         </div>
 

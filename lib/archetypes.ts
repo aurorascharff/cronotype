@@ -1,7 +1,7 @@
 import type { Archetype, ArchetypeId, ArchetypeTheme, HourStats } from '@/types/cronotype';
 
 const THEMES: Record<ArchetypeId, ArchetypeTheme> = {
-  drifter: { accent: '#94a3b8', accent2: '#cbd5e1', bgDark: '#08090b', bgLight: '#fafafa' },
+  drifter: { accent: '#60a5fa', accent2: '#93c5fd', bgDark: '#08090b', bgLight: '#fafafa' },
   'insomniac-maintainer': { accent: '#ec4899', accent2: '#f472b6', bgDark: '#08090b', bgLight: '#fafafa' },
   'lunch-bandit': { accent: '#ef4444', accent2: '#f87171', bgDark: '#08090b', bgLight: '#fafafa' },
   'nine-to-fiver': { accent: '#06b6d4', accent2: '#22d3ee', bgDark: '#08090b', bgLight: '#fafafa' },
@@ -9,6 +9,13 @@ const THEMES: Record<ArchetypeId, ArchetypeTheme> = {
   'touch-grass': { accent: '#84cc16', accent2: '#a3e635', bgDark: '#08090b', bgLight: '#fafafa' },
   vampire: { accent: '#a855f7', accent2: '#c084fc', bgDark: '#08090b', bgLight: '#fafafa' },
   'weekend-warrior': { accent: '#10b981', accent2: '#34d399', bgDark: '#08090b', bgLight: '#fafafa' },
+};
+
+export const QUIET_THEME: ArchetypeTheme = {
+  accent: '#9ca3af',
+  accent2: '#d1d5db',
+  bgDark: '#08090b',
+  bgLight: '#fafafa',
 };
 
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {

@@ -6,9 +6,10 @@ import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
+import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
-import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
+import type { HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
   handle: string;
@@ -36,7 +37,7 @@ export async function CronotypeProfile({ handle }: Props) {
   return (
     <div className="relative">
       {stats.total === 0 ? (
-        <NoRecentProfileCard profile={profile} archetype={archetype} stats={stats} />
+        <NoRecentProfileCard profile={profile} stats={stats} />
       ) : (
         <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
       )}
@@ -48,7 +49,7 @@ export async function CronotypeProfile({ handle }: Props) {
           <ShareActions
             shareUrl={shareUrl}
             archetypeName={stats.total === 0 ? 'quiet lately' : archetype.name}
-            accent={archetype.theme.accent}
+            accent={stats.total === 0 ? QUIET_THEME.accent : archetype.theme.accent}
             handle={profile.login}
           />
         </div>
@@ -59,14 +60,12 @@ export async function CronotypeProfile({ handle }: Props) {
 
 function NoRecentProfileCard({
   profile,
-  archetype,
   stats,
 }: {
   profile: ProfileSummary;
-  archetype: Archetype;
   stats: HourStats;
 }) {
-  const { theme } = archetype;
+  const theme = QUIET_THEME;
   const joined = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
     new Date(profile.createdAt),
   );
@@ -116,11 +115,11 @@ function NoRecentProfileCard({
           </p>
 
           <Link
-            href={`/types#${archetype.id}`}
+            href="/types"
             className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper w-fit text-xs underline-offset-2 transition-colors hover:underline"
             style={{ color: theme.accent }}
           >
-            Closest type: {archetype.name} →
+            No current 90d type →
           </Link>
 
           <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">

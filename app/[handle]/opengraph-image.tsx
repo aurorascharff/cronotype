@@ -9,12 +9,28 @@ export const size = { width: 1200, height: 630 };
 
 type Params = { handle: string };
 
+const COLORS = {
+  ink2: '#0f1013',
+  mutedDark: '#8b8d96',
+  mutedDivider: 'rgba(139, 141, 150, 0.25)',
+  paper: '#fafafa',
+  paper80: 'rgba(250, 250, 250, 0.8)',
+  white10: 'rgba(255, 255, 255, 0.1)',
+  white20: 'rgba(255, 255, 255, 0.2)',
+};
+
 async function loadGeist() {
   try {
-    const [regular, semibold] = await Promise.all([loadFont('Geist-Regular.ttf'), loadFont('Geist-SemiBold.ttf')]);
+    const [sans, monoRegular, monoSemibold] = await Promise.all([
+      loadFont('Geist-Variable.ttf'),
+      loadFont('GeistMono-Regular.ttf'),
+      loadFont('GeistMono-SemiBold.ttf'),
+    ]);
     return [
-      { data: regular, name: 'Geist', style: 'normal' as const, weight: 400 as const },
-      { data: semibold, name: 'Geist', style: 'normal' as const, weight: 600 as const },
+      { data: sans, name: 'GeistSans', style: 'normal' as const, weight: 400 as const },
+      { data: sans, name: 'GeistSans', style: 'normal' as const, weight: 600 as const },
+      { data: monoRegular, name: 'GeistMono', style: 'normal' as const, weight: 400 as const },
+      { data: monoSemibold, name: 'GeistMono', style: 'normal' as const, weight: 600 as const },
     ];
   } catch {
     return undefined;
@@ -28,6 +44,18 @@ async function loadFont(name: string) {
   const signature = String.fromCharCode(...new Uint8Array(data.slice(0, 4)));
   if (signature.startsWith('<')) throw new Error(`Invalid font response for ${name}`);
   return data;
+}
+
+function titleSizeFor(name: string) {
+  if (name.length >= 20) return 70;
+  if (name.length >= 16) return 80;
+  return 98;
+}
+
+function meaningSizeFor(text: string) {
+  if (text.length >= 92) return 25;
+  if (text.length >= 72) return 27;
+  return 30;
 }
 
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
@@ -50,6 +78,8 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   const inner = avatarR + gap;
   const outer = haloSize * 0.46;
   const barWidth = Math.max(4, haloSize * 0.018);
+  const titleFontSize = titleSizeFor(archetype.name);
+  const meaningFontSize = meaningSizeFor(archetype.meaning);
 
   const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
     <div
@@ -57,7 +87,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
       style={{
         color: theme.accent,
         display: 'flex',
-        fontFamily: 'Geist, sans-serif',
+        fontFamily: 'GeistMono, monospace',
         fontSize: 22,
         fontWeight: 600,
         justifyContent: anchor === 'center' ? 'center' : anchor === 'right' ? 'flex-end' : 'flex-start',
@@ -76,10 +106,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
     <div
       style={{
         alignItems: 'center',
-        background: '#08090b',
-        color: 'white',
+        background: COLORS.ink2,
+        color: COLORS.paper,
         display: 'flex',
-        fontFamily: 'Geist, sans-serif',
+        fontFamily: 'GeistSans, sans-serif',
         gap: 56,
         height: '100%',
         padding: 64,
@@ -218,11 +248,11 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         {tickLabel('6pm', -outer - 18, 0, 'right')}
       </div>
 
-      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12 }}>
-        <div style={{ alignItems: 'baseline', color: '#8b8d96', display: 'flex', gap: 10 }}>
-          <span style={{ fontSize: 28 }}>@{profile.login}</span>
-          <span style={{ color: '#8b8d9640', fontSize: 28 }}>·</span>
-          <span style={{ fontSize: 22 }}>{formatFollowers(profile.followers)}</span>
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div style={{ alignItems: 'baseline', color: COLORS.mutedDark, display: 'flex', gap: 10 }}>
+          <span style={{ fontSize: 24 }}>@{profile.login}</span>
+          <span style={{ color: COLORS.mutedDivider, fontSize: 28 }}>·</span>
+          <span style={{ fontSize: 20 }}>{formatFollowers(profile.followers)}</span>
         </div>
         <div
           style={{
@@ -230,18 +260,28 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
             backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
             color: 'transparent',
             display: 'flex',
-            fontSize: 108,
+            fontSize: titleFontSize,
             fontWeight: 600,
             letterSpacing: '-0.04em',
-            lineHeight: 0.95,
+            lineHeight: 1,
+            maxWidth: 680,
           }}
         >
           {archetype.name}
         </div>
-        <div style={{ color: '#c8cad4', display: 'flex', fontSize: 32, marginTop: 8, maxWidth: 620 }}>
+        <div
+          style={{
+            color: COLORS.mutedDark,
+            display: 'flex',
+            fontSize: meaningFontSize,
+            lineHeight: 1.35,
+            marginTop: 6,
+            maxWidth: 600,
+          }}
+        >
           {archetype.meaning}
         </div>
-        <div style={{ display: 'flex', gap: 44, marginTop: 28 }}>
+        <div style={{ display: 'flex', gap: 40, marginTop: 24 }}>
           <Stat label="PEAK" value={formatHour(stats.peakHour)} />
           <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
           <Stat label="COMMITS" value={formatCount(stats.total)} />
@@ -251,7 +291,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
       <div
         style={{
-          color: '#8b8d96',
+          color: COLORS.mutedDark,
           display: 'flex',
           fontSize: 24,
           fontWeight: 600,
@@ -266,10 +306,12 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
       <div
         style={{
-          border: '1px solid rgba(255, 255, 255, 0.22)',
+          border: `1px solid ${COLORS.white20}`,
           borderRadius: 6,
-          color: '#d4d6e0',
+          background: COLORS.white10,
+          color: COLORS.paper80,
           display: 'flex',
+          fontFamily: 'GeistMono, monospace',
           fontSize: 18,
           fontWeight: 500,
           letterSpacing: '0.08em',
@@ -285,9 +327,9 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
       <div
         style={{
-          color: '#8b8d96',
+          color: COLORS.mutedDark,
           display: 'flex',
-          fontFamily: 'Geist, monospace',
+          fontFamily: 'GeistMono, monospace',
           fontSize: 22,
           left: 64,
           letterSpacing: '-0.01em',
@@ -305,10 +347,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ color: '#8b8d96', display: 'flex', fontSize: 18, letterSpacing: '0.08em' }}>{label}</div>
+      <div style={{ color: COLORS.mutedDark, display: 'flex', fontSize: 18, letterSpacing: '0.08em' }}>{label}</div>
       <div
         style={{
-          color: accent ?? 'white',
+          color: accent ?? COLORS.paper,
           display: 'flex',
           fontSize: 40,
           fontWeight: 600,
@@ -326,11 +368,11 @@ function fallback(fonts?: Awaited<ReturnType<typeof loadGeist>>) {
     <div
       style={{
         alignItems: 'center',
-        background: '#08090b',
-        color: 'white',
+        background: COLORS.ink2,
+        color: COLORS.paper,
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Geist, sans-serif',
+        fontFamily: 'GeistSans, sans-serif',
         gap: 16,
         height: '100%',
         justifyContent: 'center',
@@ -338,14 +380,15 @@ function fallback(fonts?: Awaited<ReturnType<typeof loadGeist>>) {
         width: '100%',
       }}
     >
-      <div style={{ color: '#8b8d96', display: 'flex', fontSize: 30 }}>cronotype</div>
+      <div style={{ color: COLORS.mutedDark, display: 'flex', fontSize: 30 }}>cronotype</div>
       <div
         style={{
           color: fallbackArchetype.theme.accent,
           display: 'flex',
-          fontSize: 102,
+          fontSize: 86,
           fontWeight: 600,
-          letterSpacing: '-0.04em',
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
         }}
       >
         What type of developer are you?
