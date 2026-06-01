@@ -22,7 +22,7 @@ export async function RecentDiagnosed({ excludeLogin, limit = 8 }: Props) {
   );
 }
 
-export function RecentDiagnosedSkeleton({ limit = 8 }: { limit?: number }) {
+export function RecentDiagnosedSkeleton({ limit = 4 }: { limit?: number }) {
   return (
     <section className="space-y-4">
       <header>

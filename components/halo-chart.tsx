@@ -41,10 +41,10 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
   });
 
   const ticks = [
-    { anchor: 'middle' as const, label: '12a', x: cx, y: cy - outer - 16 },
-    { anchor: 'start' as const, label: '6a', x: cx + outer + 14, y: cy + 5 },
-    { anchor: 'middle' as const, label: '12p', x: cx, y: cy + outer + 22 },
-    { anchor: 'end' as const, label: '6p', x: cx - outer - 14, y: cy + 5 },
+    { anchor: 'middle' as const, label: '12am', x: cx, y: cy - outer - 16 },
+    { anchor: 'start' as const, label: '6am', x: cx + outer + 14, y: cy + 5 },
+    { anchor: 'middle' as const, label: '12pm', x: cx, y: cy + outer + 22 },
+    { anchor: 'end' as const, label: '6pm', x: cx - outer - 14, y: cy + 5 },
   ];
 
   const gradId = `halo-grad-${theme.accent.replace('#', '')}`;

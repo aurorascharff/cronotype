@@ -1,5 +1,8 @@
+import { Fragment } from 'react';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory, type MonthBucket } from '@/features/profile/profile-queries';
+import { ARCHETYPES } from '@/lib/archetypes';
+import type { ArchetypeId } from '@/types/cronotype';
 
 type Props = {
   login: string;
@@ -11,7 +14,7 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
-  const [months, { archetype }] = await Promise.all([
+  const [{ months, yearlyArchetypes, partial }, { archetype }] = await Promise.all([
     getMonthlyHistory(login),
     computeCronotype(login, '90d'),
   ]);
@@ -33,6 +36,7 @@ export async function EvolutionStrip({ login }: Props) {
   const peak = findPeak(months);
   const total = months.reduce((a, b) => a + b.count, 0);
   const yearMarkers = computeYearMarkers(months);
+  const journey = buildArchetypeJourney(yearlyArchetypes, archetype.id);
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
@@ -42,6 +46,7 @@ export async function EvolutionStrip({ login }: Props) {
           <p className="text-muted dark:text-muted-dark mt-0.5 text-xs">
             {total.toLocaleString()} commits since {months[0].month.slice(0, 4)} ·{' '}
             <span style={{ color: archetype.theme.accent }}>{archetype.name}</span> today
+            {partial ? ' · recent-only snapshot' : ''}
           </p>
         </div>
         <span className="text-muted dark:text-muted-dark text-xs tabular-nums">
@@ -130,6 +135,26 @@ export async function EvolutionStrip({ login }: Props) {
             </span>
           ))}
         </div>
+
+        {journey.length > 1 && (
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
+            {journey.map((step, i) => {
+              const a = ARCHETYPES[step.archetypeId];
+              const label = step.current ? 'now' : String(step.year);
+              return (
+                <Fragment key={`${step.archetypeId}-${step.year}-${i}`}>
+                  {i > 0 && <span className="text-muted dark:text-muted-dark">→</span>}
+                  <span
+                    className="rounded-full border border-black/10 px-2 py-0.5 dark:border-white/10"
+                    style={{ color: a.theme.accent }}
+                  >
+                    {a.name} <span className="text-muted dark:text-muted-dark">{label}</span>
+                  </span>
+                </Fragment>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -138,15 +163,11 @@ export async function EvolutionStrip({ login }: Props) {
 export function EvolutionStripSkeleton() {
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
-      <div className="mb-5 flex items-baseline justify-between">
-        <div className="space-y-1.5">
-          <div className="skeleton h-4 w-32" />
-          <div className="skeleton h-3 w-48 opacity-60" />
-        </div>
-        <div className="skeleton h-3 w-20" />
+      <div className="mb-4 space-y-1.5">
+        <div className="skeleton h-4 w-32" />
+        <div className="skeleton h-3 w-52 opacity-60" />
       </div>
       <div className="skeleton h-32 rounded-md sm:h-40" />
-      <div className="mt-2 h-4" />
     </section>
   );
 }
@@ -228,4 +249,28 @@ function computeYearMarkers(months: MonthBucket[]): Array<{ label: string; x: nu
     label: String(year),
     x: (idx / (months.length - 1)) * W,
   }));
+}
+
+function buildArchetypeJourney(
+  yearly: Array<{ year: number; archetypeId: ArchetypeId; commits: number }>,
+  currentId: ArchetypeId,
+) {
+  const dense = yearly
+    .filter(y => y.commits > 0)
+    .map(y => ({ archetypeId: y.archetypeId, current: false, year: y.year }));
+
+  const collapsed: Array<{ year: number; archetypeId: ArchetypeId; current: boolean }> = [];
+  for (const step of dense) {
+    const prev = collapsed[collapsed.length - 1];
+    if (!prev || prev.archetypeId !== step.archetypeId) collapsed.push(step);
+  }
+
+  const last = collapsed[collapsed.length - 1];
+  if (!last || last.archetypeId !== currentId) {
+    collapsed.push({ archetypeId: currentId, current: true, year: new Date().getUTCFullYear() });
+  } else {
+    last.current = true;
+  }
+
+  return collapsed.slice(Math.max(0, collapsed.length - 6));
 }

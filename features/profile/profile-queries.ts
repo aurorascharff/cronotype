@@ -1,6 +1,7 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { ARCHETYPES } from '@/lib/archetypes';
+import { classify } from '@/lib/archetypes';
 import { buildStats, type Commit } from '@/lib/stats';
 import { syntheticStatsFor } from '@/lib/synthetic';
 import type { ArchetypeId, ProfileSummary, Window } from '@/types/cronotype';
@@ -164,8 +165,21 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
 // ── Monthly history for the evolution strip ──────────────────────────────────────
 
 export type MonthBucket = { month: string; count: number };
+export type YearArchetypeBucket = { year: number; archetypeId: ArchetypeId; commits: number };
+export type MonthlyHistory = {
+  months: MonthBucket[];
+  yearlyArchetypes: YearArchetypeBucket[];
+  partial: boolean;
+};
 
-export async function getYearMonthly(login: string, year: number): Promise<MonthBucket[]> {
+type YearMonthly = {
+  months: MonthBucket[];
+  archetypeId: ArchetypeId | null;
+  commits: number;
+  year: number;
+};
+
+export async function getYearMonthly(login: string, year: number): Promise<YearMonthly> {
   'use cache';
   cacheTag(`monthly-${login.toLowerCase()}-${year}`);
   if (year === new Date().getUTCFullYear()) {
@@ -183,7 +197,13 @@ export async function getYearMonthly(login: string, year: number): Promise<Month
       const wave = (Math.abs(x) % 1) * 0.7 + Math.sin(m / 2 + year) * 0.3 + 0.4;
       months.push({ count: Math.max(0, Math.round(wave * 60)), month: `${year}-${String(m + 1).padStart(2, '0')}` });
     }
-    return months;
+    const commits = months.reduce((sum, m) => sum + m.count, 0);
+    return {
+      archetypeId: mockArchetypeFor(`${login}-${year}`),
+      commits,
+      months,
+      year,
+    };
   }
 
   const from = `${year}-01-01`;
@@ -196,9 +216,19 @@ export async function getYearMonthly(login: string, year: number): Promise<Month
     const key = c.authoredAt.slice(0, 7); // YYYY-MM
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return Array.from(counts.entries())
+  const months = Array.from(counts.entries())
     .map(([month, count]) => ({ count, month }))
     .sort((a, b) => a.month.localeCompare(b.month));
+
+  const commitsCount = commits.length;
+  const archetypeId = commitsCount === 0 ? null : classify(buildStats(commits)).id;
+
+  return {
+    archetypeId,
+    commits: commitsCount,
+    months,
+    year,
+  };
 }
 
 /**
@@ -206,21 +236,31 @@ export async function getYearMonthly(login: string, year: number): Promise<Month
  * marked `'use cache'` — the inner `getYearMonthly` calls are each cached,
  * wrapping the loop trips the "stuck on shared state" runtime error.
  */
-export async function getMonthlyHistory(login: string): Promise<MonthBucket[]> {
+export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
   const profile = await getProfile(login);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const thisYear = new Date().getUTCFullYear();
 
-  const out: MonthBucket[] = [];
-  for (let year = firstYear; year <= thisYear; year++) {
+  const byYear: YearMonthly[] = [];
+  let partial = false;
+
+  // Fetch newest years first so a rate limit still yields useful, current data.
+  for (let year = thisYear; year >= firstYear; year--) {
     try {
-      const months = await getYearMonthly(login, year);
-      out.push(...months);
+      const result = await getYearMonthly(login, year);
+      byYear.push(result);
     } catch (err) {
-      if (err instanceof GitHubError && (err.status === 403 || err.status === 429)) break;
+      if (err instanceof GitHubError && (err.status === 403 || err.status === 429)) {
+        partial = true;
+        break;
+      }
       throw err;
     }
   }
+
+  const out = byYear
+    .flatMap(y => y.months)
+    .sort((a, b) => a.month.localeCompare(b.month));
 
   // Trim leading months with zero commits before the user's first commit.
   let start = 0;
@@ -230,7 +270,20 @@ export async function getMonthlyHistory(login: string): Promise<MonthBucket[]> {
   while (end > start && out[end - 1].count === 0 && out[end - 1].month > `${thisYear}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`) {
     end--;
   }
-  return out.slice(start, end);
+
+  const months = out.slice(start, end);
+  if (months.length === 0) {
+    return { months: [], partial, yearlyArchetypes: [] };
+  }
+
+  const startYear = Number(months[0].month.slice(0, 4));
+  const endYear = Number(months[months.length - 1].month.slice(0, 4));
+  const yearlyArchetypes = byYear
+    .filter(y => y.year >= startYear && y.year <= endYear && y.archetypeId)
+    .map(y => ({ archetypeId: y.archetypeId as ArchetypeId, commits: y.commits, year: y.year }))
+    .sort((a, b) => a.year - b.year);
+
+  return { months, partial, yearlyArchetypes };
 }
 
 // ── Mock helpers (only used when MOCK_PROFILE=1) ──────────────────────────

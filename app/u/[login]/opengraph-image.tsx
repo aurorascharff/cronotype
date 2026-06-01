@@ -111,12 +111,12 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
         {/* Verdict + stats */}
         <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12 }}>
-          <div style={{ color: '#8b8d96', display: 'flex', fontSize: 22 }}>@{profile.login}</div>
+          <div style={{ color: '#8b8d96', display: 'flex', fontSize: 30 }}>@{profile.login}</div>
           <div
             style={{
               color: theme.accent,
               display: 'flex',
-              fontSize: 92,
+              fontSize: 102,
               fontWeight: 600,
               letterSpacing: '-0.04em',
               lineHeight: 1,
@@ -124,10 +124,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           >
             {archetype.name}
           </div>
-          <div style={{ color: '#c8cad4', display: 'flex', fontSize: 26, marginTop: 8, maxWidth: 540 }}>
+          <div style={{ color: '#c8cad4', display: 'flex', fontSize: 34, marginTop: 10, maxWidth: 620 }}>
             {archetype.meaning}
           </div>
-          <div style={{ display: 'flex', gap: 40, marginTop: 28 }}>
+          <div style={{ display: 'flex', gap: 44, marginTop: 30 }}>
             <Stat label="PEAK" value={formatHour(stats.peakHour)} />
             <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
             <Stat label="WEEKEND" value={`${Math.round(stats.pctWeekend)}%`} />
@@ -140,7 +140,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           style={{
             color: '#8b8d96',
             display: 'flex',
-            fontSize: 18,
+            fontSize: 24,
             fontWeight: 600,
             left: 64,
             letterSpacing: '-0.01em',
@@ -158,10 +158,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
             borderRadius: 6,
             color: '#8b8d96',
             display: 'flex',
-            fontSize: 14,
+            fontSize: 18,
             fontWeight: 500,
             letterSpacing: '0.08em',
-            padding: '6px 12px',
+            padding: '8px 14px',
             position: 'absolute',
             right: 64,
             textTransform: 'uppercase',
@@ -178,9 +178,9 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ color: '#8b8d96', display: 'flex', fontSize: 14, letterSpacing: '0.08em' }}>{label}</div>
-      <div style={{ color: 'white', display: 'flex', fontSize: 32, fontWeight: 600 }}>{value}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ color: '#8b8d96', display: 'flex', fontSize: 18, letterSpacing: '0.08em' }}>{label}</div>
+      <div style={{ color: 'white', display: 'flex', fontSize: 40, fontWeight: 600 }}>{value}</div>
     </div>
   );
 }
@@ -204,12 +204,12 @@ function fallback() {
           width: '100%',
         }}
       >
-        <div style={{ color: '#8b8d96', display: 'flex', fontSize: 22 }}>cronotype</div>
+        <div style={{ color: '#8b8d96', display: 'flex', fontSize: 30 }}>cronotype</div>
         <div
           style={{
             color: fallbackArchetype.theme.accent,
             display: 'flex',
-            fontSize: 92,
+            fontSize: 102,
             fontWeight: 600,
             letterSpacing: '-0.04em',
           }}
@@ -223,10 +223,10 @@ function fallback() {
 }
 
 function formatHour(h: number) {
-  if (h === 0) return '12a';
-  if (h === 12) return '12p';
-  if (h < 12) return `${h}a`;
-  return `${h - 12}p`;
+  if (h === 0) return '12am';
+  if (h === 12) return '12pm';
+  if (h < 12) return `${h}am`;
+  return `${h - 12}pm`;
 }
 
 function formatCount(n: number) {

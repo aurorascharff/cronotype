@@ -61,7 +61,7 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
   );
 }
 
-export function ProfileCardGridSkeleton({ count = 8 }: { count?: number }) {
+export function ProfileCardGridSkeleton({ count = 4 }: { count?: number }) {
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -69,11 +69,12 @@ export function ProfileCardGridSkeleton({ count = 8 }: { count?: number }) {
           key={i}
           className="dark:bg-ink-2 flex h-full flex-col gap-4 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
         >
-          <div className="skeleton h-28 rounded-md" />
+          <div className="flex h-28 items-center justify-center">
+            <div className="skeleton h-16 w-16 rounded-full" />
+          </div>
           <div className="space-y-1">
             <div className="skeleton h-3 w-24" />
             <div className="skeleton h-3 w-16 opacity-60" />
-            <div className="skeleton h-3 w-20" />
           </div>
         </li>
       ))}
