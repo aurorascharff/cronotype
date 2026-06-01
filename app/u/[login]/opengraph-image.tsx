@@ -63,12 +63,12 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
       style={{
         color: theme.accent,
         display: 'flex',
-        fontFamily: 'monospace',
+        fontFamily: 'Geist, sans-serif',
         fontSize: 22,
         fontWeight: 600,
         justifyContent: anchor === 'center' ? 'center' : anchor === 'right' ? 'flex-end' : 'flex-start',
         left: cx + dx - 60,
-        letterSpacing: '0.04em',
+        letterSpacing: '0.02em',
         position: 'absolute',
         top: cx + dy - 14,
         width: 120,
@@ -198,8 +198,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
               display: 'flex',
               height: avatarR * 2,
               justifyContent: 'center',
+              left: cx - avatarR,
               overflow: 'hidden',
               position: 'absolute',
+              top: cx - avatarR,
               width: avatarR * 2,
             }}
           >
@@ -209,7 +211,13 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
               alt=""
               width={avatarR * 2}
               height={avatarR * 2}
-              style={{ display: 'block', objectFit: 'cover' }}
+              style={{
+                borderRadius: '50%',
+                display: 'block',
+                height: avatarR * 2,
+                objectFit: 'cover',
+                width: avatarR * 2,
+              }}
             />
           </div>
 

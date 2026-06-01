@@ -22,8 +22,8 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
   'insomniac-maintainer': {
     id: 'insomniac-maintainer',
     name: 'Insomniac Maintainer',
-    tagline: 'Day shift by calendar, night shift by instinct.',
-    meaning: 'You keep the lights on after everyone else logs off.',
+    tagline: 'Two distinct peaks: business hours and late night.',
+    meaning: 'A day job, plus a side project (or an on-call rotation) at night.',
     theme: THEMES['insomniac-maintainer'],
   },
   'lunch-bandit': {

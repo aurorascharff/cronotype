@@ -26,7 +26,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
     signal: 'The fallback. Nothing else triggers: no nocturnal cluster, no business-hours block, no weekend tilt.',
   },
   'insomniac-maintainer': {
-    meaning: 'You keep the lights on after everyone else logs off.',
+    meaning: 'A day job, plus a side project (or an on-call rotation) at night.',
     percentile: 'Higher with more nocturnal commits added to a base of 50%.',
     signal: 'isBimodal: a daytime peak and a second peak after midnight, both well above the average hour.',
   },
@@ -104,16 +104,18 @@ export default function TypesPage() {
                   {a.name}
                 </h2>
                 <p className="text-ink dark:text-paper text-sm">{d.meaning}</p>
-                <dl className="space-y-1 text-xs">
-                  <div>
-                    <dt className="text-muted dark:text-muted-dark inline font-medium">Signal. </dt>
-                    <dd className="text-ink/85 dark:text-paper/85 inline">{d.signal}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted dark:text-muted-dark inline font-medium">Percentile. </dt>
-                    <dd className="text-ink/85 dark:text-paper/85 inline">{d.percentile}</dd>
-                  </div>
-                </dl>
+                <div className="space-y-1.5 pt-1 text-xs">
+                  <p className="text-muted dark:text-muted-dark">
+                    <span className="text-ink/80 dark:text-paper/80 font-medium">How it&apos;s spotted</span>
+                    <br />
+                    {d.signal}
+                  </p>
+                  <p className="text-muted dark:text-muted-dark">
+                    <span className="text-ink/80 dark:text-paper/80 font-medium">Percentile</span>
+                    <br />
+                    {d.percentile}
+                  </p>
+                </div>
               </div>
             </li>
           );

@@ -1,36 +1,34 @@
 # Cronotype
 
-A Next.js 16 app that classifies a GitHub user's commit rhythm into one of eight archetypes based on the hourly distribution of their recent public commits.
+Type a GitHub handle. Get a commit-time archetype, a year-by-year timeline of how it changed, and a shareable profile card.
 
 Live at [cronotype.vercel.app](https://cronotype.vercel.app).
 
+## What it does
+
+Reads the last 90 days of public commits for a GitHub user and sorts them into one of eight rhythms (Vampire, Sunrise Sniper, Nine-to-Fiver, Lunch Bandit, Weekend Warrior, Insomniac Maintainer, Drifter, Grass Toucher). Then draws a multicolor line chart of how the archetype shifted year over year.
+
+Every profile has a dynamic Open Graph image, a "Recently diagnosed" feed, and a [types page](https://cronotype.vercel.app/types) explaining each rhythm and the exact rule that triggers it.
+
 ## Stack
 
-- Next.js 16 with `cacheComponents`, React 19, React Compiler enabled
-- Tailwind CSS v4 with CSS custom properties as design tokens
+- Next.js 16, React 19, React Compiler, Tailwind CSS v4
 - GitHub Search Commits API for the 90-day hourly distribution
 - GitHub GraphQL contributions calendar for the multi-year history
-- `next/og` for the share image, rendered with Geist from `public/fonts`
+- `next/og` for the share image, rendered with Geist
 
-## Patterns it shows
+## Architecture
 
 - `'use cache'` per query with `cacheTag` and `cacheLife`. Profile, stats, and per-year archetype each cache independently
-- `connection()` to gate dynamic work (current time, fresh API calls) into Suspense boundaries so the rest of the page can prerender
-- `unstable_catchError` from `next/error` for retry-aware error boundaries that handle `notFound()` and `redirect()` correctly
-- React Server Components everywhere. Only the form, the share buttons, and the theme toggle are client components
-- Per-route OG images via `opengraph-image.tsx`, with `generateMetadata` per profile
-
-## Project structure
+- `connection()` to gate dynamic work into Suspense boundaries
+- `unstable_catchError` from `next/error` for retry-aware error boundaries
+- Server components everywhere. Only the form, share buttons, and theme toggle are client
 
 ```
 app/                  Pages, layouts, OG images
-features/
-  profile/            Queries, services, components for a single handle
-  leaderboard/        Recently diagnosed list
-components/           Shared UI
-lib/
-  archetypes.ts       The classifier and percentile math
-  github.ts           Auth and shared fetch helpers
+features/profile/     Queries, services, components for a single handle
+features/leaderboard/ Recently diagnosed list
+lib/archetypes.ts     Classifier and percentile math
 ```
 
 ## Running it locally

@@ -41,62 +41,32 @@ export async function EvolutionStrip({ login }: Props) {
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 sm:p-8">
-      <h2 className="text-muted dark:text-muted-dark mb-6 text-[11px] font-medium tracking-[0.14em] uppercase">
-        How you got here{partial ? ' · partial' : ''}
-      </h2>
+      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
+          How you got here
+        </h2>
+        {partial && (
+          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+            Partial · some years unavailable
+          </span>
+        )}
+      </div>
+
+      <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+        {eras
+          .filter(e => e.label)
+          .map((e, i) => (
+            <li key={`legend-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="h-2 w-2 rounded-full" style={{ background: e.color }} />
+              <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
+                {e.label}
+              </span>
+              <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
+            </li>
+          ))}
+      </ul>
 
       <div className="relative">
-        <div className="relative mb-2 h-9">
-          {(() => {
-            // Approximate label width in percent of chart width. Tuned so
-            // adjacent labels never visually touch when slotted into rows.
-            const CHAR_PCT = 0.85;
-            const PAD_PCT = 3;
-            // Two rows: above-the-chart preferred, drop below if taken.
-            const rowEnds = [-Infinity, -Infinity];
-            return eras.map((e, i) => {
-              if (!e.label) return null;
-              const midPct = (e.startPct + e.endPct) / 2;
-              const align = midPct < 14 ? 'left' : midPct > 86 ? 'right' : 'center';
-              const text = `${e.label} ${e.yearLabel}`;
-              const widthPct = text.length * CHAR_PCT + PAD_PCT;
-              const startPct =
-                align === 'center'
-                  ? midPct - widthPct / 2
-                  : align === 'right'
-                    ? midPct - widthPct
-                    : midPct;
-              let row = 0;
-              while (row < rowEnds.length && rowEnds[row] > startPct) row++;
-              if (row >= rowEnds.length) row = rowEnds.length - 1;
-              rowEnds[row] = startPct + widthPct;
-              return (
-                <div
-                  key={`era-label-${i}`}
-                  className="absolute flex items-center gap-1.5 whitespace-nowrap"
-                  style={{
-                    left: `${midPct}%`,
-                    top: row === 0 ? '0' : '20px',
-                    transform:
-                      align === 'center'
-                        ? 'translateX(-50%)'
-                        : align === 'right'
-                          ? 'translateX(-100%)'
-                          : 'none',
-                  }}
-                >
-                  <span className="h-2 w-2 rounded-full" style={{ background: e.color }} />
-                  <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
-                    {e.label}
-                  </span>
-                  <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
-                </div>
-              );
-            });
-          })()}
-        </div>
-
-        <div className="relative">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             preserveAspectRatio="none"
@@ -179,7 +149,6 @@ export async function EvolutionStrip({ login }: Props) {
             </span>
           ))}
         </div>
-      </div>
     </section>
   );
 }
