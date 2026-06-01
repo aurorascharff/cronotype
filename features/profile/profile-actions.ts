@@ -1,7 +1,6 @@
 'use server';
 
 import { updateTag } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { isFeaturedLogin } from '@/features/leaderboard/featured';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
@@ -18,20 +17,21 @@ function invalidateAllForLogin(login: string) {
   }
 }
 
+async function recordFeaturedRevealIfNeeded(login: string) {
+  if (!isFeaturedLogin(login)) return;
+  try {
+    await recordFeaturedReveal(login);
+    updateTag('reveals');
+  } catch {
+    // The per-user reveal is the critical write. The homepage list can catch up later.
+  }
+}
+
 export async function revealUser(login: string) {
   const lower = login.toLowerCase();
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
-  if (isFeaturedLogin(lower)) {
-    await recordFeaturedReveal(lower);
-    updateTag('reveals');
-  }
-}
-
-export async function revealUserAndRedirect(login: string) {
-  const lower = login.toLowerCase();
-  await revealUser(lower);
-  redirect(`/u/${lower}`);
+  await recordFeaturedRevealIfNeeded(lower);
 }
 
 export async function regenerateUser(login: string) {
@@ -39,10 +39,7 @@ export async function regenerateUser(login: string) {
   invalidateAllForLogin(lower);
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
-  if (isFeaturedLogin(lower)) {
-    await recordFeaturedReveal(lower);
-    updateTag('reveals');
-  }
+  await recordFeaturedRevealIfNeeded(lower);
 }
 
 export async function refreshPartialTimeline(

@@ -1,13 +1,15 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { revealUserAndRedirect } from '@/features/profile/profile-actions';
+import { revealUser } from '@/features/profile/profile-actions';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const [value, setValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const busy = isSubmitting || pending;
 
   function go(raw: string) {
@@ -26,7 +28,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
     setIsSubmitting(true);
     startTransition(async () => {
       try {
-        await revealUserAndRedirect(login);
+        await revealUser(login);
+        router.push(`/u/${login}`);
       } catch {
         setIsSubmitting(false);
         toast.error("Couldn't start the reveal. Try again in a moment.");
