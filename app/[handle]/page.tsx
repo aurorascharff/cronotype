@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { connection } from 'next/server';
 import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
 import { RegenerateButton } from '@/components/regenerate-button';
@@ -8,11 +9,8 @@ import { RevealGate } from '@/components/reveal-gate';
 import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
-import { computeCronotype } from '@/features/profile/profile-service';
-import { GitHubError } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import { hasBeenRevealed } from '@/lib/reveals';
-import { cacheLife, cacheTag } from 'next/cache';
 import type { Metadata } from 'next';
 
 export async function generateMetadata({ params }: PageProps<'/[handle]'>): Promise<Metadata> {
@@ -31,33 +29,8 @@ export async function generateMetadata({ params }: PageProps<'/[handle]'>): Prom
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : 'http://localhost:3000');
   const imageUrl = `${baseUrl.replace(/\/$/, '')}/${handle}/opengraph-image`;
-  try {
-    if (!(await hasBeenRevealed(handle))) {
-      return { title: `Reveal @${handle}` };
-    }
-    return await getProfileMetadata(handle, imageUrl);
-  } catch (err) {
-    if (err instanceof GitHubError && err.status === 404) {
-      return { title: `@${handle} not found` };
-    }
-    return { title: `@${handle}` };
-  }
-}
-
-async function getProfileMetadata(handle: string, imageUrl: string): Promise<Metadata> {
-  'use cache';
-  cacheTag(`profile-page-${handle}`);
-  cacheTag(`profile-${handle}`);
-  cacheTag(`cronotype-${handle}-90d`);
-  cacheLife('cronotype');
-
-  const { archetype, percentile, profile, stats } = await computeCronotype(handle, '90d');
-  const title =
-    stats.total === 0 ? `${profile.name ?? '@' + profile.login} is quiet lately` : `${profile.name ?? '@' + profile.login} is a ${archetype.name}`;
-  const description =
-    stats.total === 0
-      ? `@${profile.login} has a profile, but no recent authored signal commits to classify a current rhythm.`
-      : `${archetype.tagline} ${percentile}th percentile.`;
+  const title = `@${handle} · Cronotype`;
+  const description = `View @${handle}'s commit-time rhythm.`;
   return {
     description,
     openGraph: {
@@ -120,6 +93,7 @@ function ProfilePageSkeleton() {
 async function ProfileContent({ handle }: { handle: string }) {
   if (!isValidGitHubHandle(handle)) notFound();
 
+  await connection();
   const revealed = await hasBeenRevealed(handle);
   if (!revealed) return <RevealGate handle={handle} />;
 
