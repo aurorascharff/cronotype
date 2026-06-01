@@ -219,9 +219,10 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
       </div>
 
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12 }}>
-        <div style={{ alignItems: 'baseline', color: '#8b8d96', display: 'flex', gap: 16 }}>
+        <div style={{ alignItems: 'baseline', color: '#8b8d96', display: 'flex', gap: 10 }}>
           <span style={{ fontSize: 28 }}>@{profile.login}</span>
-          <span style={{ fontSize: 20 }}>{formatFollowers(profile.followers)}</span>
+          <span style={{ color: '#8b8d9640', fontSize: 28 }}>·</span>
+          <span style={{ fontSize: 22 }}>{formatFollowers(profile.followers)}</span>
         </div>
         <div
           style={{
@@ -284,16 +285,17 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
       <div
         style={{
-          color: '#6b7280',
+          color: '#8b8d96',
           display: 'flex',
-          fontSize: 18,
+          fontFamily: 'Geist, monospace',
+          fontSize: 22,
           left: 64,
-          letterSpacing: '0.01em',
+          letterSpacing: '-0.01em',
           position: 'absolute',
           bottom: 36,
         }}
       >
-        Find your developer type
+        cronotype.vercel.app/u/{profile.login}
       </div>
     </div>,
     { ...size, fonts },

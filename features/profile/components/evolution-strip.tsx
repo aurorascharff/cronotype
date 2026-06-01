@@ -30,14 +30,8 @@ export async function EvolutionStrip({ login }: Props) {
           <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
           {failedYears.length > 0 && <RefreshPartial login={login} years={failedYears} />}
         </header>
-        <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-          <div className="border-muted/15 dark:border-muted-dark/15 relative h-32 overflow-hidden rounded-md border sm:h-40">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-muted dark:text-muted-dark text-center text-sm">
-                {partial ? 'Couldn\u2019t load the timeline. Hit refresh to try again.' : 'Not enough commit history yet.'}
-              </p>
-            </div>
-          </div>
+        <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
+          {partial ? "Couldn\u2019t load the timeline. Hit refresh to try again." : 'Not enough commit history yet.'}
         </div>
       </section>
     );
