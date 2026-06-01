@@ -20,12 +20,12 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         viewTransitionName: 'hero-card',
       }}
     >
-      <div className="text-ink/70 dark:text-paper/80 absolute top-4 right-4 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
+      <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
         Last 90 days
       </div>
 
-      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
-        <div className="flex items-center justify-center sm:justify-start sm:pl-3">
+      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
+        <div className="mx-auto flex h-44 w-44 items-center justify-center min-[420px]:h-52 min-[420px]:w-52 sm:mx-0 sm:h-[220px] sm:w-[220px] sm:justify-start sm:pl-3">
           <HaloChart stats={stats} theme={theme} avatarUrl={profile.avatarUrl} size={220} />
         </div>
 
@@ -45,7 +45,7 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
             <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
           </div>
           <h1
-            className="tracking-tightest text-5xl leading-[0.95] font-semibold sm:text-6xl"
+            className="tracking-tightest text-4xl leading-[0.98] font-semibold break-words min-[420px]:text-5xl sm:text-6xl"
             style={{
               backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
               WebkitBackgroundClip: 'text',

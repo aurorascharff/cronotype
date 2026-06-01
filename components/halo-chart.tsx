@@ -41,7 +41,7 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="overflow-visible"
+      className="h-full w-full overflow-visible"
       role="img"
       aria-label={`Halo chart, ${stats.total} commits, peak at hour ${stats.peakHour}`}
     >

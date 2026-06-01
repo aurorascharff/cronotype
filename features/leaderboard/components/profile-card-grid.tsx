@@ -9,7 +9,7 @@ export function ProfileCardSlot({ login }: { login: string }) {
   const avatarUrl = `https://github.com/${login}.png?size=96`;
   return (
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
-      <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
+      <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
             <Suspense fallback={<ClassifyingRing />}>
@@ -106,7 +106,7 @@ export function ProfileCardSkeleton() {
       className="dark:bg-ink-2 relative h-full rounded-xl border border-black/10 bg-white dark:border-white/10"
       aria-hidden
     >
-      <div className="flex h-full flex-col gap-4 p-4">
+      <div className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
             <ClassifyingRing />

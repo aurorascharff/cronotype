@@ -63,23 +63,24 @@ export function ShareActions({ shareUrl, archetypeName, accent, login, className
   }
 
   const base =
-    'inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white/85 px-2.5 py-1.5 text-[11px] font-medium text-ink backdrop-blur-sm transition-colors hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:text-paper dark:hover:bg-white/[0.12]';
+    'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-black/10 bg-white/85 px-2.5 text-[11px] font-medium text-ink backdrop-blur-sm transition-colors hover:bg-white max-[520px]:w-9 max-[520px]:px-0 dark:border-white/15 dark:bg-white/[0.06] dark:text-paper dark:hover:bg-white/[0.12]';
+  const label = 'max-[520px]:sr-only';
 
   return (
-    <div className={`flex items-center gap-1.5 ${className ?? ''}`}>
+    <div className={`flex min-w-0 flex-wrap items-center gap-1.5 ${className ?? ''}`}>
       <button type="button" onClick={shareToX} aria-label="Share on X" className={base}>
         <XIcon className="h-3.5 w-3.5" />
-        <span>Share</span>
+        <span className={label}>Share</span>
       </button>
       <button type="button" onClick={shareToBluesky} aria-label="Share on Bluesky" className={base}>
         <BlueskyIcon className="h-3.5 w-3.5" />
-        <span>Share</span>
+        <span className={label}>Share</span>
       </button>
       <button type="button" onClick={copyLink} aria-label="Copy link" className={base}>
         <span style={{ color: accent }} className="inline-flex">
           {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
         </span>
-        <span>{copied ? 'Copied' : 'Copy link'}</span>
+        <span className={label}>{copied ? 'Copied' : 'Copy link'}</span>
       </button>
       <button
         type="button"
@@ -89,7 +90,7 @@ export function ShareActions({ shareUrl, archetypeName, accent, login, className
         className={`${base} disabled:opacity-60`}
       >
         <DownloadIcon className="h-3.5 w-3.5" />
-        <span>{downloading ? 'Downloading' : 'Download'}</span>
+        <span className={label}>{downloading ? 'Downloading' : 'Download'}</span>
       </button>
     </div>
   );
@@ -97,7 +98,11 @@ export function ShareActions({ shareUrl, archetypeName, accent, login, className
 
 export function ShareUrl({ shareUrl }: { shareUrl: string }) {
   const display = shareUrl.replace(/^https?:\/\//, '');
-  return <span className="text-muted dark:text-muted-dark font-mono text-xs tracking-tight sm:text-sm">{display}</span>;
+  return (
+    <span className="text-muted dark:text-muted-dark block min-w-0 max-w-full truncate font-mono text-xs tracking-tight sm:text-sm">
+      {display}
+    </span>
+  );
 }
 
 function XIcon({ className }: { className?: string }) {

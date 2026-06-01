@@ -90,12 +90,12 @@ export default function TypesPage() {
             <li
               key={id}
               id={id}
-              className="dark:bg-ink-2 flex scroll-mt-24 gap-4 rounded-xl border border-black/10 bg-white p-4 sm:p-5 dark:border-white/10"
+              className="dark:bg-ink-2 flex scroll-mt-24 flex-col gap-4 rounded-xl border border-black/10 bg-white p-4 min-[420px]:flex-row sm:p-5 dark:border-white/10"
             >
               <div className="flex h-16 w-16 shrink-0 items-center justify-center">
                 <RadialChip stats={stats} color={a.theme.accent} size={64} />
               </div>
-              <div className="min-w-0 space-y-2.5">
+              <div className="min-w-0 space-y-2.5 break-words">
                 <h2 className="text-base font-semibold tracking-tight" style={{ color: a.theme.accent }}>
                   {a.name}
                 </h2>
@@ -122,7 +122,7 @@ export default function TypesPage() {
         <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
           How the reveal works
         </h2>
-        <ul className="text-ink dark:text-paper space-y-2 text-sm">
+        <ul className="text-ink dark:text-paper space-y-2 text-sm break-words">
           <li>
             <strong className="font-semibold">Data source.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">

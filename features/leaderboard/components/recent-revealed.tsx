@@ -21,7 +21,7 @@ export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
       {logins.map(login => (
         <li key={login}>
           <ProfileCardSlot login={login} />
@@ -33,7 +33,7 @@ export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
 
 export function RecentRevealedSkeleton({ limit = 8 }: { limit?: number }) {
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: limit }).map((_, i) => (
         <li key={i}>
           <ProfileCardSkeleton />

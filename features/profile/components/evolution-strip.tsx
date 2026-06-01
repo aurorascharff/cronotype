@@ -33,6 +33,8 @@ export async function EvolutionStrip({ login }: Props) {
 
   const hasUnknown = eras.some(e => e.unknown);
   const fillId = `evolution-fill-${archetype.id}`;
+  const mobileYearMarkers =
+    yearMarkers.length > 1 ? [yearMarkers[0], yearMarkers[yearMarkers.length - 1]] : yearMarkers;
 
   return (
     <>
@@ -47,8 +49,8 @@ export async function EvolutionStrip({ login }: Props) {
           <DownloadTimeline login={login} />
         </div>
       </header>
-      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10">
+        <ul className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 sm:gap-x-4">
           {eras
             .filter(e => e.label)
             .map((e, i) => (
@@ -147,7 +149,12 @@ export async function EvolutionStrip({ login }: Props) {
           </svg>
         </div>
 
-        <div className="text-muted dark:text-muted-dark relative mt-2 h-4 text-[10px] tabular-nums">
+        <div className="text-muted dark:text-muted-dark mt-2 flex justify-between text-[10px] tabular-nums sm:hidden">
+          {mobileYearMarkers.map(yr => (
+            <span key={yr.label}>{yr.label}</span>
+          ))}
+        </div>
+        <div className="text-muted dark:text-muted-dark relative mt-2 hidden h-4 text-[10px] tabular-nums sm:block">
           {yearMarkers.map(yr => (
             <span key={yr.label} className="absolute -translate-x-1/2" style={{ left: `${(yr.x / W) * 100}%` }}>
               {yr.label}
@@ -166,7 +173,7 @@ export function EvolutionStripSkeleton() {
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
       </header>
       <div
-        className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10"
+        className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10"
         aria-hidden
       >
         <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
