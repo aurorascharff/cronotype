@@ -1,20 +1,19 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
+import CardErrorBoundary from '@/components/card-error-boundary';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
 
 /**
- * Server component for a single card. Renders progressively:
+ * Server component for a single card. Renders in three stages:
  *
- *   1. Avatar + handle: deterministic, no fetch (GitHub serves an avatar at
- *      `https://github.com/{login}.png` for any valid login).
- *   2. Profile (name + followers): cheap GET /users/:login, cached 60 days.
- *   3. Archetype + radial chip: Search Commits API, cached 60 days.
+ *   1. Avatar + handle: deterministic, no fetch.
+ *   2. Profile (name + followers): cheap GET /users/:login.
+ *   3. Classification (radial chip + archetype): Search Commits API.
  *
- * Each stage has its own Suspense boundary so a rate-limit on one doesn't
- * blank out the others. Once any data is cached, it survives subsequent
- * rate-limited refreshes - the cache layer keeps serving it.
+ * Each stage has its own Suspense + error boundary. Stage 3 throws on failure
+ * so the boundary can show a retry button instead of leaving an empty ring.
  */
 export function ProfileCardSlot({ login }: { login: string }) {
   const avatarUrl = `https://github.com/${login}.png?size=96`;
@@ -22,16 +21,18 @@ export function ProfileCardSlot({ login }: { login: string }) {
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
       <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
-          <Suspense fallback={<RadialChipPlaceholder />}>
-            <CardChip login={login} />
-          </Suspense>
+          <CardErrorBoundary fallback={retry => <ClassifyingRing failed onRetry={retry} />}>
+            <Suspense fallback={<ClassifyingRing />}>
+              <CardChip login={login} />
+            </Suspense>
+          </CardErrorBoundary>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={avatarUrl}
             alt=""
             width={48}
             height={48}
-            className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
+            className="relative h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
           />
         </div>
         <Suspense fallback={<CardMetaSkeleton login={login} />}>
@@ -54,26 +55,25 @@ export function ProfileCardSlot({ login }: { login: string }) {
 }
 
 async function CardChip({ login }: { login: string }) {
-  const result = await getCardClassification(login);
-  if (!result) return <RadialChipPlaceholder />;
-  return <RadialChip stats={result.stats} color={result.archetype.theme.accent} size={112} />;
+  const { archetype, stats } = await getCardClassification(login);
+  return <RadialChip stats={stats} color={archetype.theme.accent} size={112} />;
 }
 
 async function CardMeta({ login }: { login: string }) {
-  const [profile, classification] = await Promise.all([getCardProfile(login), getCardClassification(login)]);
+  const profile = await getCardProfile(login);
   if (!profile) return <CardMetaFallback login={login} />;
   return (
     <div className="min-w-0 space-y-1">
       <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
       <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
       <div className="flex items-center justify-between gap-2">
-        {classification ? (
-          <div className="truncate text-xs font-medium" style={{ color: classification.archetype.theme.accent }}>
-            {classification.archetype.name}
-          </div>
-        ) : (
-          <div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs">Classifying…</div>
-        )}
+        <Suspense
+          fallback={<div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs italic">Classifying…</div>}
+        >
+          <CardErrorBoundary fallback={() => <div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs">—</div>}>
+            <ArchetypeName login={login} />
+          </CardErrorBoundary>
+        </Suspense>
         <div className="text-muted dark:text-muted-dark shrink-0 text-[10.5px] tabular-nums">
           {formatFollowers(profile.followers)}
         </div>
@@ -82,8 +82,52 @@ async function CardMeta({ login }: { login: string }) {
   );
 }
 
-function RadialChipPlaceholder() {
-  return <div className="bg-muted/8 dark:bg-muted-dark/8 absolute inset-2 rounded-full" aria-hidden />;
+async function ArchetypeName({ login }: { login: string }) {
+  const { archetype } = await getCardClassification(login);
+  return (
+    <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>
+      {archetype.name}
+    </div>
+  );
+}
+
+/**
+ * Visual placeholder for the radial chip during classification.
+ *
+ * - Pending: rotating dashed ring with a subtle pulse - reads as "working"
+ * - Failed: static dotted ring with an inline retry button overlay
+ */
+function ClassifyingRing({ failed = false, onRetry }: { failed?: boolean; onRetry?: () => void }) {
+  return (
+    <>
+      <span
+        aria-label={failed ? 'Classification failed' : 'Classifying'}
+        className={`absolute inset-2 rounded-full border-2 ${
+          failed
+            ? 'border-muted/20 dark:border-muted-dark/20 border-dotted'
+            : 'border-muted/30 dark:border-muted-dark/30 animate-spin border-dashed opacity-70'
+        }`}
+        style={failed ? undefined : { animationDuration: '4s' }}
+      />
+      {failed && onRetry && (
+        <button
+          type="button"
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRetry();
+          }}
+          aria-label="Retry classification"
+          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper absolute -top-1 -right-1 z-10 rounded-full border border-black/10 bg-white p-1 shadow-sm transition-colors dark:border-white/15 dark:bg-white/[0.08]"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3 w-3" aria-hidden>
+            <path d="M21 12a9 9 0 1 1-3.51-7.13" strokeLinecap="round" />
+            <path d="M21 4v6h-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+    </>
+  );
 }
 
 function CardMetaSkeleton({ login }: { login: string }) {
@@ -115,8 +159,7 @@ function CardMetaFallback({ login }: { login: string }) {
 
 export function ProfileCardSkeleton() {
   // Identical to the resolved ProfileCardSlot layout: same padding, gap,
-  // chip area height, and meta-block shape. Only difference: skeleton tiles
-  // instead of text/chip content. Eliminates any visible shift on Suspense reveal.
+  // chip area height, and meta-block shape. Eliminates layout shift on Suspense reveal.
   return (
     <div
       className="dark:bg-ink-2 relative h-full rounded-xl border border-black/10 bg-white dark:border-white/10"
@@ -124,7 +167,7 @@ export function ProfileCardSkeleton() {
     >
       <div className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
-          <div className="bg-muted/8 dark:bg-muted-dark/8 absolute inset-2 rounded-full" />
+          <ClassifyingRing />
           <div className="skeleton h-12 w-12 rounded-full" />
         </div>
         <div className="min-w-0 space-y-1">

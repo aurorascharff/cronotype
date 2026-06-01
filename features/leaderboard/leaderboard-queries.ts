@@ -66,16 +66,13 @@ export const getCardProfile = cache(async (login: string): Promise<ProfileSummar
 });
 
 /**
- * Expensive Search Commits fetch. Cached per-login for 60 days via `getStatsFor`.
- *
- * Separate from getCardProfile so a rate-limit on the commits API doesn't
- * blank out the profile we already have cached.
+ * Expensive Search Commits fetch. Throws on failure so the caller can wrap it
+ * in an error boundary and offer a retry. Cached per-login for 60 days via
+ * `getStatsFor` - once it succeeds it stays put.
  */
-export const getCardClassification = cache(async (login: string): Promise<{ archetype: Archetype; stats: HourStats } | null> => {
-  try {
+export const getCardClassification = cache(
+  async (login: string): Promise<{ archetype: Archetype; stats: HourStats }> => {
     const stats = await getStatsFor(login, '90d');
     return { archetype: classify(stats), stats };
-  } catch {
-    return null;
-  }
-});
+  },
+);
