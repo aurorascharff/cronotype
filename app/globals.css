@@ -16,6 +16,7 @@
   --color-brand: #06b6d4;
   --color-brand-2: #22d3ee;
   --color-on-brand: #ffffff;
+  --color-on-brand-dark: #08090b;
 
   --font-mono: var(--font-geist-mono);
   --font-sans: var(--font-geist-sans);
