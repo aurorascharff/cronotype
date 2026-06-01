@@ -107,7 +107,7 @@ export const getProfile = cache(async (login: string): Promise<ProfileSummary> =
 async function getProfileCached(login: string): Promise<ProfileSummary> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
-  cacheLife('hours');
+  cacheLife('cronotype');
 
   if (MOCK) return mockProfile(login);
 
@@ -208,7 +208,7 @@ export const getStatsFor = cache(async (login: string, window: Window): Promise<
 async function getStatsForCached(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
   'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
-  cacheLife('hours');
+  cacheLife('cronotype');
 
   if (MOCK) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
 
@@ -252,11 +252,7 @@ export const getYearMonthly = cache(async (login: string, year: number): Promise
 async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly> {
   'use cache';
   cacheTag(`monthly-${login.toLowerCase()}-${year}`);
-  if (year === new Date().getUTCFullYear()) {
-    cacheLife('hours');
-  } else {
-    cacheLife('weeks');
-  }
+  cacheLife('cronotype');
 
   if (MOCK) {
     const seed = login.length * 31 + year;
@@ -309,11 +305,7 @@ async function getYearArchetype(login: string, year: number): Promise<ArchetypeI
 async function getYearArchetypeCached(login: string, year: number): Promise<ArchetypeId | null> {
   'use cache';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
-  if (year === new Date().getUTCFullYear()) {
-    cacheLife('hours');
-  } else {
-    cacheLife('weeks');
-  }
+  cacheLife('cronotype');
 
   if (MOCK) return mockArchetypeFor(`${login}-${year}`);
 

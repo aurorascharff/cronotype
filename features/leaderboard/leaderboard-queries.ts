@@ -36,16 +36,18 @@ const FEATURED: string[] = [
   'cassidoo',
 ];
 
-export const getRecentClassified = cache(async (limit = 6): Promise<LeaderboardEntry[]> => {
-  try {
-    const all = await getRevealedEntries();
-    return all.slice(0, limit);
-  } catch {
-    return [];
-  }
+/**
+ * Returns the ordered list of logins to show in the grid.
+ *
+ * Just the logins - not the data. Each card then fetches its own data via
+ * `computeCronotype(login)`, which is cached per-login. That means navigating
+ * away and back hits the per-login caches instead of re-fetching N users.
+ */
+export const getRecentLogins = cache(async (limit: number): Promise<string[]> => {
+  return getRecentLoginsCached(limit);
 });
 
-async function getRevealedEntries(): Promise<LeaderboardEntry[]> {
+async function getRecentLoginsCached(limit: number): Promise<string[]> {
   'use cache';
   cacheTag('leaderboard');
   cacheTag('reveals');
@@ -61,30 +63,23 @@ async function getRevealedEntries(): Promise<LeaderboardEntry[]> {
     if (seen.has(lower)) continue;
     seen.add(lower);
     logins.push(lower);
+    if (logins.length >= limit) break;
   }
-
-  const entries: LeaderboardEntry[] = [];
-  for (const login of logins) {
-    try {
-      const { profile, archetype, stats } = await computeCronotype(login, '90d');
-      entries.push({ archetype, profile, stats });
-    } catch {
-      // One user failing is fine; we skip them and keep going.
-    }
-  }
-
-  // Don't cache an empty list - that means every fetch failed (almost certainly
-  // rate-limited). Throwing prevents the empty result from being pinned for
-  // cacheLife. The caller catches and renders empty.
-  if (entries.length === 0) throw new Error('Leaderboard empty; not caching');
-
-  // Preserve recency order from KV; FEATURED fillers come after, sorted by
-  // followers as a stable tiebreaker.
-  const order = new Map(logins.map((l, i) => [l, i]));
-  return entries.sort((a, b) => {
-    const ai = order.get(a.profile.login.toLowerCase()) ?? Infinity;
-    const bi = order.get(b.profile.login.toLowerCase()) ?? Infinity;
-    if (ai !== bi) return ai - bi;
-    return b.profile.followers - a.profile.followers;
-  });
+  return logins;
 }
+
+/**
+ * Per-card data fetch. Cached per-login via the tags on computeCronotype's
+ * inner queries (`profile-{login}`, `stats-{login}-90d`).
+ *
+ * Returns null on failure so the card can render an empty state without
+ * crashing the whole grid.
+ */
+export const getCardEntry = cache(async (login: string): Promise<LeaderboardEntry | null> => {
+  try {
+    const { profile, archetype, stats } = await computeCronotype(login, '90d');
+    return { archetype, profile, stats };
+  } catch {
+    return null;
+  }
+});

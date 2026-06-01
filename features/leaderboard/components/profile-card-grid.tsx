@@ -1,30 +1,20 @@
 import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
+import { getCardEntry, type LeaderboardEntry } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
-import type { LeaderboardEntry } from '@/features/leaderboard/leaderboard-queries';
 
-type Props = {
-  entries: LeaderboardEntry[];
-};
-
-export function ProfileCardGrid({ entries }: Props) {
-  if (entries.length === 0) {
-    return (
-      <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-black/10 p-8 text-center text-sm dark:border-white/10">
-        Couldn&apos;t reach GitHub just now. Refresh in a minute.
-      </p>
-    );
-  }
-
-  return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {entries.map(e => (
-        <li key={e.profile.login}>
-          <ProfileCard entry={e} />
-        </li>
-      ))}
-    </ul>
-  );
+/**
+ * Server component that fetches a single card's data and renders it.
+ * Wrap in `<Suspense fallback={<ProfileCardSkeleton />}>` from the caller.
+ *
+ * Each instance pulls from `computeCronotype(login)` which is cached per-login,
+ * so rendering this 16 times on the homepage fans out to 16 independent cache
+ * lookups. Navigating to /u/<login> shares the same cache entry.
+ */
+export async function ProfileCardSlot({ login }: { login: string }) {
+  const entry = await getCardEntry(login);
+  if (!entry) return <ProfileCardError login={login} />;
+  return <ProfileCard entry={entry} />;
 }
 
 export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
@@ -71,25 +61,29 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
   );
 }
 
-export function ProfileCardGridSkeleton({ count = 3 }: { count?: number }) {
+export function ProfileCardSkeleton() {
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <li
-          key={i}
-          className="dark:bg-ink-2 flex h-full flex-col items-center gap-3 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
-          aria-hidden
-        >
-          <div className="flex h-28 items-center justify-center">
-            <div className="skeleton h-24 w-24 rounded-full" />
-          </div>
-          <div className="flex w-full flex-col items-center gap-1.5">
-            <div className="skeleton h-3 w-24" />
-            <div className="skeleton h-2 w-16" />
-            <div className="skeleton h-2.5 w-20" />
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div
+      className="dark:bg-ink-2 flex h-full flex-col items-center gap-3 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
+      aria-hidden
+    >
+      <div className="flex h-28 items-center justify-center">
+        <div className="skeleton h-24 w-24 rounded-full" />
+      </div>
+      <div className="flex w-full flex-col items-center gap-1.5">
+        <div className="skeleton h-3 w-24" />
+        <div className="skeleton h-2 w-16" />
+        <div className="skeleton h-2.5 w-20" />
+      </div>
+    </div>
+  );
+}
+
+function ProfileCardError({ login }: { login: string }) {
+  return (
+    <div className="dark:bg-ink-2 text-muted dark:text-muted-dark flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-black/10 bg-white p-4 text-center text-xs dark:border-white/10">
+      <span className="font-mono text-[11px]">@{login}</span>
+      <span className="text-[10.5px]">Couldn&apos;t load right now</span>
+    </div>
   );
 }
