@@ -55,13 +55,16 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
     <>
-      <Crossfade>
-        <Suspense fallback={<CronotypeProfileSkeleton />}>
-          {params.then(({ login }) => (
-            <CronotypeProfile login={login.toLowerCase()} />
-          ))}
-        </Suspense>
-      </Crossfade>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+        <Crossfade>
+          <Suspense fallback={<CronotypeProfileSkeleton />}>
+            {params.then(({ login }) => (
+              <CronotypeProfile login={login.toLowerCase()} />
+            ))}
+          </Suspense>
+        </Crossfade>
+      </section>
       <Crossfade>
         <Suspense fallback={<EvolutionStripSkeleton />}>
           <InlineErrorBoundary

@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
 import CardErrorBoundary from '@/components/card-error-boundary';
+import { ClassifyingRing } from '@/components/classifying-ring';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
 
@@ -21,7 +22,7 @@ export function ProfileCardSlot({ login }: { login: string }) {
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
       <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
-          <CardErrorBoundary fallback={retry => <ClassifyingRing failed onRetry={retry} />}>
+          <CardErrorBoundary variant="ring">
             <Suspense fallback={<ClassifyingRing />}>
               <CardChip login={login} />
             </Suspense>
@@ -70,7 +71,7 @@ async function CardMeta({ login }: { login: string }) {
         <Suspense
           fallback={<div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs italic">Classifying…</div>}
         >
-          <CardErrorBoundary fallback={() => <div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs">—</div>}>
+          <CardErrorBoundary variant="em-dash">
             <ArchetypeName login={login} />
           </CardErrorBoundary>
         </Suspense>
@@ -88,45 +89,6 @@ async function ArchetypeName({ login }: { login: string }) {
     <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>
       {archetype.name}
     </div>
-  );
-}
-
-/**
- * Visual placeholder for the radial chip during classification.
- *
- * - Pending: rotating dashed ring with a subtle pulse - reads as "working"
- * - Failed: static dotted ring with an inline retry button overlay
- */
-function ClassifyingRing({ failed = false, onRetry }: { failed?: boolean; onRetry?: () => void }) {
-  return (
-    <>
-      <span
-        aria-label={failed ? 'Classification failed' : 'Classifying'}
-        className={`absolute inset-2 rounded-full border-2 ${
-          failed
-            ? 'border-muted/20 dark:border-muted-dark/20 border-dotted'
-            : 'border-muted/30 dark:border-muted-dark/30 animate-spin border-dashed opacity-70'
-        }`}
-        style={failed ? undefined : { animationDuration: '4s' }}
-      />
-      {failed && onRetry && (
-        <button
-          type="button"
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRetry();
-          }}
-          aria-label="Retry classification"
-          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper absolute -top-1 -right-1 z-10 rounded-full border border-black/10 bg-white p-1 shadow-sm transition-colors dark:border-white/15 dark:bg-white/[0.08]"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3 w-3" aria-hidden>
-            <path d="M21 12a9 9 0 1 1-3.51-7.13" strokeLinecap="round" />
-            <path d="M21 4v6h-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      )}
-    </>
   );
 }
 
