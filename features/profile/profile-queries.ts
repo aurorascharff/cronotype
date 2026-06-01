@@ -238,19 +238,28 @@ function dedupe(commits: Commit[]): Commit[] {
 }
 
 export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
+  const now = new Date();
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dateKey = to.toISOString().slice(0, 10);
+  return getStatsForCached(login, window, dateKey);
+}
+
+async function getStatsForCached(
+  login: string,
+  window: Window,
+  dateKey: string,
+): Promise<ReturnType<typeof buildStats>> {
   'use cache';
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
+  cacheTag(`stats-${login.toLowerCase()}-${window}-${dateKey}`);
   cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
     return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
   }
 
+  const to = new Date(`${dateKey}T00:00:00Z`);
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
-  const now = new Date();
-  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const dateKey = to.toISOString().slice(0, 10);
-  cacheTag(`stats-${login.toLowerCase()}-${window}-${dateKey}`);
   const from = new Date(to.getTime() - days * 24 * 3600_000);
   const commits = await fetchCommitsInRange(
     login,
