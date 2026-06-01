@@ -12,7 +12,7 @@ export type LeaderboardEntry = {
 };
 
 export async function getRecentLogins(limit: number): Promise<string[]> {
-  'use cache';
+  'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
   cacheLife('minutes');

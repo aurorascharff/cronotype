@@ -1,5 +1,6 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { getRecentLogins } from '@/features/leaderboard/leaderboard-queries';
+import { connection } from 'next/server';
 
 type Props = {
   excludeLogin?: string;
@@ -7,6 +8,8 @@ type Props = {
 };
 
 export async function RecentRevealed({ excludeLogin, limit = 16 }: Props) {
+  await connection();
+
   const all = await getRecentLogins(limit + (excludeLogin ? 1 : 0));
   const logins = excludeLogin
     ? all.filter(l => l.toLowerCase() !== excludeLogin.toLowerCase()).slice(0, limit)
