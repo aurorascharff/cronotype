@@ -2,16 +2,27 @@
 
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
+import { refreshPartialYears } from '@/features/profile/profile-actions';
 
-export function RefreshPartial() {
+type Props = {
+  login: string;
+  years: number[];
+};
+
+export function RefreshPartial({ login, years }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   return (
     <button
       type="button"
-      onClick={() => startTransition(() => router.refresh())}
-      disabled={isPending}
+      onClick={() =>
+        startTransition(async () => {
+          await refreshPartialYears(login, years);
+          router.refresh();
+        })
+      }
+      disabled={isPending || years.length === 0}
       className="text-muted/70 dark:text-muted-dark/70 hover:text-ink dark:hover:text-paper inline-flex items-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-[10.5px] tracking-wide uppercase transition-colors hover:border-black/10 disabled:opacity-60 dark:hover:border-white/10"
     >
       <span aria-hidden className={`inline-block h-2.5 w-2.5 ${isPending ? 'animate-spin' : ''}`}>

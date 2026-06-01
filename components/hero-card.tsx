@@ -39,9 +39,10 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
             >
               @{profile.login}
             </a>
-            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tabular-nums sm:text-[11px]">
-              {formatFollowers(profile.followers)}
+            <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
+              ·
             </span>
+            <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
           </div>
           <h1
             className="tracking-tightest text-5xl leading-[0.95] font-semibold sm:text-6xl"

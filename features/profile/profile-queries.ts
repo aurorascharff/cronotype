@@ -234,6 +234,8 @@ export type MonthlyHistory = {
   months: MonthBucket[];
   yearlyArchetypes: YearArchetypeBucket[];
   partial: boolean;
+  /** Years whose monthly OR archetype fetch failed — the only ones worth re-fetching. */
+  failedYears: number[];
 };
 
 type YearMonthly = {
@@ -335,17 +337,19 @@ async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
   const results = await Promise.allSettled(years.map(year => getYearMonthly(login, year)));
 
   const byYear: YearMonthly[] = [];
+  const failedYearsSet = new Set<number>();
   let partial = false;
-  for (const r of results) {
+  results.forEach((r, i) => {
     if (r.status === 'fulfilled') {
       byYear.push(r.value);
     } else {
       partial = true;
+      failedYearsSet.add(years[i]);
     }
-  }
+  });
 
   if (byYear.length === 0) {
-    return { months: [], partial: true, yearlyArchetypes: [] };
+    return { failedYears: [...failedYearsSet], months: [], partial: true, yearlyArchetypes: [] };
   }
 
   const out = byYear.flatMap(y => y.months).sort((a, b) => a.month.localeCompare(b.month));
@@ -363,7 +367,7 @@ async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
 
   const months = out.slice(start, end);
   if (months.length === 0) {
-    return { months: [], partial, yearlyArchetypes: [] };
+    return { failedYears: [...failedYearsSet], months: [], partial, yearlyArchetypes: [] };
   }
 
   const startYear = Number(months[0].month.slice(0, 4));
@@ -394,6 +398,7 @@ async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
       yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
     } else {
       failed++;
+      failedYearsSet.add(year);
     }
   });
 
@@ -401,7 +406,7 @@ async function getMonthlyHistoryImpl(login: string): Promise<MonthlyHistory> {
     partial = true;
   }
 
-  return { months, partial, yearlyArchetypes };
+  return { failedYears: [...failedYearsSet].sort((a, b) => b - a), months, partial, yearlyArchetypes };
 }
 
 function mockProfile(login: string): ProfileSummary {

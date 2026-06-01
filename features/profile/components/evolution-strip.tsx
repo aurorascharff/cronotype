@@ -16,7 +16,7 @@ const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
   await connection();
-  const [{ months, yearlyArchetypes, partial }, { archetype }] = await Promise.all([
+  const [{ months, yearlyArchetypes, partial, failedYears }, { archetype }] = await Promise.all([
     getMonthlyHistory(login),
     computeCronotype(login, '90d'),
   ]);
@@ -52,7 +52,7 @@ export async function EvolutionStrip({ login }: Props) {
             <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
               Partial · GitHub rate limit
             </span>
-            <RefreshPartial />
+            <RefreshPartial login={login} years={failedYears} />
           </div>
         )}
       </header>
