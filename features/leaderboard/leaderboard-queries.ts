@@ -59,9 +59,7 @@ export async function getRecentLogins(limit: number): Promise<string[]> {
   const revealed = await listReveals(limit);
   if (revealed.length === 0) return [];
 
-  const profiles = await Promise.all(
-    revealed.map(async login => ({ login, profile: await getProfile(login) })),
-  );
+  const profiles = await Promise.all(revealed.map(async login => ({ login, profile: await getProfile(login) })));
   profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
 
   return profiles.map(p => p.login).slice(0, limit);

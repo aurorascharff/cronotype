@@ -72,11 +72,7 @@ export function computeYearMarkers(months: MonthBucket[], width: number): Array<
   }));
 }
 
-export function buildYearMarks(
-  months: MonthBucket[],
-  yearly: YearArchetypeBucket[],
-  currentId: ArchetypeId,
-): Mark[] {
+export function buildYearMarks(months: MonthBucket[], yearly: YearArchetypeBucket[], currentId: ArchetypeId): Mark[] {
   const archetypeByYear = new Map<number, ArchetypeId>();
   for (const y of yearly) {
     if (y.commits > 0) archetypeByYear.set(y.year, y.archetypeId);

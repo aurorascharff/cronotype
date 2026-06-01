@@ -58,7 +58,9 @@ async function CardMeta({ login }: { login: string }) {
       <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
       <div className="text-muted dark:text-muted-dark flex items-baseline gap-1.5 truncate text-xs">
         <span className="truncate">@{profile.login}</span>
-        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">·</span>
+        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
+          ·
+        </span>
         <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
       </div>
       {classification ? (
@@ -78,7 +80,9 @@ function CardMetaSkeleton({ login }: { login: string }) {
       <div className="skeleton h-5 w-3/4 rounded" />
       <div className="text-muted dark:text-muted-dark flex items-baseline gap-1.5 truncate text-xs">
         <span className="truncate">@{login}</span>
-        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">·</span>
+        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
+          ·
+        </span>
         <span className="skeleton inline-block h-3 w-10 rounded" />
       </div>
       <div className="skeleton h-4 w-1/2 rounded" />
