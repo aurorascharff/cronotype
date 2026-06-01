@@ -1,19 +1,23 @@
 import Link from 'next/link';
-import { updateTag } from 'next/cache';
 import { notFound } from 'next/navigation';
-import { after } from 'next/server';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { HeroCard } from '@/components/hero-card';
+import { RevealGate } from '@/components/reveal-gate';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
-import { recordReveal } from '@/lib/reveals';
+import { hasBeenRevealed } from '@/lib/reveals';
 
 type Props = {
   login: string;
 };
 
 export async function CronotypeProfile({ login }: Props) {
+  if (login !== SHELL_LOGIN) {
+    const revealed = await hasBeenRevealed(login);
+    if (!revealed) return <RevealGate login={login} />;
+  }
+
   let result;
   try {
     result = await computeCronotype(login, '90d');
@@ -26,13 +30,6 @@ export async function CronotypeProfile({ login }: Props) {
 
   if (stats.total === 0) {
     return <EmptyProfile login={login} />;
-  }
-
-  if (login !== SHELL_LOGIN) {
-    after(async () => {
-      await recordReveal(profile.login);
-      updateTag('reveals');
-    });
   }
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.vercel.app';

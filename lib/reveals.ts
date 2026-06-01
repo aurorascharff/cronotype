@@ -29,3 +29,10 @@ export async function listReveals(limit: number): Promise<string[]> {
   const raw = await kv.zrange<string[]>(REVEALS_KEY, 0, limit - 1, { rev: true });
   return raw ?? [];
 }
+
+export async function hasBeenRevealed(login: string): Promise<boolean> {
+  const kv = getClient();
+  if (!kv) return false;
+  const score = await kv.zscore(REVEALS_KEY, login.toLowerCase());
+  return score !== null;
+}

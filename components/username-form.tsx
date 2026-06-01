@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { revealUser } from '@/features/profile/profile-actions';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
   const [value, setValue] = useState('');
@@ -19,9 +20,9 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
       toast.error("That doesn't look like a GitHub username.");
       return;
     }
-    // Clear immediately so back-navigation lands on an empty field.
     setValue('');
-    startTransition(() => {
+    startTransition(async () => {
+      await revealUser(login);
       router.push(`/u/${login}`);
     });
   }
