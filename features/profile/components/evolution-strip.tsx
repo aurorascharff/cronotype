@@ -1,4 +1,5 @@
 import { DownloadTimeline } from '@/components/download-timeline';
+import { PartialTimelineRefresh } from '@/features/profile/components/partial-timeline-refresh';
 import { getTimelineChart } from '@/features/profile/timeline-chart';
 
 type Props = {
@@ -21,6 +22,7 @@ export async function EvolutionStrip({ login }: Props) {
   if (!hasData) {
     return (
       <>
+        <PartialTimelineRefresh active={partial} />
         <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
           <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         </header>
@@ -38,6 +40,7 @@ export async function EvolutionStrip({ login }: Props) {
 
   return (
     <>
+      <PartialTimelineRefresh active={partial} />
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         <div className="flex items-center gap-2">

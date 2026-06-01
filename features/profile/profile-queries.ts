@@ -28,6 +28,10 @@ export class GitHubError extends Error {
   }
 }
 
+function isRateLimitError(err: unknown): boolean {
+  return err instanceof GitHubError && (err.status === 403 || err.status === 429);
+}
+
 function headers(extra: Record<string, string> = {}): HeadersInit {
   const h: Record<string, string> = {
     Accept: 'application/vnd.github+json',
@@ -477,6 +481,7 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
       archetypeResults.push({ status: 'fulfilled', value });
     } catch (reason) {
       archetypeResults.push({ status: 'rejected', reason });
+      if (isRateLimitError(reason)) break;
     }
   }
 
@@ -495,6 +500,10 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   });
 
   if (yearsWithCommits.length > 0 && failed / yearsWithCommits.length > 0.5) {
+    partial = true;
+  }
+
+  if (archetypeResults.length < yearsWithCommits.length) {
     partial = true;
   }
 
