@@ -14,7 +14,7 @@ export async function RecentDiagnosed({ excludeLogin, limit = 8 }: Props) {
   return (
     <section className="space-y-4">
       <header>
-        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Featured rhythms</h2>
       </header>
       <ProfileCardGrid entries={entries} />
     </section>
@@ -25,7 +25,7 @@ export function RecentDiagnosedSkeleton({ limit = 4 }: { limit?: number }) {
   return (
     <section className="space-y-4">
       <header>
-        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Featured rhythms</h2>
       </header>
       <ProfileCardGridSkeleton count={limit} />
     </section>

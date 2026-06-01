@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
-import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
-import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
+import { computeCronotype } from '@/features/profile/profile-service';
+import { ARCHETYPES } from '@/lib/archetypes';
 
 export const alt = 'Cronotype profile';
 export const contentType = 'image/png';
@@ -32,21 +32,14 @@ async function loadGeist() {
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
   const { login } = await params;
 
-  let profile;
-  let stats;
-  try {
-    [profile, stats] = await Promise.all([getProfile(login), getStatsFor(login, '90d')]);
-  } catch {
-    return fallback(await loadGeist());
-  }
+  const result = await computeCronotype(login, '90d');
+  const { profile, stats, archetype, percentile } = result;
 
   if (stats.total === 0) return fallback(await loadGeist());
 
   const fonts = await loadGeist();
 
-  const archetype = classify(stats);
   const { theme } = archetype;
-  const percentile = percentileFor(archetype, stats);
   const max = Math.max(1, ...stats.hourly);
 
   const haloSize = 380;

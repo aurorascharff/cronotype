@@ -1,4 +1,5 @@
 import { connection } from 'next/server';
+import { RefreshPartial } from '@/components/refresh-partial';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory, type MonthBucket } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
@@ -46,9 +47,12 @@ export async function EvolutionStrip({ login }: Props) {
           How you got here
         </h2>
         {partial && (
-          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
-            Partial · some years unavailable
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+              Partial · GitHub rate limit
+            </span>
+            <RefreshPartial />
+          </div>
         )}
       </div>
 
@@ -170,10 +174,34 @@ export async function EvolutionStrip({ login }: Props) {
 export function EvolutionStripSkeleton() {
   return (
     <section
-      className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white dark:border-white/10"
+      className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 dark:border-white/10 sm:p-8"
       aria-hidden
     >
-      <div className="h-[260px] sm:h-[320px]" />
+      <div className="mb-5 h-2.5 w-32 rounded-full border border-black/10 dark:border-white/10" />
+      <div className="mb-4 flex gap-3">
+        <div className="h-4 w-24 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-4 w-20 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-4 w-28 rounded-full border border-black/10 dark:border-white/10" />
+      </div>
+      <div className="relative h-32 sm:h-40">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="h-full w-full">
+          <path
+            d="M0,30 L10,28 L18,22 L26,12 L34,18 L44,8 L54,16 L62,6 L72,14 L82,10 L92,16 L100,12"
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.15"
+            strokeWidth="0.8"
+            strokeDasharray="1.5 1.5"
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+      </div>
+      <div className="mt-2 flex justify-between">
+        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
+      </div>
     </section>
   );
 }

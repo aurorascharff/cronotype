@@ -78,15 +78,66 @@ function EmptyProfile({ login }: { login: string }) {
 export function CronotypeProfileSkeleton() {
   return (
     <div
-      className="dark:bg-ink-2 w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]"
+      className="dark:bg-ink-2 text-muted/40 dark:text-muted-dark/40 w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]"
       aria-hidden
     >
       <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
         <div className="flex items-center justify-center sm:justify-start sm:pl-3">
-          <div className="h-[140px] w-[140px] rounded-full border border-black/10 dark:border-white/10 sm:h-[220px] sm:w-[220px]" />
+          <HaloSkeleton />
         </div>
-        <div className="h-[140px] sm:h-[220px]" />
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="h-3 w-20 rounded-full border border-current" />
+          <div className="h-10 w-2/3 rounded-md border border-current sm:h-14" />
+          <div className="h-3 w-3/4 rounded-full border border-current" />
+          <div className="mt-2 flex gap-x-6">
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <div className="h-2 w-10 rounded-full border border-current" />
+                <div className="h-5 w-12 rounded-md border border-current sm:h-6" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+function HaloSkeleton() {
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const avatarR = size * 0.22;
+  const gap = size * 0.04;
+  const inner = avatarR + gap;
+  const outer = size * 0.46;
+  const barWidth = Math.max(3, size * 0.018);
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="text-muted/40 dark:text-muted-dark/40 h-[140px] w-[140px] overflow-visible sm:h-[220px] sm:w-[220px]"
+      aria-hidden
+    >
+      <circle cx={cx} cy={cy} r={inner - 1} fill="none" stroke="currentColor" strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={outer + 1} fill="none" stroke="currentColor" strokeWidth={1} opacity={0.5} />
+      <circle cx={cx} cy={cy} r={avatarR} fill="none" stroke="currentColor" strokeWidth={1.5} />
+      {Array.from({ length: 24 }).map((_, h) => {
+        const len = (outer - inner) * (0.35 + 0.4 * Math.abs(Math.sin((h / 24) * Math.PI * 2)));
+        return (
+          <rect
+            key={h}
+            x={cx - barWidth / 2}
+            y={cy - inner - len}
+            width={barWidth}
+            height={len}
+            fill="currentColor"
+            transform={`rotate(${(h / 24) * 360}, ${cx}, ${cy})`}
+          />
+        );
+      })}
+    </svg>
   );
 }

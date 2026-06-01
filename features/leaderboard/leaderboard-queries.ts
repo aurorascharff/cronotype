@@ -1,5 +1,4 @@
 import 'server-only';
-import { cacheLife, cacheTag } from 'next/cache';
 import { computeCronotype } from '@/features/profile/profile-service';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
@@ -21,55 +20,51 @@ declare global {
   var __cronotype_store: Store | undefined;
 }
 
+export const FEATURED: string[] = [
+  'torvalds',
+  'rauchg',
+  'gaearon',
+  'sebmarkbage',
+  'acdlite',
+  'leerob',
+  'shuding',
+  'sindresorhus',
+  'tj',
+  'kentcdodds',
+  'wesbos',
+  'sophiebits',
+];
+
 function store(): Store {
   if (!globalThis.__cronotype_store || !(globalThis.__cronotype_store.recent instanceof Map)) {
     globalThis.__cronotype_store = { recent: new Map() };
-    seed(globalThis.__cronotype_store);
   }
   return globalThis.__cronotype_store;
 }
 
-function seed(s: Store) {
-  const seeds = [
-    'rauchg',
-    'gaearon',
-    'leerob',
-    'shuding',
-    'sebmarkbage',
-    'acdlite',
-    'sophiebits',
-    'feross',
-    'wesbos',
-    'tj',
-    'sindresorhus',
-    'kentcdodds',
-  ];
-
-  for (const login of seeds) {
-    s.recent.set(login.toLowerCase(), {
-      classifiedAt: new Date(Date.now() - ((login.length * 3600_000) % (30 * 24 * 3600_000))).toISOString(),
-      login: login.toLowerCase(),
-    });
-  }
-}
-
 export function recordEntry(login: string, classifiedAt: string) {
-  store().recent.set(login.toLowerCase(), {
-    classifiedAt,
-    login: login.toLowerCase(),
-  });
+  const key = login.toLowerCase();
+  if (FEATURED.some(f => f.toLowerCase() === key)) return;
+  store().recent.set(key, { classifiedAt, login: key });
 }
 
 export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {
-  const records = await readRecentRegistry();
+  const featuredLogins = FEATURED.map(l => l.toLowerCase());
+  const featuredSet = new Set(featuredLogins);
+  const recent = Array.from(store().recent.values())
+    .filter(r => !featuredSet.has(r.login))
+    .sort((a, b) => +new Date(b.classifiedAt) - +new Date(a.classifiedAt))
+    .map(r => r.login);
+
+  const ordered = [...featuredLogins, ...recent].slice(0, limit);
 
   const entries = await Promise.all(
-    records.slice(0, limit).map(async record => {
+    ordered.map(async login => {
       try {
-        const { profile, archetype, stats } = await computeCronotype(record.login, '90d');
+        const { profile, archetype, stats } = await computeCronotype(login, '90d');
         return {
           archetype,
-          classifiedAt: record.classifiedAt,
+          classifiedAt: store().recent.get(login)?.classifiedAt ?? new Date().toISOString(),
           profile,
           stats,
         } satisfies LeaderboardEntry;
@@ -80,14 +75,4 @@ export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]
   );
 
   return entries.filter((e): e is LeaderboardEntry => e !== null);
-}
-
-async function readRecentRegistry(): Promise<RecentRecord[]> {
-  'use cache';
-  cacheTag('leaderboard-recent');
-  cacheLife('seconds');
-
-  return Array.from(store().recent.values()).sort(
-    (a, b) => +new Date(b.classifiedAt) - +new Date(a.classifiedAt),
-  );
 }

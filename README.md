@@ -41,7 +41,3 @@ pnpm dev
 ```
 
 Set `MOCK_PROFILE=1` to skip GitHub entirely while working on UI.
-
----
-
-By [Aurora Scharff](https://github.com/aurorascharff).
