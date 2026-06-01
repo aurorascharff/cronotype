@@ -47,8 +47,13 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
             {profile.name ?? profile.login}
           </div>
           <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
-          <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>
-            {archetype.name}
+          <div className="flex items-center justify-between gap-2">
+            <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>
+              {archetype.name}
+            </div>
+            <div className="text-muted dark:text-muted-dark shrink-0 text-[10.5px] tabular-nums">
+              {formatFollowers(profile.followers)}
+            </div>
           </div>
         </div>
       </Link>
@@ -122,4 +127,10 @@ function RadialChipSkeleton({ size }: { size: number }) {
       })}
     </svg>
   );
+}
+
+function formatFollowers(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}m followers`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k followers`;
+  return `${n} followers`;
 }

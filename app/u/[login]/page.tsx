@@ -78,9 +78,9 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
         </InlineErrorBoundary>
       </Suspense>
 
-      <Suspense fallback={<RecentDiagnosedSkeleton limit={8} />}>
+      <Suspense fallback={<RecentDiagnosedSkeleton limit={12} />}>
         {params.then(({ login }) => (
-          <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={8} />
+          <RecentDiagnosed excludeLogin={login.toLowerCase()} limit={12} />
         ))}
       </Suspense>
     </>

@@ -6,7 +6,7 @@ type Props = {
   limit?: number;
 };
 
-export async function RecentDiagnosed({ excludeLogin, limit = 8 }: Props) {
+export async function RecentDiagnosed({ excludeLogin, limit = 16 }: Props) {
   const all = await getRecentClassified(limit + 1);
   const entries = excludeLogin
     ? all.filter(e => e.profile.login.toLowerCase() !== excludeLogin.toLowerCase()).slice(0, limit)
@@ -14,18 +14,18 @@ export async function RecentDiagnosed({ excludeLogin, limit = 8 }: Props) {
   return (
     <section className="space-y-4">
       <header>
-        <h2 className="text-lg font-semibold tracking-tight">Featured rhythms</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
       </header>
       <ProfileCardGrid entries={entries} />
     </section>
   );
 }
 
-export function RecentDiagnosedSkeleton({ limit = 4 }: { limit?: number }) {
+export function RecentDiagnosedSkeleton({ limit = 8 }: { limit?: number }) {
   return (
     <section className="space-y-4">
       <header>
-        <h2 className="text-lg font-semibold tracking-tight">Featured rhythms</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Recently diagnosed</h2>
       </header>
       <ProfileCardGridSkeleton count={limit} />
     </section>

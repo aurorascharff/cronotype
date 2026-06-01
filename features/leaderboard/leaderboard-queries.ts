@@ -6,10 +6,10 @@ export type LeaderboardEntry = {
   profile: ProfileSummary;
   archetype: Archetype;
   stats: HourStats;
-  classifiedAt: string;
+  isFeatured: boolean;
 };
 
-type RecentRecord = { login: string; classifiedAt: string };
+type RecentRecord = { login: string };
 
 type Store = {
   recent: Map<string, RecentRecord>;
@@ -22,17 +22,35 @@ declare global {
 
 export const FEATURED: string[] = [
   'torvalds',
-  'rauchg',
   'gaearon',
-  'sebmarkbage',
-  'acdlite',
-  'leerob',
-  'shuding',
+  'rauchg',
   'sindresorhus',
   'tj',
   'kentcdodds',
   'wesbos',
+  'addyosmani',
+  'getify',
+  'bradtraversy',
+  'jaredpalmer',
+  'jhildenbiddle',
+  'sebmarkbage',
+  'acdlite',
+  'leerob',
+  'shuding',
   'sophiebits',
+  'feross',
+  'styfle',
+  'timneutkens',
+  'huozhi',
+  'shadcn',
+  'pcattori',
+  'mjackson',
+  'jacobmparis',
+  'iamsahebgiri',
+  'tannerlinsley',
+  'tkdodo',
+  'cassidoo',
+  'sarah-edo',
 ];
 
 function store(): Store {
@@ -42,29 +60,27 @@ function store(): Store {
   return globalThis.__cronotype_store;
 }
 
-export function recordEntry(login: string, classifiedAt: string) {
+export function recordEntry(login: string) {
   const key = login.toLowerCase();
   if (FEATURED.some(f => f.toLowerCase() === key)) return;
-  store().recent.set(key, { classifiedAt, login: key });
+  store().recent.set(key, { login: key });
 }
 
 export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {
-  const featuredLogins = FEATURED.map(l => l.toLowerCase());
-  const featuredSet = new Set(featuredLogins);
-  const recent = Array.from(store().recent.values())
+  const featuredSet = new Set(FEATURED.map(l => l.toLowerCase()));
+  const recentLogins = Array.from(store().recent.values())
     .filter(r => !featuredSet.has(r.login))
-    .sort((a, b) => +new Date(b.classifiedAt) - +new Date(a.classifiedAt))
     .map(r => r.login);
 
-  const ordered = [...featuredLogins, ...recent].slice(0, limit);
+  const allLogins = [...featuredSet, ...recentLogins];
 
   const entries = await Promise.all(
-    ordered.map(async login => {
+    allLogins.map(async login => {
       try {
         const { profile, archetype, stats } = await computeCronotype(login, '90d');
         return {
           archetype,
-          classifiedAt: store().recent.get(login)?.classifiedAt ?? new Date().toISOString(),
+          isFeatured: featuredSet.has(login),
           profile,
           stats,
         } satisfies LeaderboardEntry;
@@ -74,5 +90,8 @@ export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]
     }),
   );
 
-  return entries.filter((e): e is LeaderboardEntry => e !== null);
+  return entries
+    .filter((e): e is LeaderboardEntry => e !== null)
+    .sort((a, b) => b.profile.followers - a.profile.followers)
+    .slice(0, limit);
 }
