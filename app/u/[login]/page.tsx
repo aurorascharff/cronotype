@@ -8,8 +8,6 @@ import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
 
-export const unstable_prefetch = 'force-runtime';
-
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
   const { login: rawLogin } = await params;
   const login = rawLogin.toLowerCase();
@@ -57,34 +55,34 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
 export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
     <>
-      <Suspense fallback={<CronotypeProfileSkeleton />}>
-        <Crossfade>
+      <Crossfade>
+        <Suspense fallback={<CronotypeProfileSkeleton />}>
           {params.then(({ login }) => (
             <CronotypeProfile login={login.toLowerCase()} />
           ))}
-        </Crossfade>
-      </Suspense>
-
-      <Suspense fallback={<EvolutionStripSkeleton />}>
-        <InlineErrorBoundary
-          title="We couldn't load this history right now."
-          body="Your main reading is still visible. Try again to fetch the full timeline."
-        >
-          <Crossfade>
+        </Suspense>
+      </Crossfade>
+      <Crossfade>
+        <Suspense fallback={<EvolutionStripSkeleton />}>
+          <InlineErrorBoundary
+            title="We couldn't load this history right now."
+            body="Your main reading is still visible. Try again to fetch the full timeline."
+          >
             {params.then(({ login }) => (
               <EvolutionStrip login={login.toLowerCase()} />
             ))}
-          </Crossfade>
-        </InlineErrorBoundary>
-      </Suspense>
-
+          </InlineErrorBoundary>
+        </Suspense>
+      </Crossfade>
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
-        <Suspense fallback={<RecentRevealedSkeleton limit={12} />}>
-          {params.then(({ login }) => (
-            <RecentRevealed excludeLogin={login.toLowerCase()} limit={12} />
-          ))}
-        </Suspense>
+        <Crossfade>
+          <Suspense fallback={<RecentRevealedSkeleton limit={12} />}>
+            {params.then(({ login }) => (
+              <RecentRevealed excludeLogin={login.toLowerCase()} limit={12} />
+            ))}
+          </Suspense>
+        </Crossfade>
       </section>
     </>
   );
