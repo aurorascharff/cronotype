@@ -43,38 +43,55 @@ export async function EvolutionStrip({ login }: Props) {
       </h2>
 
       <div className="relative">
-        <div className="relative mb-1 h-5">
-          {transitions.map((t, i) => {
-            const leftPct = (t.idx / (smoothed.length - 1)) * 100;
-            const align = leftPct < 12 ? 'left' : leftPct > 88 ? 'right' : 'center';
-            const accent2 = ARCHETYPES[t.archetypeId].theme.accent2;
-            return (
-              <div
-                key={`transition-label-${i}`}
-                className="pointer-events-none absolute top-0 flex items-center gap-1.5 whitespace-nowrap"
-                style={{
-                  left: `${leftPct}%`,
-                  transform: align === 'center' ? 'translateX(-50%)' : align === 'right' ? 'translateX(-100%)' : 'none',
-                }}
-              >
-                <span
-                  className="inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ background: t.color }}
-                />
-                <span
-                  className="text-[11px] font-semibold tracking-tight"
+        <div className="relative mb-1 h-9">
+          {(() => {
+            const CHAR_PCT = 0.95;
+            const DOT_PADDING_PCT = 2.6;
+            const ROW_OFFSETS_PX = [0, 18];
+            const rowEnds: number[] = [-Infinity, -Infinity];
+
+            return transitions.map((t, i) => {
+              const leftPct = (t.idx / (smoothed.length - 1)) * 100;
+              const align = leftPct < 12 ? 'left' : leftPct > 88 ? 'right' : 'center';
+              const widthPct = t.label.length * CHAR_PCT + DOT_PADDING_PCT;
+              const startPct = align === 'center' ? leftPct - widthPct / 2 : align === 'right' ? leftPct - widthPct : leftPct;
+              const endPct = startPct + widthPct;
+
+              let row = 0;
+              while (row < rowEnds.length && rowEnds[row] > startPct) row++;
+              if (row >= rowEnds.length) row = rowEnds.length - 1;
+              rowEnds[row] = endPct + 1;
+
+              const accent2 = ARCHETYPES[t.archetypeId].theme.accent2;
+              return (
+                <div
+                  key={`transition-label-${i}`}
+                  className="pointer-events-none absolute flex items-center gap-1.5 whitespace-nowrap"
                   style={{
-                    backgroundImage: `linear-gradient(135deg, ${accent2}, ${t.color})`,
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    left: `${leftPct}%`,
+                    top: `${ROW_OFFSETS_PX[row]}px`,
+                    transform: align === 'center' ? 'translateX(-50%)' : align === 'right' ? 'translateX(-100%)' : 'none',
                   }}
                 >
-                  {t.label}
-                </span>
-              </div>
-            );
-          })}
+                  <span
+                    className="inline-block h-1.5 w-1.5 rounded-full"
+                    style={{ background: t.color }}
+                  />
+                  <span
+                    className="text-[11px] font-semibold tracking-tight"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, ${accent2}, ${t.color})`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {t.label}
+                  </span>
+                </div>
+              );
+            });
+          })()}
         </div>
 
         <svg
