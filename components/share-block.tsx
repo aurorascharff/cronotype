@@ -7,13 +7,15 @@ type Props = {
   shareUrl: string;
   archetypeName: string;
   accent: string;
+  login: string;
   className?: string;
 };
 
 const SHARE_TAGLINE = 'Find your developer type';
 
-export function ShareActions({ shareUrl, archetypeName, accent, className }: Props) {
+export function ShareActions({ shareUrl, archetypeName, accent, login, className }: Props) {
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   async function copyLink() {
     try {
@@ -23,6 +25,28 @@ export function ShareActions({ shareUrl, archetypeName, accent, className }: Pro
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Couldn't copy. Try selecting the URL manually.");
+    }
+  }
+
+  async function downloadImage() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/u/${login}/opengraph-image`);
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cronotype-${login}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Couldn't download the image. Try again in a moment.");
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -56,6 +80,16 @@ export function ShareActions({ shareUrl, archetypeName, accent, className }: Pro
           {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
         </span>
         <span>{copied ? 'Copied' : 'Copy link'}</span>
+      </button>
+      <button
+        type="button"
+        onClick={downloadImage}
+        disabled={downloading}
+        aria-label="Download image"
+        className={`${base} disabled:opacity-60`}
+      >
+        <DownloadIcon className="h-3.5 w-3.5" />
+        <span>{downloading ? 'Downloading' : 'Download'}</span>
       </button>
     </div>
   );
@@ -113,6 +147,25 @@ function CheckIcon({ className }: { className?: string }) {
       aria-hidden
     >
       <path d="M5 12l4 4 10-10" />
+    </svg>
+  );
+}
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M12 4v12" />
+      <path d="M7 11l5 5 5-5" />
+      <path d="M5 20h14" />
     </svg>
   );
 }

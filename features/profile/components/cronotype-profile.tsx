@@ -36,7 +36,7 @@ export async function CronotypeProfile({ login }: Props) {
           <ShareUrl shareUrl={shareUrl} />
         </div>
         <div className="pointer-events-auto">
-          <ShareActions shareUrl={shareUrl} archetypeName={archetype.name} accent={archetype.theme.accent} />
+          <ShareActions shareUrl={shareUrl} archetypeName={archetype.name} accent={archetype.theme.accent} login={profile.login} />
         </div>
       </div>
     </div>
