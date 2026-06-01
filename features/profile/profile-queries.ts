@@ -11,6 +11,16 @@ const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
 
+/**
+ * Sentinel login used by `generateStaticParams` to opt the route into PPR
+ * without hitting GitHub at build. All queries short-circuit to synthetic data
+ * for this exact login so the shell prerender always succeeds.
+ */
+export const SHELL_LOGIN = '__shell__';
+function isShell(login: string): boolean {
+  return login.toLowerCase() === SHELL_LOGIN;
+}
+
 export class GitHubError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -109,7 +119,7 @@ async function getProfileCached(login: string): Promise<ProfileSummary> {
   cacheTag(`profile-${login.toLowerCase()}`);
   cacheLife('cronotype');
 
-  if (MOCK) return mockProfile(login);
+  if (MOCK || isShell(login)) return mockProfile(login);
 
   const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
   if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
@@ -210,7 +220,7 @@ async function getStatsForCached(login: string, window: Window): Promise<ReturnT
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('cronotype');
 
-  if (MOCK) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
+  if (MOCK || isShell(login)) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
 
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
   const to = new Date();
@@ -254,7 +264,7 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   cacheTag(`monthly-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
 
-  if (MOCK) {
+  if (MOCK || isShell(login)) {
     const seed = login.length * 31 + year;
     const months: MonthBucket[] = [];
     for (let m = 0; m < 12; m++) {
@@ -307,7 +317,7 @@ async function getYearArchetypeCached(login: string, year: number): Promise<Arch
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
 
-  if (MOCK) return mockArchetypeFor(`${login}-${year}`);
+  if (MOCK || isShell(login)) return mockArchetypeFor(`${login}-${year}`);
 
   const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 2);
   if (sampleCommits.length === 0) return null;
