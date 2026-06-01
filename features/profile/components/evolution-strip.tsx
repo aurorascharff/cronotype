@@ -29,6 +29,7 @@ export async function EvolutionStrip({ handle }: Props) {
     linePath,
     months,
     partial,
+    totalCommits,
     yTicks,
     yearMarkers,
   } = await getTimelineChart(handle, {
@@ -67,6 +68,9 @@ export async function EvolutionStrip({ handle }: Props) {
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         <div className="flex items-center gap-2">
+          <span className="text-muted dark:text-muted-dark text-[10.5px] tracking-wide uppercase tabular-nums">
+            {formatCount(totalCommits)} commits
+          </span>
           {partial && (
             <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
               Partial · GitHub rate limit
@@ -92,6 +96,9 @@ export async function EvolutionStrip({ handle }: Props) {
                   {e.label}
                 </span>
                 <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
+                <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tabular-nums">
+                  {formatCount(e.commits)} commits
+                </span>
               </li>
             ))}
           {hasUnknown && (

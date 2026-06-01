@@ -35,12 +35,13 @@ const PAD_BOT = 8;
 export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
 
-  const { archetype, areaPath, eras, hasData, linePath, months, profile, yearMarkers } = await getTimelineChart(handle, {
-    height: H,
-    padBottom: PAD_BOT,
-    padTop: PAD_TOP,
-    width: W,
-  });
+  const { archetype, areaPath, eras, hasData, linePath, months, profile, totalCommits, yearMarkers } =
+    await getTimelineChart(handle, {
+      height: H,
+      padBottom: PAD_BOT,
+      padTop: PAD_TOP,
+      width: W,
+    });
 
   const fonts = await loadGeist();
 
@@ -90,6 +91,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
       <div style={{ alignItems: 'baseline', color: 'white', display: 'flex', gap: 16, marginBottom: 24 }}>
         <span style={{ fontSize: 56, fontWeight: 600, letterSpacing: '-0.04em' }}>{archetype.name}</span>
         <span style={{ color: '#8b8d96', fontSize: 22 }}>today</span>
+        <span style={{ color: '#8b8d96', fontSize: 22 }}>{totalCommits.toLocaleString('en')} commits</span>
       </div>
 
       <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 18, gap: 18, marginBottom: 18 }}>
@@ -101,6 +103,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
               <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 10, width: 10 }} />
               <span style={{ color: e.color, fontWeight: 600 }}>{e.label}</span>
               <span style={{ color: '#8b8d96', fontSize: 16 }}>{e.yearLabel}</span>
+              <span style={{ color: '#8b8d96', fontSize: 16 }}>{e.commits.toLocaleString('en')}</span>
             </div>
           ))}
       </div>

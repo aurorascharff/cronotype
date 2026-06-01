@@ -26,6 +26,7 @@ export async function getTimelineChart(login: string, geometry: TimelineGeometry
       months,
       partial,
       profile,
+      totalCommits: 0,
       yTicks: [],
       yearlyArchetypes,
       yearMarkers: [],
@@ -49,6 +50,7 @@ export async function getTimelineChart(login: string, geometry: TimelineGeometry
   const yearMarkers = computeYearMarkers(months, geometry.width);
   const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
   const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
+  const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const yTicks = [max, max / 2].map(value => ({
     value: Math.round(value),
     y: geometry.padTop + usableH - (value / max) * usableH,
@@ -66,6 +68,7 @@ export async function getTimelineChart(login: string, geometry: TimelineGeometry
     partial,
     profile,
     yTicks,
+    totalCommits,
     yearMarkers,
     yearlyArchetypes,
   };

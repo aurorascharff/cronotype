@@ -5,6 +5,7 @@ import type { MonthBucket, YearArchetypeBucket } from '@/features/profile/profil
 export type Mark = {
   archetypeId: ArchetypeId | null;
   color: string | null;
+  commits: number;
   idx: number;
   label: string | null;
   year: number;
@@ -12,6 +13,7 @@ export type Mark = {
 
 export type Era = {
   color: string;
+  commits: number;
   label: string | null;
   yearLabel: string;
   startPct: number;
@@ -98,6 +100,7 @@ export function buildYearMarks(months: MonthBucket[], yearly: YearArchetypeBucke
       return {
         archetypeId,
         color: archetype?.theme.accent ?? null,
+        commits: commitsByYear.get(year) ?? 0,
         idx,
         label: archetype?.name ?? null,
         year,
@@ -107,7 +110,7 @@ export function buildYearMarks(months: MonthBucket[], yearly: YearArchetypeBucke
 
 export function buildEras(marks: Mark[], pointCount: number, fallback: string): Era[] {
   if (marks.length === 0 || pointCount < 2) {
-    return [{ color: fallback, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
+    return [{ color: fallback, commits: 0, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
   }
 
   const pct = (idx: number) => (idx / (pointCount - 1)) * 100;
@@ -125,11 +128,13 @@ export function buildEras(marks: Mark[], pointCount: number, fallback: string): 
 
     const prev = eras[eras.length - 1];
     if (prev && prev.unknown === unknown && prev.color === color && prev.label === m.label) {
+      prev.commits += m.commits;
       prev.endPct = endPct;
       prev.yearLabel = `${prev.yearLabel.split('-')[0]}-${m.year}`;
     } else {
       eras.push({
         color,
+        commits: m.commits,
         endPct,
         label: m.label,
         startPct,
