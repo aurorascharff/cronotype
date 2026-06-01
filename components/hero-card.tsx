@@ -12,6 +12,7 @@ type Props = {
 
 export function HeroCard({ profile, archetype, stats, percentile }: Props) {
   const { theme } = archetype;
+  const sampleSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
 
   return (
     <article
@@ -67,7 +68,7 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
           <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
             <Stat label="Peak" value={formatHour(stats.peakHour)} />
             <Stat label="Nocturnal" value={`${Math.round(stats.pctNocturnal)}%`} />
-            <Stat label="90d sample" value={formatCount(stats.total)} />
+            <Stat label="Sample" value={sampleSize} />
             <Stat label="Percentile" value={`${percentile}`} accent={theme.accent} />
           </dl>
         </div>

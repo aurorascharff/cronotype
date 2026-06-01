@@ -81,6 +81,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   const barWidth = Math.max(4, haloSize * 0.018);
   const titleFontSize = titleSizeFor(archetype.name);
   const meaningFontSize = meaningSizeFor(archetype.meaning);
+  const sampleSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
 
   const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
     <div
@@ -285,7 +286,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         <div style={{ display: 'flex', gap: 40, marginTop: 24 }}>
           <Stat label="PEAK" value={formatHour(stats.peakHour)} />
           <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
-          <Stat label="90D SAMPLE" value={formatCount(stats.total)} />
+          <Stat label="SAMPLE" value={sampleSize} />
           <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
         </div>
       </div>

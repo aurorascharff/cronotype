@@ -123,7 +123,7 @@ function NoRecentProfileCard({
           </Link>
 
           <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
-            <ProfileStat label="90d sample" value="0" accent={theme.accent} />
+            <ProfileStat label="Sample" value="0" accent={theme.accent} />
             <ProfileStat label="Followers" value={formatFollowers(profile.followers)} />
             <ProfileStat label="Repos" value={String(profile.publicRepos)} />
             <ProfileStat label="Joined" value={joined} />
