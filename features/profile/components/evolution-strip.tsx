@@ -172,14 +172,14 @@ export async function EvolutionStrip({ login }: Props) {
 export function EvolutionStripSkeleton() {
   return (
     <section
-      className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10"
+      className="dark:bg-ink-2 text-muted/40 dark:text-muted-dark/40 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10"
       aria-hidden
     >
-      <div className="mb-5 h-2.5 w-32 rounded-full border border-black/10 dark:border-white/10" />
+      <div className="mb-5 h-2.5 w-32 rounded-full border border-current bg-current/[0.08]" />
       <div className="mb-4 flex gap-3">
-        <div className="h-4 w-24 rounded-full border border-black/10 dark:border-white/10" />
-        <div className="h-4 w-20 rounded-full border border-black/10 dark:border-white/10" />
-        <div className="h-4 w-28 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-4 w-24 rounded-full border border-current bg-current/[0.08]" />
+        <div className="h-4 w-20 rounded-full border border-current bg-current/[0.08]" />
+        <div className="h-4 w-28 rounded-full border border-current bg-current/[0.08]" />
       </div>
       <div className="relative h-32 sm:h-40">
         <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="h-full w-full">
@@ -187,7 +187,7 @@ export function EvolutionStripSkeleton() {
             d="M0,30 L10,28 L18,22 L26,12 L34,18 L44,8 L54,16 L62,6 L72,14 L82,10 L92,16 L100,12"
             fill="none"
             stroke="currentColor"
-            strokeOpacity="0.15"
+            strokeOpacity="0.5"
             strokeWidth="0.8"
             strokeDasharray="1.5 1.5"
             vectorEffect="non-scaling-stroke"
@@ -195,10 +195,10 @@ export function EvolutionStripSkeleton() {
         </svg>
       </div>
       <div className="mt-2 flex justify-between">
-        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
-        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
-        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
-        <div className="h-2.5 w-8 rounded-full border border-black/10 dark:border-white/10" />
+        <div className="h-2.5 w-8 rounded-full border border-current bg-current/[0.08]" />
+        <div className="h-2.5 w-8 rounded-full border border-current bg-current/[0.08]" />
+        <div className="h-2.5 w-8 rounded-full border border-current bg-current/[0.08]" />
+        <div className="h-2.5 w-8 rounded-full border border-current bg-current/[0.08]" />
       </div>
     </section>
   );
