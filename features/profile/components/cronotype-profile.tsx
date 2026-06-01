@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { updateTag } from 'next/cache';
 import { notFound } from 'next/navigation';
-import { after, connection } from 'next/server';
+import { after } from 'next/server';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
@@ -14,7 +14,6 @@ type Props = {
 };
 
 export async function CronotypeProfile({ login }: Props) {
-  await connection();
   let result;
   try {
     result = await computeCronotype(login, '90d');

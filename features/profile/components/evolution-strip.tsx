@@ -1,4 +1,3 @@
-import { connection } from 'next/server';
 import { RefreshPartial } from '@/components/refresh-partial';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory, type MonthBucket } from '@/features/profile/profile-queries';
@@ -15,7 +14,6 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ login }: Props) {
-  await connection();
   const [{ months, yearlyArchetypes, partial, failedYears }, { archetype }] = await Promise.all([
     getMonthlyHistory(login),
     computeCronotype(login, '90d'),
@@ -25,15 +23,16 @@ export async function EvolutionStrip({ login }: Props) {
 
   if (!hasData) {
     return (
-      <section className="space-y-4">
-        <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-          <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-          {failedYears.length > 0 && <RefreshPartial login={login} years={failedYears} />}
-        </header>
-        <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
+      <>
+        {failedYears.length > 0 && (
+          <div className="flex justify-end">
+            <RefreshPartial login={login} years={failedYears} />
+          </div>
+        )}
+        <div className="text-muted dark:text-muted-dark flex h-32 items-center justify-center text-center text-sm sm:h-40">
           {partial ? "Couldn\u2019t load the timeline. Hit refresh to try again." : 'Not enough commit history yet.'}
         </div>
-      </section>
+      </>
     );
   }
 
@@ -59,20 +58,18 @@ export async function EvolutionStrip({ login }: Props) {
   const fillId = `evolution-fill-${archetype.id}`;
 
   return (
-    <section className="space-y-4">
-      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-        {partial && (
+    <>
+      {partial && (
+        <div className="flex justify-end">
           <div className="flex items-center gap-2">
             <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
               Partial · GitHub rate limit
             </span>
             <RefreshPartial login={login} years={failedYears} />
           </div>
-        )}
-      </header>
-      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+        </div>
+      )}
+      <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
           {eras
             .filter(e => e.label)
             .map((e, i) => (
@@ -178,8 +175,7 @@ export async function EvolutionStrip({ login }: Props) {
             </span>
           ))}
         </div>
-      </div>
-    </section>
+    </>
   );
 }
 
@@ -187,55 +183,39 @@ export function EvolutionStripSkeleton() {
   const years = 12;
 
   return (
-    <section className="space-y-4" aria-hidden>
-      <header>
-        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-      </header>
-      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-6 sm:p-8 dark:border-white/10">
-        <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
-          <li className="flex items-center gap-1.5">
-            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
-            <span className="skeleton h-3 w-20" />
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
-            <span className="skeleton h-3 w-16" />
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
-            <span className="skeleton h-3 w-24" />
-          </li>
-        </ul>
+    <div aria-hidden>
+      <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5">
+        <li className="flex items-center gap-1.5">
+          <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
+          <span className="skeleton h-3 w-20" />
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
+          <span className="skeleton h-3 w-16" />
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
+          <span className="skeleton h-3 w-24" />
+        </li>
+      </ul>
 
-        <div
-          role="status"
-          aria-label="Loading timeline"
-          className="border-muted/15 dark:border-muted-dark/15 relative h-32 overflow-hidden rounded-md border sm:h-40"
-        >
-          {/* Dotted year dividers - same density and treatment as the resolved chart. */}
-          {Array.from({ length: years - 1 }).map((_, i) => (
-            <div
-              key={i}
-              className="border-muted/20 dark:border-muted-dark/20 absolute inset-y-2 border-l border-dashed"
-              style={{ left: `${((i + 1) / years) * 100}%` }}
-            />
-          ))}
-
-          {/* Subtle inline loading pulse - keeps the silhouette empty since we
-       don't yet know the line shape, but gestures at activity. */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Spinner />
-          </div>
-        </div>
-
-        <div className="text-muted/60 dark:text-muted-dark/60 mt-2 flex justify-between text-[10px] tabular-nums">
-          <span className="skeleton h-2.5 w-8" />
-          <span className="skeleton h-2.5 w-8" />
-          <span className="skeleton h-2.5 w-8" />
-          <span className="skeleton h-2.5 w-8" />
+      <div
+        role="status"
+        aria-label="Loading timeline"
+        className="relative h-32 overflow-hidden sm:h-40"
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Spinner />
         </div>
       </div>
-    </section>
+
+      <div className="text-muted/60 dark:text-muted-dark/60 mt-2 flex justify-between text-[10px] tabular-nums">
+        <span className="skeleton h-2.5 w-8" />
+        <span className="skeleton h-2.5 w-8" />
+        <span className="skeleton h-2.5 w-8" />
+        <span className="skeleton h-2.5 w-8" />
+      </div>
+    </div>
   );
 }
 
