@@ -6,18 +6,10 @@ import { ProfileErrorCard } from '@/components/profile-error-card';
 type Props = {
   title?: string;
   body?: string;
-  retryLabel?: string;
 };
 
-function InlineErrorFallback(props: Props, { unstable_retry: retry }: ErrorInfo) {
-  return (
-    <ProfileErrorCard
-      title={props.title ?? 'Something went wrong.'}
-      body={props.body ?? 'Try again to refetch.'}
-      onRetry={() => retry()}
-      retryLabel={props.retryLabel ?? 'Try again'}
-    />
-  );
+function InlineErrorFallback(props: Props, _info: ErrorInfo) {
+  return <ProfileErrorCard title={props.title ?? 'Something went wrong.'} body={props.body ?? 'Try again later.'} />;
 }
 
 export default catchError(InlineErrorFallback);
