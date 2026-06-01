@@ -36,7 +36,7 @@ export async function EvolutionStrip({ login }: Props) {
   const yearMarkers = computeYearMarkers(months);
   const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
   const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
-  const gradientId = `evolution-stroke-${archetype.id}`;
+  const hasUnknown = eras.some(e => e.unknown);
   const fillId = `evolution-fill-${archetype.id}`;
 
   return (
@@ -64,6 +64,18 @@ export async function EvolutionStrip({ login }: Props) {
               <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
             </li>
           ))}
+        {hasUnknown && (
+          <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+            <span
+              className="inline-block h-px w-4 align-middle"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 8px)',
+              }}
+            />
+            <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
+          </li>
+        )}
       </ul>
 
       <div className="relative">
@@ -75,12 +87,6 @@ export async function EvolutionStrip({ login }: Props) {
             aria-label={`Archetype evolution from ${months[0].month.slice(0, 4)} to ${months[months.length - 1].month.slice(0, 4)}`}
           >
             <defs>
-              <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                {eras.flatMap((e, i) => [
-                  <stop key={`${i}-a`} offset={`${e.startPct}%`} stopColor={e.color} />,
-                  <stop key={`${i}-b`} offset={`${e.endPct}%`} stopColor={e.color} />,
-                ])}
-              </linearGradient>
               {eras.map((e, i) => (
                 <linearGradient key={`${fillId}-${i}`} id={`${fillId}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" stopColor={e.color} stopOpacity="0.28" />
@@ -98,14 +104,16 @@ export async function EvolutionStrip({ login }: Props) {
               })}
             </defs>
 
-            {eras.map((e, i) => (
-              <path
-                key={`era-fill-${i}`}
-                d={areaPath}
-                fill={`url(#${fillId}-${i})`}
-                clipPath={`url(#${fillId}-clip-${i})`}
-              />
-            ))}
+            {eras.map((e, i) =>
+              e.unknown ? null : (
+                <path
+                  key={`era-fill-${i}`}
+                  d={areaPath}
+                  fill={`url(#${fillId}-${i})`}
+                  clipPath={`url(#${fillId}-clip-${i})`}
+                />
+              ),
+            )}
 
             {eras.map((e, i) => {
               if (i === 0) return null;
@@ -126,15 +134,21 @@ export async function EvolutionStrip({ login }: Props) {
               );
             })}
 
-            <path
-              d={linePath}
-              fill="none"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
+            {eras.map((e, i) => (
+              <path
+                key={`era-line-${i}`}
+                d={linePath}
+                fill="none"
+                stroke={e.color}
+                strokeWidth="2.5"
+                strokeDasharray={e.unknown ? '4 4' : undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={e.unknown ? 0.55 : 1}
+                clipPath={`url(#${fillId}-clip-${i})`}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
           </svg>
         </div>
 
@@ -270,11 +284,12 @@ type Era = {
   yearLabel: string;
   startPct: number;
   endPct: number;
+  unknown: boolean;
 };
 
 function buildEras(marks: Mark[], pointCount: number, fallback: string): Era[] {
   if (marks.length === 0 || pointCount < 2) {
-    return [{ color: fallback, endPct: 100, label: null, startPct: 0, yearLabel: '' }];
+    return [{ color: fallback, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
   }
 
   const pct = (idx: number) => (idx / (pointCount - 1)) * 100;
@@ -284,13 +299,14 @@ function buildEras(marks: Mark[], pointCount: number, fallback: string): Era[] {
 
   for (let i = 0; i < marks.length; i++) {
     const m = marks[i];
-    const color = m.color ?? lastColor;
+    const unknown = !m.archetypeId;
+    const color = unknown ? '#94a3b8' : m.color ?? lastColor;
     const startPct = i === 0 ? 0 : pct(m.idx);
     const endPct = i === marks.length - 1 ? 100 : pct(marks[i + 1].idx);
-    lastColor = color;
+    if (!unknown) lastColor = color;
 
     const prev = eras[eras.length - 1];
-    if (prev && prev.color === color && m.archetypeId && prev.label === m.label) {
+    if (prev && prev.unknown === unknown && prev.color === color && prev.label === m.label) {
       prev.endPct = endPct;
       prev.yearLabel = `${prev.yearLabel.split('-')[0]}-${m.year}`;
     } else {
@@ -299,6 +315,7 @@ function buildEras(marks: Mark[], pointCount: number, fallback: string): Era[] {
         endPct,
         label: m.label,
         startPct,
+        unknown,
         yearLabel: String(m.year),
       });
     }

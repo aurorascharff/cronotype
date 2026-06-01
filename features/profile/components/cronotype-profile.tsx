@@ -78,10 +78,15 @@ function EmptyProfile({ login }: { login: string }) {
 export function CronotypeProfileSkeleton() {
   return (
     <div
-      className="dark:bg-ink-2 w-full rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]"
+      className="dark:bg-ink-2 w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]"
       aria-hidden
     >
-      <div className="h-[380px] sm:h-auto" />
+      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
+        <div className="flex items-center justify-center sm:justify-start sm:pl-3">
+          <div className="h-[140px] w-[140px] rounded-full border border-black/10 dark:border-white/10 sm:h-[220px] sm:w-[220px]" />
+        </div>
+        <div className="h-[140px] sm:h-[220px]" />
+      </div>
     </div>
   );
 }

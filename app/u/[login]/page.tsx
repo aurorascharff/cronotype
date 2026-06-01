@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
 import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
@@ -57,9 +58,11 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
   return (
     <>
       <Suspense fallback={<CronotypeProfileSkeleton />}>
-        {params.then(({ login }) => (
-          <CronotypeProfile login={login.toLowerCase()} />
-        ))}
+        <Crossfade>
+          {params.then(({ login }) => (
+            <CronotypeProfile login={login.toLowerCase()} />
+          ))}
+        </Crossfade>
       </Suspense>
 
       <Suspense fallback={<EvolutionStripSkeleton />}>
@@ -67,9 +70,11 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
           title="We couldn't load this history right now."
           body="Your main diagnosis is still visible. Try again to fetch the full timeline."
         >
-          {params.then(({ login }) => (
-            <EvolutionStrip login={login.toLowerCase()} />
-          ))}
+          <Crossfade>
+            {params.then(({ login }) => (
+              <EvolutionStrip login={login.toLowerCase()} />
+            ))}
+          </Crossfade>
         </InlineErrorBoundary>
       </Suspense>
 
