@@ -139,8 +139,12 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
 }
 
 export async function getProfile(login: string): Promise<ProfileSummary> {
+  return getProfileCached(login.toLowerCase());
+}
+
+async function getProfileCached(login: string): Promise<ProfileSummary> {
   'use cache';
-  cacheTag(`profile-${login.toLowerCase()}`);
+  cacheTag(`profile-${login}`);
   cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
@@ -241,7 +245,7 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
   const now = new Date();
   const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const dateKey = to.toISOString().slice(0, 10);
-  return getStatsForCached(login, window, dateKey);
+  return getStatsForCached(login.toLowerCase(), window, dateKey);
 }
 
 async function getStatsForCached(
@@ -291,8 +295,12 @@ type YearMonthly = {
 };
 
 export async function getYearMonthly(login: string, year: number): Promise<YearMonthly | null> {
+  return getYearMonthlyCached(login.toLowerCase(), year);
+}
+
+async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly | null> {
   'use cache';
-  cacheTag(`monthly-${login.toLowerCase()}-${year}`);
+  cacheTag(`monthly-${login}-${year}`);
   cacheLife('cronotype');
 
   if (MOCK || isShell(login)) {
@@ -455,7 +463,7 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
   for (const year of yearsWithCommits) {
     try {
-      const value = await getYearArchetype(login, year);
+      const value = await getYearArchetype(lower, year);
       archetypeResults.push({ status: 'fulfilled', value });
     } catch (reason) {
       archetypeResults.push({ status: 'rejected', reason });
