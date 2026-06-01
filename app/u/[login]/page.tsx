@@ -88,9 +88,9 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
         <Crossfade>
-          <Suspense fallback={<RecentRevealedSkeleton limit={12} />}>
+          <Suspense fallback={<RecentRevealedSkeleton limit={16} />}>
             {params.then(({ login }) => (
-              <RecentRevealed excludeLogin={login.toLowerCase()} limit={12} />
+              <RecentRevealed excludeLogin={login.toLowerCase()} limit={16} />
             ))}
           </Suspense>
         </Crossfade>

@@ -13,24 +13,47 @@ export type LeaderboardEntry = {
 };
 
 const FEATURED: string[] = [
-  'torvalds',
+  // React / Next.js core
   'gaearon',
-  'rauchg',
-  'sindresorhus',
-  'tj',
-  'kentcdodds',
-  'wesbos',
-  'addyosmani',
   'sebmarkbage',
   'acdlite',
+  'sophiebits',
+  'rickhanlonii',
+  'rauchg',
   'leerob',
   'shuding',
-  'sophiebits',
-  'shadcn',
   'timneutkens',
+  'styfle',
+  // JS ecosystem / tools
+  'sindresorhus',
+  'tj',
+  'addyosmani',
+  'paulirish',
+  'mjackson',
+  'ryanflorence',
+  'kentcdodds',
+  'wesbos',
+  'sdras',
   'tannerlinsley',
   'tkdodo',
   'cassidoo',
+  'jaredpalmer',
+  'mxstbr',
+  'kettanaito',
+  // Frameworks / runtimes
+  'evanw',
+  'developit',
+  'antfu',
+  'yyx990803',
+  'rich-harris',
+  // Infra / systems
+  'torvalds',
+  'mitchellh',
+  'kelseyhightower',
+  // Design / UI
+  'shadcn',
+  'pacocoursey',
+  'steveruizok',
 ];
 
 export const getRecentLogins = cache(async (limit: number): Promise<string[]> => {

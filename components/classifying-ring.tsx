@@ -1,41 +1,21 @@
 type Props = {
   failed?: boolean;
-  onRetry?: () => void;
   variant?: 'inset' | 'fixed';
   size?: number;
 };
 
-export function ClassifyingRing({ failed = false, onRetry, variant = 'inset', size }: Props) {
+export function ClassifyingRing({ failed = false, variant = 'inset', size }: Props) {
   const positionClass = variant === 'inset' ? 'absolute inset-0' : '';
   const fixedStyle = variant === 'fixed' && size ? { height: size, width: size } : undefined;
   return (
-    <>
-      <span
-        aria-label={failed ? 'Classification failed' : 'Classifying'}
-        className={`${positionClass} rounded-full border-2 ${
-          failed
-            ? 'border-muted/20 dark:border-muted-dark/20 border-dotted'
-            : 'border-muted/25 dark:border-muted-dark/25 animate-pulse border-dashed'
-        }`}
-        style={fixedStyle}
-      />
-      {failed && onRetry && (
-        <button
-          type="button"
-          onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRetry();
-          }}
-          aria-label="Retry classification"
-          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper absolute top-0 right-0 z-10 rounded-full border border-black/10 bg-white p-1 shadow-sm transition-colors dark:border-white/15 dark:bg-white/[0.08]"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3 w-3" aria-hidden>
-            <path d="M21 12a9 9 0 1 1-3.51-7.13" strokeLinecap="round" />
-            <path d="M21 4v6h-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      )}
-    </>
+    <span
+      aria-label={failed ? 'Classification failed' : 'Classifying'}
+      className={`${positionClass} rounded-full border-2 ${
+        failed
+          ? 'border-muted/20 dark:border-muted-dark/20 border-dotted'
+          : 'border-muted/25 dark:border-muted-dark/25 animate-pulse border-dashed'
+      }`}
+      style={fixedStyle}
+    />
   );
 }

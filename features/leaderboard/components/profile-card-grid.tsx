@@ -13,7 +13,7 @@ export function ProfileCardSlot({ login }: { login: string }) {
       <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
-            <CardErrorBoundary login={login} variant="ring">
+            <CardErrorBoundary variant="ring">
               <Suspense fallback={<ClassifyingRing />}>
                 <CardChip login={login} />
               </Suspense>
@@ -63,7 +63,7 @@ async function CardMeta({ login }: { login: string }) {
         <Suspense
           fallback={<div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs italic">Classifying…</div>}
         >
-          <CardErrorBoundary login={login} variant="em-dash">
+          <CardErrorBoundary variant="em-dash">
             <ArchetypeName login={login} />
           </CardErrorBoundary>
         </Suspense>

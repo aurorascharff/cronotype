@@ -20,8 +20,8 @@ export default function HomePage() {
       </section>
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
-        <Suspense fallback={<RecentRevealedSkeleton limit={16} />}>
-          <RecentRevealed limit={16} />
+        <Suspense fallback={<RecentRevealedSkeleton limit={24} />}>
+          <RecentRevealed limit={24} />
         </Suspense>
       </section>
     </div>

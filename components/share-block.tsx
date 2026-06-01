@@ -63,7 +63,7 @@ export function ShareActions({ shareUrl, archetypeName, accent, className }: Pro
 
 export function ShareUrl({ shareUrl }: { shareUrl: string }) {
   const display = shareUrl.replace(/^https?:\/\//, '');
-  return <span className="text-muted/70 dark:text-muted-dark/70 font-mono text-[11px] tracking-tight">{display}</span>;
+  return <span className="text-muted dark:text-muted-dark font-mono text-xs tracking-tight sm:text-sm">{display}</span>;
 }
 
 function XIcon({ className }: { className?: string }) {

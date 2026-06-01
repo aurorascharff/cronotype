@@ -9,7 +9,3 @@ export async function refreshPartialYears(login: string, years: number[]) {
     updateTag(`year-archetype-${lower}-${year}`);
   }
 }
-
-export async function refreshCardStats(login: string) {
-  updateTag(`stats-${login.toLowerCase()}-90d`);
-}
