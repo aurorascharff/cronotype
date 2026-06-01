@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { RadialChip } from '@/components/radial-chip';
-import CardErrorBoundary from '@/components/card-error-boundary';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { formatFollowers } from '@/lib/format';
@@ -13,11 +12,9 @@ export function ProfileCardSlot({ login }: { login: string }) {
       <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
-            <CardErrorBoundary variant="ring">
-              <Suspense fallback={<ClassifyingRing />}>
-                <CardChip login={login} />
-              </Suspense>
-            </CardErrorBoundary>
+            <Suspense fallback={<ClassifyingRing />}>
+              <CardChip login={login} />
+            </Suspense>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -48,38 +45,30 @@ export function ProfileCardSlot({ login }: { login: string }) {
 }
 
 async function CardChip({ login }: { login: string }) {
-  const { archetype, stats } = await getCardClassification(login);
-  return <RadialChip stats={stats} color={archetype.theme.accent} size={112} />;
+  const result = await getCardClassification(login);
+  if (!result) return <ClassifyingRing failed />;
+  return <RadialChip stats={result.stats} color={result.archetype.theme.accent} size={112} />;
 }
 
 async function CardMeta({ login }: { login: string }) {
-  const profile = await getCardProfile(login);
+  const [profile, classification] = await Promise.all([getCardProfile(login), getCardClassification(login)]);
   if (!profile) return <CardMetaFallback login={login} />;
   return (
     <div className="min-w-0 space-y-1">
       <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
       <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
       <div className="flex items-center justify-between gap-2">
-        <Suspense
-          fallback={<div className="text-muted/60 dark:text-muted-dark/60 truncate text-xs italic">Classifying…</div>}
-        >
-          <CardErrorBoundary variant="em-dash">
-            <ArchetypeName login={login} />
-          </CardErrorBoundary>
-        </Suspense>
+        {classification ? (
+          <div className="truncate text-xs font-medium" style={{ color: classification.archetype.theme.accent }}>
+            {classification.archetype.name}
+          </div>
+        ) : (
+          <span className="text-muted/40 dark:text-muted-dark/40 text-xs">—</span>
+        )}
         <div className="text-muted dark:text-muted-dark shrink-0 text-[10.5px] tabular-nums">
           {formatFollowers(profile.followers)}
         </div>
       </div>
-    </div>
-  );
-}
-
-async function ArchetypeName({ login }: { login: string }) {
-  const { archetype } = await getCardClassification(login);
-  return (
-    <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>
-      {archetype.name}
     </div>
   );
 }

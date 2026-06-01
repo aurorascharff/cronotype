@@ -300,8 +300,8 @@ function buildYearMarks(
     if (y.commits > 0) archetypeByYear.set(y.year, y.archetypeId);
   }
 
-  const thisYear = new Date().getUTCFullYear();
-  archetypeByYear.set(thisYear, currentId);
+  const lastYear = months.length > 0 ? Number(months[months.length - 1].month.slice(0, 4)) : 2026;
+  archetypeByYear.set(lastYear, currentId);
 
   const commitsByYear = new Map<number, number>();
   const firstIdxByYear = new Map<number, number>();

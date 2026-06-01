@@ -77,7 +77,11 @@ export async function getCardProfile(login: string): Promise<ProfileSummary | nu
   }
 }
 
-export async function getCardClassification(login: string): Promise<{ archetype: Archetype; stats: HourStats }> {
-  const stats = await getStatsFor(login, '90d');
-  return { archetype: classify(stats), stats };
+export async function getCardClassification(login: string): Promise<{ archetype: Archetype; stats: HourStats } | null> {
+  try {
+    const stats = await getStatsFor(login, '90d');
+    return { archetype: classify(stats), stats };
+  } catch {
+    return null;
+  }
 }

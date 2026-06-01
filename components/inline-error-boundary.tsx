@@ -8,7 +8,6 @@ type Props = {
   title?: string;
   body?: string;
   retryLabel?: string;
-  showHomeLink?: boolean;
 };
 
 function InlineErrorFallback(props: Props, { unstable_retry: retry }: ErrorInfo) {
@@ -21,7 +20,6 @@ function InlineErrorFallback(props: Props, { unstable_retry: retry }: ErrorInfo)
       onRetry={() => startTransition(() => retry())}
       isPending={isPending}
       retryLabel={props.retryLabel ?? 'Try again'}
-      showHomeLink={props.showHomeLink ?? false}
     />
   );
 }

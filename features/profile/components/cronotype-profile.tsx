@@ -6,7 +6,7 @@ import { ClassifyingRing } from '@/components/classifying-ring';
 import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
-import { GitHubError } from '@/features/profile/profile-queries';
+import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
 import { recordReveal } from '@/lib/reveals';
 
 type Props = {
@@ -28,10 +28,12 @@ export async function CronotypeProfile({ login }: Props) {
     return <EmptyProfile login={login} />;
   }
 
-  after(async () => {
-    await recordReveal(profile.login);
-    updateTag('reveals');
-  });
+  if (login !== SHELL_LOGIN) {
+    after(async () => {
+      await recordReveal(profile.login);
+      updateTag('reveals');
+    });
+  }
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://cronotype.vercel.app';
   const shareUrl = `${base.replace(/\/$/, '')}/u/${profile.login}`;

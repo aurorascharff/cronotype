@@ -335,7 +335,26 @@ async function getYearArchetype(login: string, year: number): Promise<ArchetypeI
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
+  'use cache';
   const lower = login.toLowerCase();
+  cacheTag(`monthly-history-${lower}`);
+  cacheLife('hours');
+
+  if (MOCK || isShell(lower)) {
+    const years = [2026, 2025, 2024, 2023, 2022];
+    const results = await Promise.all(years.map(y => getYearMonthly(lower, y)));
+    return {
+      failedYears: [],
+      months: results.flatMap(r => r.months).sort((a, b) => a.month.localeCompare(b.month)),
+      partial: false,
+      yearlyArchetypes: results.map(r => ({
+        archetypeId: r.archetypeId ?? ('drifter' as ArchetypeId),
+        commits: r.commits,
+        year: r.year,
+      })),
+    };
+  }
+
   const profile = await getProfile(lower);
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const now = new Date();
