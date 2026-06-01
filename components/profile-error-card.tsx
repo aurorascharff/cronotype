@@ -36,7 +36,7 @@ export function ProfileErrorCard({
         {showHomeLink ? (
           <Link
             href="/"
-            className="bg-brand text-on-brand rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] hover:brightness-105"
+            className="bg-brand text-on-brand dark:text-ink rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] hover:brightness-105"
           >
             {homeLabel}
           </Link>

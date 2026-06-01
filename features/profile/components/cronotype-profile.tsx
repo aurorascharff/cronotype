@@ -58,7 +58,7 @@ function EmptyProfile({ login }: { login: string }) {
       <h2 className="text-2xl font-semibold tracking-tight">@{login} hasn&apos;t pushed in the last 90 days.</h2>
       <Link
         href="/"
-        className="bg-brand text-on-brand mt-6 inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] hover:brightness-105"
+        className="bg-brand text-on-brand dark:text-ink mt-6 inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] hover:brightness-105"
       >
         Try another handle
       </Link>

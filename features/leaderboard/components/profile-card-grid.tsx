@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { RadialChip } from '@/components/radial-chip';
 import CardErrorBoundary from '@/components/card-error-boundary';
 import { ClassifyingRing } from '@/components/classifying-ring';
@@ -48,11 +49,13 @@ export function ProfileCardSlot({ login }: { login: string }) {
 }
 
 async function CardChip({ login }: { login: string }) {
+  await connection();
   const { archetype, stats } = await getCardClassification(login);
   return <RadialChip stats={stats} color={archetype.theme.accent} size={112} />;
 }
 
 async function CardMeta({ login }: { login: string }) {
+  await connection();
   const profile = await getCardProfile(login);
   if (!profile) return <CardMetaFallback login={login} />;
   return (
