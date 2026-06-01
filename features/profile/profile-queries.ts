@@ -138,26 +138,35 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
   return weeks.flatMap(w => w.contributionDays);
 }
 
-export async function getProfile(login: string): Promise<ProfileSummary> {
+export async function getProfile(login: string): Promise<ProfileSummary | null> {
   'use cache';
   cacheTag(`profile-${login.toLowerCase()}`);
-  cacheLife('profile');
 
-  if (MOCK || isShell(login)) return mockProfile(login);
+  if (MOCK || isShell(login)) {
+    cacheLife('profile');
+    return mockProfile(login);
+  }
 
-  const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
-  if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
-  if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
-  const j = await res.json();
-  return {
-    avatarUrl: j.avatar_url,
-    bio: j.bio ?? null,
-    createdAt: j.created_at,
-    followers: j.followers ?? 0,
-    login: j.login,
-    name: j.name ?? null,
-    publicRepos: j.public_repos ?? 0,
-  };
+  try {
+    const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
+    if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
+    if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
+    const j = await res.json();
+    cacheLife('profile');
+    return {
+      avatarUrl: j.avatar_url,
+      bio: j.bio ?? null,
+      createdAt: j.created_at,
+      followers: j.followers ?? 0,
+      login: j.login,
+      name: j.name ?? null,
+      publicRepos: j.public_repos ?? 0,
+    };
+  } catch (err) {
+    if (err instanceof GitHubError && err.status === 404) throw err;
+    cacheLife('minutes');
+    return null;
+  }
 }
 
 type SearchCommitItem = {
@@ -364,6 +373,7 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   }
 
   const profile = await getProfile(lower);
+  if (!profile) return { failedYears: [], months: [], partial: true, yearlyArchetypes: [] };
   const firstYear = new Date(profile.createdAt).getUTCFullYear();
   const now = new Date();
   const thisYear = now.getUTCFullYear();
