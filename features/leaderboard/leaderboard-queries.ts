@@ -23,7 +23,7 @@ declare global {
 }
 
 function store(): Store {
-  if (!globalThis.__cronotype_store) {
+  if (!globalThis.__cronotype_store || !(globalThis.__cronotype_store.recent instanceof Map)) {
     globalThis.__cronotype_store = { recent: new Map() };
     seed(globalThis.__cronotype_store);
   }
@@ -31,28 +31,27 @@ function store(): Store {
 }
 
 function seed(s: Store) {
-  const seeds: Array<{ login: string; id: ArchetypeId }> = [
-    { id: 'vampire', login: 'rauchg' },
-    { id: 'vampire', login: 'gaearon' },
-    { id: 'insomniac-maintainer', login: 'leerob' },
-    { id: 'nine-to-fiver', login: 'shuding' },
-    { id: 'sunrise-sniper', login: 'sebmarkbage' },
-    { id: 'lunch-bandit', login: 'acdlite' },
-    { id: 'weekend-warrior', login: 'sophiebits' },
-    { id: 'drifter', login: 'feross' },
-    { id: 'nine-to-fiver', login: 'wesbos' },
-    { id: 'vampire', login: 'tj' },
-    { id: 'insomniac-maintainer', login: 'sindresorhus' },
-    { id: 'sunrise-sniper', login: 'kentcdodds' },
+  const seeds = [
+    'rauchg',
+    'gaearon',
+    'leerob',
+    'shuding',
+    'sebmarkbage',
+    'acdlite',
+    'sophiebits',
+    'feross',
+    'wesbos',
+    'tj',
+    'sindresorhus',
+    'kentcdodds',
   ];
 
-  for (const { login } of seeds) {
+  for (const login of seeds) {
     s.recent.set(login.toLowerCase(), {
       classifiedAt: new Date(Date.now() - ((login.length * 3600_000) % (30 * 24 * 3600_000))).toISOString(),
       login: login.toLowerCase(),
     });
   }
-  void ARCHETYPES;
 }
 
 /** Records a login as recently diagnosed. The actual profile/stats live in the cached `computeCronotype`. */

@@ -28,7 +28,7 @@ export function ShareButton({ shareUrl, accent, className }: Props) {
       type="button"
       onClick={copy}
       aria-label="Copy share link"
-      className={`text-ink dark:text-paper group inline-flex items-center gap-1.5 rounded-md border border-black/10 bg-white/85 px-2.5 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] ${className ?? ''}`}
+      className={`text-ink dark:text-paper group inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white/85 px-2.5 py-1.5 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-white dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12] ${className ?? ''}`}
     >
       <span style={{ color: accent }} className="inline-flex">
         {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}

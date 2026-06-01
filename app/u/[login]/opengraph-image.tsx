@@ -8,6 +8,27 @@ export const size = { width: 1200, height: 630 };
 
 type Params = { login: string };
 
+async function loadGeist() {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : 'http://localhost:3000');
+  const base = baseUrl.replace(/\/$/, '');
+  try {
+    const [regular, semibold] = await Promise.all([
+      fetch(`${base}/fonts/Geist-Regular.ttf`).then(r => r.arrayBuffer()),
+      fetch(`${base}/fonts/Geist-SemiBold.ttf`).then(r => r.arrayBuffer()),
+    ]);
+    return [
+      { data: regular, name: 'Geist', style: 'normal' as const, weight: 400 as const },
+      { data: semibold, name: 'Geist', style: 'normal' as const, weight: 600 as const },
+    ];
+  } catch {
+    return undefined;
+  }
+}
+
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
   const { login } = await params;
 
@@ -16,10 +37,12 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   try {
     [profile, stats] = await Promise.all([getProfile(login), getStatsFor(login, '90d')]);
   } catch {
-    return fallback();
+    return fallback(await loadGeist());
   }
 
-  if (stats.total === 0) return fallback();
+  if (stats.total === 0) return fallback(await loadGeist());
+
+  const fonts = await loadGeist();
 
   const archetype = classify(stats);
   const { theme } = archetype;
@@ -63,7 +86,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           background: '#08090b',
           color: 'white',
           display: 'flex',
-          fontFamily: 'sans-serif',
+          fontFamily: 'Geist, sans-serif',
           gap: 56,
           height: '100%',
           padding: 64,
@@ -258,7 +281,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts },
   );
 }
 
@@ -280,7 +303,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
-function fallback() {
+function fallback(fonts?: Awaited<ReturnType<typeof loadGeist>>) {
   const fallbackArchetype = ARCHETYPES.drifter;
   return new ImageResponse(
     (
@@ -291,7 +314,7 @@ function fallback() {
           color: 'white',
           display: 'flex',
           flexDirection: 'column',
-          fontFamily: 'sans-serif',
+          fontFamily: 'Geist, sans-serif',
           gap: 16,
           height: '100%',
           justifyContent: 'center',
@@ -313,7 +336,7 @@ function fallback() {
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts },
   );
 }
 
