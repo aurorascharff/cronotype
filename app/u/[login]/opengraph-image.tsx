@@ -279,6 +279,20 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         >
           Last 90 days
         </div>
+
+        <div
+          style={{
+            color: '#6b7280',
+            display: 'flex',
+            fontSize: 18,
+            left: 64,
+            letterSpacing: '0.01em',
+            position: 'absolute',
+            bottom: 36,
+          }}
+        >
+          Find your developer type
+        </div>
       </div>
     ),
     { ...size, fonts },

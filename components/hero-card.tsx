@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { HaloChart } from '@/components/halo-chart';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
@@ -40,6 +41,14 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
             {archetype.name}
           </h1>
           <p className="text-muted dark:text-muted-dark max-w-md text-sm sm:text-base">{archetype.meaning}</p>
+
+          <Link
+            href={`/types#${archetype.id}`}
+            className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper w-fit text-xs underline-offset-2 transition-colors hover:underline"
+            style={{ color: theme.accent }}
+          >
+            What&apos;s a {archetype.name}? →
+          </Link>
 
           <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
             <Stat label="Peak" value={formatHour(stats.peakHour)} />

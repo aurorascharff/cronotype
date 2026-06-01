@@ -1,8 +1,7 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { ARCHETYPES } from '@/lib/archetypes';
 import { computeCronotype } from '@/features/profile/profile-service';
-import type { Archetype, ArchetypeId, HourStats, ProfileSummary } from '@/types/cronotype';
+import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
 export type LeaderboardEntry = {
   profile: ProfileSummary;

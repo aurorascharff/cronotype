@@ -70,37 +70,24 @@
   }
 }
 
-@keyframes wave-lines {
-  0% {
-    background-position: -468px 0;
-  }
+@keyframes skeleton-pulse {
+  0%,
   100% {
-    background-position: 468px 0;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 
 .skeleton {
-  background: rgba(120, 120, 120, 0.18);
-  background: linear-gradient(
-    to right,
-    rgba(120, 120, 120, 0.18) 8%,
-    rgba(160, 160, 160, 0.28) 18%,
-    rgba(120, 120, 120, 0.18) 33%
-  );
-  background-size: 800px 100px;
-  animation: wave-lines 1.8s infinite linear;
+  background: color-mix(in oklab, var(--color-muted) 18%, transparent);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
   border-radius: var(--radius-sm);
 }
 
 .dark .skeleton {
-  background: rgba(140, 140, 140, 0.10);
-  background: linear-gradient(
-    to right,
-    rgba(140, 140, 140, 0.10) 8%,
-    rgba(180, 180, 180, 0.22) 18%,
-    rgba(140, 140, 140, 0.10) 33%
-  );
-  background-size: 800px 100px;
+  background: color-mix(in oklab, var(--color-muted-dark) 16%, transparent);
 }
 
 ::view-transition-old(root),

@@ -71,8 +71,8 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
         aria-label="Diagnose this developer"
         className={
           large
-            ? 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
-            : 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-[filter,opacity] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70'
+            ? 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-70'
+            : 'bg-brand text-on-brand inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-[filter,opacity] hover:brightness-105 disabled:opacity-70'
         }
       >
         <span>Diagnose</span>

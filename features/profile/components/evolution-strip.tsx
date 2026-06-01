@@ -34,7 +34,10 @@ export async function EvolutionStrip({ login }: Props) {
   const areaPath = `${linePath} L${W},${H - PAD_BOT} L0,${H - PAD_BOT} Z`;
 
   const yearMarkers = computeYearMarkers(months);
-  const transitions = buildArchetypeTransitions(months, yearlyArchetypes, archetype.id);
+  const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
+  const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
+  const gradientId = `evolution-stroke-${archetype.id}`;
+  const fillId = `evolution-fill-${archetype.id}`;
 
   return (
     <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
@@ -43,118 +46,69 @@ export async function EvolutionStrip({ login }: Props) {
       </h2>
 
       <div className="relative">
-        <div className="relative mb-1 h-9">
-          {(() => {
-            const CHAR_PCT = 0.95;
-            const DOT_PADDING_PCT = 2.6;
-            const ROW_OFFSETS_PX = [0, 18];
-            const rowEnds: number[] = [-Infinity, -Infinity];
-
-            return transitions.map((t, i) => {
-              const leftPct = (t.idx / (smoothed.length - 1)) * 100;
-              const align = leftPct < 12 ? 'left' : leftPct > 88 ? 'right' : 'center';
-              const widthPct = t.label.length * CHAR_PCT + DOT_PADDING_PCT;
-              const startPct = align === 'center' ? leftPct - widthPct / 2 : align === 'right' ? leftPct - widthPct : leftPct;
-              const endPct = startPct + widthPct;
-
-              let row = 0;
-              while (row < rowEnds.length && rowEnds[row] > startPct) row++;
-              if (row >= rowEnds.length) row = rowEnds.length - 1;
-              rowEnds[row] = endPct + 1;
-
-              const accent2 = ARCHETYPES[t.archetypeId].theme.accent2;
-              return (
-                <div
-                  key={`transition-label-${i}`}
-                  className="pointer-events-none absolute flex items-center gap-1.5 whitespace-nowrap"
-                  style={{
-                    left: `${leftPct}%`,
-                    top: `${ROW_OFFSETS_PX[row]}px`,
-                    transform: align === 'center' ? 'translateX(-50%)' : align === 'right' ? 'translateX(-100%)' : 'none',
-                  }}
-                >
-                  <span
-                    className="inline-block h-1.5 w-1.5 rounded-full"
-                    style={{ background: t.color }}
-                  />
-                  <span
-                    className="text-[11px] font-semibold tracking-tight"
-                    style={{
-                      backgroundImage: `linear-gradient(135deg, ${accent2}, ${t.color})`,
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    {t.label}
-                  </span>
-                </div>
-              );
-            });
-          })()}
-        </div>
-
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          className="h-32 w-full sm:h-40"
-          role="img"
-          aria-label={`Archetype evolution from ${months[0].month.slice(0, 4)} to ${months[months.length - 1].month.slice(0, 4)}`}
-        >
-          <defs>
-            <linearGradient id={`evolution-fill-${archetype.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={archetype.theme.accent} stopOpacity="0.4" />
-              <stop offset="100%" stopColor={archetype.theme.accent} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          {yearMarkers.map(yr => (
-            <line
-              key={yr.x}
-              x1={yr.x}
-              y1={PAD_TOP}
-              x2={yr.x}
-              y2={H - PAD_BOT}
-              stroke="currentColor"
-              className="text-muted/15 dark:text-muted-dark/15"
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-
-          <path d={areaPath} fill={`url(#evolution-fill-${archetype.id})`} />
-
-          <path
-            d={linePath}
-            fill="none"
-            stroke={archetype.theme.accent}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-          />
-
-          {transitions.map((t, i) => {
-            const x = (t.idx / (smoothed.length - 1)) * W;
-            const y = PAD_TOP + usableH - (smoothed[t.idx] / max) * usableH;
+        <div className="relative mb-3 flex flex-wrap gap-x-4 gap-y-1.5">
+          {eras.map((e, i) => {
+            if (!e.label) return null;
             return (
-              <g key={`transition-${i}`}>
-                <line
-                  x1={x}
-                  y1={y}
-                  x2={x}
-                  y2={PAD_TOP + 18}
-                  stroke={t.color}
-                  strokeWidth="1"
-                  strokeDasharray="2 2"
-                  opacity="0.45"
-                  vectorEffect="non-scaling-stroke"
-                />
-                <circle cx={x} cy={y} r="4.5" fill={t.color} stroke="currentColor" className="text-white dark:text-[#0a0b0d]" strokeWidth="1.5" />
-              </g>
+              <div key={`era-legend-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: e.color }} />
+                <span className="text-[11px] font-semibold tracking-tight" style={{ color: e.color }}>
+                  {e.label}
+                </span>
+                <span className="text-muted dark:text-muted-dark text-[11px] tabular-nums">{e.yearLabel}</span>
+              </div>
             );
           })}
-        </svg>
+        </div>
+
+        <div className="relative">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            className="h-32 w-full sm:h-40"
+            role="img"
+            aria-label={`Archetype evolution from ${months[0].month.slice(0, 4)} to ${months[months.length - 1].month.slice(0, 4)}`}
+          >
+            <defs>
+              <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                {eras.flatMap((e, i) => [
+                  <stop key={`${i}-a`} offset={`${e.startPct}%`} stopColor={e.color} />,
+                  <stop key={`${i}-b`} offset={`${e.endPct}%`} stopColor={e.color} />,
+                ])}
+              </linearGradient>
+              <linearGradient id={fillId} x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={archetype.theme.accent} stopOpacity="0.28" />
+                <stop offset="100%" stopColor={archetype.theme.accent} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {yearMarkers.map(yr => (
+              <line
+                key={yr.x}
+                x1={yr.x}
+                y1={PAD_TOP}
+                x2={yr.x}
+                y2={H - PAD_BOT}
+                stroke="currentColor"
+                className="text-muted/15 dark:text-muted-dark/15"
+                strokeWidth="1"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+
+            <path d={areaPath} fill={`url(#${fillId})`} />
+
+            <path
+              d={linePath}
+              fill="none"
+              stroke={`url(#${gradientId})`}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
 
         <div className="text-muted dark:text-muted-dark relative mt-2 h-4 text-[10px] tabular-nums">
           {yearMarkers.map(yr => (
@@ -174,23 +128,18 @@ export async function EvolutionStrip({ login }: Props) {
 
 export function EvolutionStripSkeleton() {
   return (
-    <div>
+    <section className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
       <div className="skeleton mb-4 h-2.5 w-32" />
-
-      <div className="relative mb-1 flex h-5 items-center gap-6">
-        <div className="skeleton h-3 w-20" />
-        <div className="skeleton ml-auto h-3 w-24" />
-        <div className="skeleton h-3 w-20" />
+      <div className="relative">
+        <div className="skeleton h-32 w-full sm:h-40" />
+        <div className="mt-2 flex h-4 justify-between">
+          <div className="skeleton h-2.5 w-8" />
+          <div className="skeleton h-2.5 w-8" />
+          <div className="skeleton h-2.5 w-8" />
+          <div className="skeleton h-2.5 w-8" />
+        </div>
       </div>
-
-      <div className="skeleton h-32 w-full sm:h-40" />
-
-      <div className="relative mt-2 flex h-4 justify-between">
-        <div className="skeleton h-2.5 w-8" />
-        <div className="skeleton h-2.5 w-8" />
-        <div className="skeleton h-2.5 w-8" />
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -247,54 +196,100 @@ function computeYearMarkers(months: MonthBucket[]): Array<{ label: string; x: nu
   }));
 }
 
-function buildArchetypeTransitions(
+function buildYearMarks(
   months: MonthBucket[],
   yearly: Array<{ year: number; archetypeId: ArchetypeId; commits: number }>,
   currentId: ArchetypeId,
 ) {
-  const dense = yearly
-    .filter(y => y.commits > 0)
-    .sort((a, b) => a.year - b.year)
-    .map(y => ({ archetypeId: y.archetypeId, year: y.year }));
-
-  const collapsed: Array<{ startYear: number; endYear: number; archetypeId: ArchetypeId }> = [];
-  for (const step of dense) {
-    const prev = collapsed[collapsed.length - 1];
-    if (!prev || prev.archetypeId !== step.archetypeId) {
-      collapsed.push({ archetypeId: step.archetypeId, endYear: step.year, startYear: step.year });
-    } else {
-      prev.endYear = step.year;
-    }
+  const archetypeByYear = new Map<number, ArchetypeId>();
+  for (const y of yearly) {
+    if (y.commits > 0) archetypeByYear.set(y.year, y.archetypeId);
   }
 
   const thisYear = new Date().getUTCFullYear();
-  const last = collapsed[collapsed.length - 1];
-  if (!last || last.archetypeId !== currentId) {
-    collapsed.push({ archetypeId: currentId, endYear: thisYear, startYear: thisYear });
-  } else {
-    last.endYear = Math.max(last.endYear, thisYear);
-  }
+  archetypeByYear.set(thisYear, currentId);
 
+  // Total commits + first month index for every year present in the range.
+  const commitsByYear = new Map<number, number>();
   const firstIdxByYear = new Map<number, number>();
   months.forEach((m, i) => {
     const y = Number(m.month.slice(0, 4));
+    commitsByYear.set(y, (commitsByYear.get(y) ?? 0) + m.count);
     if (!firstIdxByYear.has(y)) firstIdxByYear.set(y, i);
   });
 
-  const transitions = collapsed
-    .map(run => {
-      const idx = firstIdxByYear.get(run.startYear);
-      if (idx == null) return null;
-      const archetype = ARCHETYPES[run.archetypeId];
+  // One mark per year that had any activity, regardless of whether the
+  // archetype sample succeeded. Years without a known type fall back to a
+  // neutral dot so the timeline stays complete.
+  const marks = Array.from(firstIdxByYear.entries())
+    .filter(([year]) => (commitsByYear.get(year) ?? 0) > 0)
+    .sort((a, b) => a[0] - b[0])
+    .map(([year, idx]) => {
+      const archetypeId = archetypeByYear.get(year) ?? null;
+      const archetype = archetypeId ? ARCHETYPES[archetypeId] : null;
       return {
-        archetypeId: run.archetypeId,
-        color: archetype.theme.accent,
+        archetypeId,
+        color: archetype?.theme.accent ?? null,
         idx,
-        label: archetype.name,
-        year: run.startYear,
+        label: archetype?.name ?? null,
+        year,
       };
-    })
-    .filter(Boolean) as Array<{ archetypeId: ArchetypeId; color: string; idx: number; label: string; year: number }>;
+    });
 
-  return transitions;
+  return marks;
 }
+
+type Mark = {
+  archetypeId: ArchetypeId | null;
+  color: string | null;
+  idx: number;
+  label: string | null;
+  year: number;
+};
+
+type Era = {
+  color: string;
+  label: string | null;
+  yearLabel: string;
+  startPct: number;
+  endPct: number;
+};
+
+// Turn the per-year marks into contiguous colored eras spanning the full x-axis.
+// Consecutive years of the same archetype merge into one era; unclassified years
+// inherit the previous era's color so the line stays continuous.
+function buildEras(marks: Mark[], pointCount: number, fallback: string): Era[] {
+  if (marks.length === 0 || pointCount < 2) {
+    return [{ color: fallback, endPct: 100, label: null, startPct: 0, yearLabel: '' }];
+  }
+
+  const pct = (idx: number) => (idx / (pointCount - 1)) * 100;
+
+  const eras: Era[] = [];
+  let lastColor = marks[0].color ?? fallback;
+
+  for (let i = 0; i < marks.length; i++) {
+    const m = marks[i];
+    const color = m.color ?? lastColor;
+    const startPct = i === 0 ? 0 : pct(m.idx);
+    const endPct = i === marks.length - 1 ? 100 : pct(marks[i + 1].idx);
+    lastColor = color;
+
+    const prev = eras[eras.length - 1];
+    if (prev && prev.color === color && m.archetypeId && prev.label === m.label) {
+      prev.endPct = endPct;
+      prev.yearLabel = `${prev.yearLabel.split('-')[0]}-${m.year}`;
+    } else {
+      eras.push({
+        color,
+        endPct,
+        label: m.label,
+        startPct,
+        yearLabel: String(m.year),
+      });
+    }
+  }
+
+  return eras;
+}
+

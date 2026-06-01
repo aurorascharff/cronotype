@@ -11,6 +11,12 @@ export function SiteHeader() {
           <span className="text-sm font-semibold tracking-tight">cronotype</span>
         </Link>
         <nav className="flex items-center gap-1">
+          <Link
+            href="/types"
+            className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex h-9 items-center rounded-lg px-3 text-sm transition-colors"
+          >
+            Types
+          </Link>
           <a
             href="https://github.com/aurorascharff/cronotype"
             target="_blank"
