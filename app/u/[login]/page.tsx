@@ -7,16 +7,10 @@ import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/c
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { computeCronotype } from '@/features/profile/profile-service';
-import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
+import { GitHubError } from '@/features/profile/profile-queries';
 import { hasBeenRevealed } from '@/lib/reveals';
 import { cacheLife, cacheTag } from 'next/cache';
 import type { Metadata } from 'next';
-
-// Opt the route shell into PPR by pre-generating a synthetic placeholder login
-// that bypasses GitHub at build. Real logins are generated on-demand.
-export function generateStaticParams() {
-  return [{ login: SHELL_LOGIN }];
-}
 
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
   const { login: rawLogin } = await params;
@@ -28,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Pro
       : 'http://localhost:3000');
   const imageUrl = `${baseUrl.replace(/\/$/, '')}/u/${login}/opengraph-image`;
   try {
-    if (login === SHELL_LOGIN || !(await hasBeenRevealed(login))) {
+    if (!(await hasBeenRevealed(login))) {
       return { title: `Reveal @${login}` };
     }
     return await getProfileMetadata(login, imageUrl);
@@ -98,10 +92,8 @@ function ProfilePageSkeleton() {
 }
 
 async function ProfileContent({ login }: { login: string }) {
-  if (login !== SHELL_LOGIN) {
-    const revealed = await hasBeenRevealed(login);
-    if (!revealed) return <RevealGate login={login} />;
-  }
+  const revealed = await hasBeenRevealed(login);
+  if (!revealed) return <RevealGate login={login} />;
 
   return <GeneratedProfile login={login} />;
 }

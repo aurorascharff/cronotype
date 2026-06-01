@@ -10,16 +10,6 @@ const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
 
-/**
- * Sentinel login used by `generateStaticParams` to opt the route into PPR
- * without hitting GitHub at build. All queries short-circuit to synthetic data
- * for this exact login so the shell prerender always succeeds.
- */
-export const SHELL_LOGIN = '__shell__';
-function isShell(login: string): boolean {
-  return login.toLowerCase() === SHELL_LOGIN;
-}
-
 export class GitHubError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -151,7 +141,7 @@ async function getProfileCached(login: string): Promise<ProfileSummary> {
   cacheTag(`profile-${login}`);
   cacheLife('cronotype');
 
-  if (MOCK || isShell(login)) {
+  if (MOCK) {
     return mockProfile(login);
   }
 
@@ -277,7 +267,7 @@ async function getStatsForCached(
   cacheTag(`stats-${login}-${window}-${toISO}`);
   cacheLife('cronotype');
 
-  if (MOCK || isShell(login)) {
+  if (MOCK) {
     return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
   }
 
@@ -317,7 +307,7 @@ async function getYearMonthlyCached(login: string, year: number, currentYear: nu
     cacheLife('cronotype');
   }
 
-  if (MOCK || isShell(login)) {
+  if (MOCK) {
     const seed = login.length * 31 + year;
     const months: MonthBucket[] = [];
     for (let m = 0; m < 12; m++) {
@@ -370,7 +360,7 @@ async function getYearArchetype(login: string, year: number, currentYear: number
     cacheLife('cronotype');
   }
 
-  if (MOCK || isShell(login)) return mockArchetypeFor(`${login}-${year}`);
+  if (MOCK) return mockArchetypeFor(`${login}-${year}`);
 
   const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1);
   if (sampleCommits.length === 0) return null;
@@ -389,7 +379,7 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
   cacheTag(`history-${login}-${today}`);
   cacheLife('cronotype');
 
-  if (MOCK || isShell(login)) {
+  if (MOCK) {
     const years = [2026, 2025, 2024, 2023, 2022];
     const rawResults = await Promise.all(years.map(y => getYearMonthly(login, y, 2026)));
     const results = rawResults.filter((r): r is YearMonthly => r !== null);
