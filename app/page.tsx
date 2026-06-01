@@ -1,6 +1,9 @@
 import { Suspense } from 'react';
 import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
+import { SuggestedUsers } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
+
+export const unstable_prefetch = 'force-runtime';
 
 export default function HomePage() {
   return (
@@ -21,6 +24,10 @@ export default function HomePage() {
         <Suspense fallback={<RecentRevealedSkeleton limit={24} />}>
           <RecentRevealed limit={24} />
         </Suspense>
+      </section>
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
+        <SuggestedUsers />
       </section>
     </div>
   );

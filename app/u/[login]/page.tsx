@@ -8,6 +8,8 @@ import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
 
+export const unstable_prefetch = 'force-runtime';
+
 // Opt the route shell into PPR by pre-generating a synthetic placeholder login
 // that bypasses GitHub at build. Real logins are generated on-demand.
 export function generateStaticParams() {
