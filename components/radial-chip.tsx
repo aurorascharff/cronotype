@@ -27,7 +27,7 @@ export function RadialChip({ stats, color, size = 64 }: Props) {
       viewBox={`0 0 ${size} ${size}`}
       className="overflow-visible"
       role="img"
-      aria-label={`${stats.total} commits, peak at hour ${stats.peakHour}`}
+      aria-label={`${stats.total} sampled commits, peak at hour ${stats.peakHour}`}
     >
       <circle cx={cx} cy={cy} r={inner - 0.5} fill="none" stroke={color} opacity={0.18} strokeWidth={1} />
       {bars.map(b => (

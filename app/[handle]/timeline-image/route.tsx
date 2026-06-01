@@ -91,7 +91,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
       <div style={{ alignItems: 'baseline', color: 'white', display: 'flex', gap: 16, marginBottom: 24 }}>
         <span style={{ fontSize: 56, fontWeight: 600, letterSpacing: '-0.04em' }}>{archetype.name}</span>
         <span style={{ color: '#8b8d96', fontSize: 22 }}>today</span>
-        <span style={{ color: '#8b8d96', fontSize: 22 }}>{totalCommits.toLocaleString('en')} commits</span>
+        <span style={{ color: '#8b8d96', fontSize: 22 }}>{totalCommits.toLocaleString('en')} contributions</span>
       </div>
 
       <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 18, gap: 18, marginBottom: 18 }}>

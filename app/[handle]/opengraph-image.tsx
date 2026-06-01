@@ -285,7 +285,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
         <div style={{ display: 'flex', gap: 40, marginTop: 24 }}>
           <Stat label="PEAK" value={formatHour(stats.peakHour)} />
           <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
-          <Stat label="COMMITS" value={formatCount(stats.total)} />
+          <Stat label="90D SAMPLE" value={formatCount(stats.total)} />
           <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
         </div>
       </div>

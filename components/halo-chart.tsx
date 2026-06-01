@@ -43,7 +43,7 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
       viewBox={`0 0 ${size} ${size}`}
       className="h-full w-full overflow-visible"
       role="img"
-      aria-label={`Halo chart, ${stats.total} commits, peak at hour ${stats.peakHour}`}
+      aria-label={`Halo chart, ${stats.total} sampled commits, peak at hour ${stats.peakHour}`}
     >
       <defs>
         <clipPath id={clipId}>
