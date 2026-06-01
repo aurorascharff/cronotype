@@ -8,6 +8,14 @@ import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
 
+// Opt the route shell into static prerendering. We pass a single placeholder
+// login (Octocat - GitHub's mascot, guaranteed to exist) just to satisfy the
+// non-empty-array requirement. Real logins are generated on-demand and cached
+// per the route's `'use cache'` boundaries.
+export function generateStaticParams() {
+  return [{ login: 'octocat' }];
+}
+
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
   const { login: rawLogin } = await params;
   const login = rawLogin.toLowerCase();

@@ -16,7 +16,7 @@ type Props = {
  * Used by both the leaderboard card skeleton and the hero card skeleton.
  */
 export function ClassifyingRing({ failed = false, onRetry, variant = 'inset', size }: Props) {
-  const positionClass = variant === 'inset' ? 'absolute inset-2' : '';
+  const positionClass = variant === 'inset' ? 'absolute inset-0' : '';
   const fixedStyle = variant === 'fixed' && size ? { height: size, width: size } : undefined;
   return (
     <>
@@ -25,9 +25,9 @@ export function ClassifyingRing({ failed = false, onRetry, variant = 'inset', si
         className={`${positionClass} rounded-full border-2 ${
           failed
             ? 'border-muted/20 dark:border-muted-dark/20 border-dotted'
-            : 'border-muted/30 dark:border-muted-dark/30 animate-spin border-dashed opacity-70'
+            : 'border-muted/25 dark:border-muted-dark/25 animate-pulse border-dashed'
         }`}
-        style={failed ? fixedStyle : { ...fixedStyle, animationDuration: '4s' }}
+        style={fixedStyle}
       />
       {failed && onRetry && (
         <button

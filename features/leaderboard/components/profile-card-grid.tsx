@@ -22,18 +22,20 @@ export function ProfileCardSlot({ login }: { login: string }) {
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
       <Link href={{ pathname: `/u/${login}` }} className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
-          <CardErrorBoundary variant="ring">
-            <Suspense fallback={<ClassifyingRing />}>
-              <CardChip login={login} />
-            </Suspense>
-          </CardErrorBoundary>
+          <div className="relative h-28 w-28">
+            <CardErrorBoundary variant="ring">
+              <Suspense fallback={<ClassifyingRing />}>
+                <CardChip login={login} />
+              </Suspense>
+            </CardErrorBoundary>
+          </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={avatarUrl}
             alt=""
             width={48}
             height={48}
-            className="relative h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
+            className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
           />
         </div>
         <Suspense fallback={<CardMetaSkeleton login={login} />}>
@@ -129,8 +131,10 @@ export function ProfileCardSkeleton() {
     >
       <div className="flex h-full flex-col gap-4 p-4">
         <div className="relative flex h-28 items-center justify-center">
-          <ClassifyingRing />
-          <div className="skeleton h-12 w-12 rounded-full" />
+          <div className="relative h-28 w-28">
+            <ClassifyingRing />
+          </div>
+          <div className="skeleton absolute h-12 w-12 rounded-full" />
         </div>
         <div className="min-w-0 space-y-1">
           <div className="skeleton h-5 w-3/4 rounded" />
