@@ -15,57 +15,57 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
   drifter: {
     id: 'drifter',
     name: 'Drifter',
-    tagline: 'Your graph refuses to be predictable.',
-    meaning: 'You code in stolen moments and still somehow keep shipping.',
+    tagline: 'Hard to pin down, harder to stop.',
+    meaning: 'You move through odd windows, bursts, and gaps, yet the work keeps appearing.',
     theme: THEMES.drifter,
   },
   'insomniac-maintainer': {
     id: 'insomniac-maintainer',
     name: 'Insomniac Maintainer',
-    tagline: 'Two distinct peaks: business hours and late night.',
-    meaning: 'A day job, plus a side project (or an on-call rotation) at night.',
+    tagline: 'Daylight duties, midnight merge energy.',
+    meaning: 'You split your output between the official day and the second shift after everyone logs off.',
     theme: THEMES['insomniac-maintainer'],
   },
   'lunch-bandit': {
     id: 'lunch-bandit',
     name: 'Lunch Bandit',
-    tagline: 'You strike hardest when calendars say break time.',
-    meaning: 'Your sharpest commits happen in that one sacred quiet hour.',
+    tagline: 'Your calendar says break. Your commit log disagrees.',
+    meaning: 'You turn the quiet middle of the day into a tiny shipping heist.',
     theme: THEMES['lunch-bandit'],
   },
   'nine-to-fiver': {
     id: 'nine-to-fiver',
     name: 'Nine-to-Fiver',
-    tagline: 'Structured rhythm. Consistent output. Professional tempo.',
-    meaning: 'You ship clean during work hours and leave work at work.',
+    tagline: 'Calendar-friendly, suspiciously consistent.',
+    meaning: 'You keep a steady workday pulse and still make it look clean.',
     theme: THEMES['nine-to-fiver'],
   },
   'sunrise-sniper': {
     id: 'sunrise-sniper',
     name: 'Sunrise Sniper',
-    tagline: 'Commits land before most people open Slack.',
-    meaning: 'You do your best work in the quiet before the world wakes up.',
+    tagline: 'You ship before the standup has coffee.',
+    meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
     theme: THEMES['sunrise-sniper'],
   },
   'touch-grass': {
     id: 'touch-grass',
     name: 'Grass Toucher',
-    tagline: 'Low public commit velocity in the recent window.',
-    meaning: 'Either your life is balanced, or your best work is happening off-stage.',
+    tagline: 'Low public signal, high possibility.',
+    meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',
     theme: THEMES['touch-grass'],
   },
   vampire: {
     id: 'vampire',
     name: 'Vampire',
-    tagline: 'Midnight to 4am is your golden hour.',
-    meaning: 'You come alive when notifications sleep.',
+    tagline: 'The repo wakes up after midnight.',
+    meaning: 'You do your sharpest work when notifications are asleep and the world stops asking questions.',
     theme: THEMES.vampire,
   },
   'weekend-warrior': {
     id: 'weekend-warrior',
     name: 'Weekend Warrior',
-    tagline: 'Saturday and Sunday carry your velocity.',
-    meaning: 'Your real momentum starts when the week is officially over.',
+    tagline: 'The week ends. Your graph clocks in.',
+    meaning: 'You turn Saturday and Sunday into the part of the week where momentum finally gets room.',
     theme: THEMES['weekend-warrior'],
   },
 };
@@ -75,19 +75,25 @@ function midday(s: HourStats) {
   return ((s.hourly[12] ?? 0) / total) * 100;
 }
 
+function hasLunchSpike(s: HourStats) {
+  const lunchSpike = midday(s);
+  const neighborAvg = (((s.hourly[11] ?? 0) + (s.hourly[13] ?? 0)) / 2 / (s.total || 1)) * 100;
+  return lunchSpike > 8 && lunchSpike > neighborAvg * 1.6;
+}
+
+function isWorkdayRhythm(s: HourStats) {
+  return s.pctBusiness > 70 && s.pctNocturnal < 15 && s.pctWeekend < 35;
+}
+
 export function classify(stats: HourStats): Archetype {
   if (stats.total < 25) return ARCHETYPES['touch-grass'];
 
+  if (stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
   if (stats.pctNocturnal > 30) return ARCHETYPES.vampire;
   if (stats.pctSunrise > 25) return ARCHETYPES['sunrise-sniper'];
-
-  const lunchSpike = midday(stats);
-  const neighborAvg = (((stats.hourly[11] ?? 0) + (stats.hourly[13] ?? 0)) / 2 / (stats.total || 1)) * 100;
-  if (lunchSpike > 8 && lunchSpike > neighborAvg * 1.6) return ARCHETYPES['lunch-bandit'];
-
+  if (hasLunchSpike(stats)) return ARCHETYPES['lunch-bandit'];
   if (stats.pctWeekend > 40) return ARCHETYPES['weekend-warrior'];
-  if (stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
-  if (stats.pctBusiness > 70 && stats.hourlyVariance < 5) return ARCHETYPES['nine-to-fiver'];
+  if (isWorkdayRhythm(stats)) return ARCHETYPES['nine-to-fiver'];
 
   return ARCHETYPES.drifter;
 }
