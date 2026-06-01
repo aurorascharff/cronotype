@@ -16,7 +16,7 @@ export async function getRecentHandles(): Promise<string[]> {
   'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
-  cacheLife('minutes');
+  cacheLife('cronotype');
 
   const revealed = await listFeaturedReveals(FEATURED.length);
   if (revealed.length === 0) return [];

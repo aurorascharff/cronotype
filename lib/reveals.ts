@@ -39,7 +39,7 @@ export async function listFeaturedReveals(limit = MAX_REVEALS): Promise<string[]
 async function listFeaturedRevealsCached(limit: number): Promise<string[]> {
   'use cache: remote';
   cacheTag('reveals');
-  cacheLife('minutes');
+  cacheLife('cronotype');
 
   const kv = getClient();
   if (!kv) return [];
