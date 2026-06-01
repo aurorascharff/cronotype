@@ -1,48 +1,17 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { revealUser } from '@/features/profile/profile-actions';
-import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
+import { revealUserFromForm } from '@/features/profile/profile-actions';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
-  const [value, setValue] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pending, startTransition] = useTransition();
-  const router = useRouter();
-  const busy = isSubmitting || pending;
+  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction, isSubmitting] = useActionState(revealUserFromForm, { error: null });
+  const busy = isSubmitting;
 
-  function go(raw: string) {
-    if (busy) return;
-
-    const handle = normalizeHandle(raw);
-    if (!handle) {
-      toast.error('Type a GitHub username.');
-      return;
-    }
-    if (!isValidGitHubHandle(handle)) {
-      toast.error("That doesn't look like a GitHub username.");
-      return;
-    }
-    setValue('');
-    setIsSubmitting(true);
-    startTransition(async () => {
-      try {
-        await revealUser(handle);
-        router.push(`/${handle}`);
-      } catch {
-        toast.error("Couldn't start the reveal. Try again in a moment.");
-      } finally {
-        setIsSubmitting(false);
-      }
-    });
-  }
-
-  function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    go(value);
-  }
+  useEffect(() => {
+    if (state.error) toast.error(state.error);
+  }, [state.error]);
 
   function onKeyDown(e: React.KeyboardEvent<HTMLFormElement>) {
     // Cmd/Ctrl+Enter - some browsers don't submit forms on this combo, so
@@ -50,14 +19,20 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       e.stopPropagation();
-      go(value);
+      formRef.current?.requestSubmit();
     }
   }
 
   const large = size === 'lg';
 
   return (
-    <form onSubmit={submit} onKeyDownCapture={onKeyDown} className="flex w-full gap-1.5" aria-busy={busy}>
+    <form
+      ref={formRef}
+      action={formAction}
+      onKeyDownCapture={onKeyDown}
+      className="flex w-full gap-1.5"
+      aria-busy={busy}
+    >
       <label htmlFor="handle" className="sr-only">
         GitHub username
       </label>
@@ -83,8 +58,6 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
           name="handle"
           type="text"
           placeholder="github-handle"
-          value={value}
-          onChange={e => setValue(e.target.value)}
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}

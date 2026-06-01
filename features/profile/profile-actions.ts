@@ -1,9 +1,14 @@
 'use server';
 
 import { updateTag } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/featured';
-import { isValidGitHubHandle } from '@/lib/github-handle';
+import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
+
+export type RevealFormState = {
+  error: string | null;
+};
 
 function invalidateAllForHandle(handle: string) {
   updateTag(`profile-page-${handle}`);
@@ -34,6 +39,23 @@ export async function revealUser(handle: string) {
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
+}
+
+export async function revealUserFromForm(
+  _state: RevealFormState,
+  formData: FormData,
+): Promise<RevealFormState> {
+  const handle = normalizeHandle(String(formData.get('handle') ?? ''));
+  if (!handle) return { error: 'Type a GitHub username.' };
+  if (!isValidGitHubHandle(handle)) return { error: "That doesn't look like a GitHub username." };
+
+  try {
+    await revealUser(handle);
+  } catch {
+    return { error: "Couldn't start the reveal. Try again in a moment." };
+  }
+
+  redirect(`/${handle}`);
 }
 
 export async function regenerateUser(handle: string) {
