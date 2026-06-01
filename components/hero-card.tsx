@@ -20,7 +20,7 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         viewTransitionName: 'hero-card',
       }}
     >
-      <div className="text-muted dark:text-muted-dark absolute top-4 right-4 z-10 rounded-lg border border-black/10 bg-white/80 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="text-ink/70 dark:text-paper/80 absolute top-4 right-4 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
         Last 90 days
       </div>
 

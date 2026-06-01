@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ClassifyingRing } from '@/components/classifying-ring';
 import { HeroCard } from '@/components/hero-card';
-import { RegenerateButton } from '@/components/regenerate-button';
 import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
@@ -32,9 +31,6 @@ export async function CronotypeProfile({ login }: Props) {
   return (
     <div className="relative">
       <HeroCard profile={profile} archetype={archetype} stats={stats} percentile={percentile} />
-      <div className="absolute top-4 right-20 z-20 sm:top-6 sm:right-32">
-        <RegenerateButton login={profile.login} />
-      </div>
       <div className="pointer-events-none absolute inset-x-4 bottom-3 z-20 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 sm:inset-x-6 sm:bottom-5">
         <div className="pointer-events-auto">
           <ShareUrl shareUrl={shareUrl} />
@@ -72,7 +68,7 @@ export function CronotypeProfileSkeleton() {
       className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10"
       aria-hidden
     >
-      <div className="absolute top-4 right-4 z-10 rounded-lg border border-black/10 bg-white/80 px-2 py-1 font-mono text-[10px] tracking-wider text-transparent uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="absolute top-4 right-4 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider text-transparent uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
         Last 90 days
       </div>
 

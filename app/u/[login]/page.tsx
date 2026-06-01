@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Crossfade } from '@/components/crossfade';
 import InlineErrorBoundary from '@/components/inline-error-boundary';
+import { RegenerateButton } from '@/components/regenerate-button';
 import { RevealGate } from '@/components/reveal-gate';
 import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
@@ -75,7 +76,9 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
 function ProfilePageSkeleton() {
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+      <header className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+      </header>
       <CronotypeProfileSkeleton />
     </section>
   );
@@ -90,7 +93,10 @@ async function ProfileContent({ login }: { login: string }) {
   return (
     <>
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+        <header className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
+          <RegenerateButton login={login} />
+        </header>
         <Crossfade>
           <Suspense fallback={<CronotypeProfileSkeleton />}>
             <InlineErrorBoundary

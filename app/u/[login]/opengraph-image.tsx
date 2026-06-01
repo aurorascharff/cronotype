@@ -266,9 +266,9 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
 
       <div
         style={{
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: '1px solid rgba(255, 255, 255, 0.22)',
           borderRadius: 6,
-          color: '#8b8d96',
+          color: '#d4d6e0',
           display: 'flex',
           fontSize: 18,
           fontWeight: 500,
