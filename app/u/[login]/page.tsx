@@ -5,15 +5,13 @@ import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/c
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { computeCronotype } from '@/features/profile/profile-service';
-import { GitHubError } from '@/features/profile/profile-queries';
+import { GitHubError, SHELL_LOGIN } from '@/features/profile/profile-queries';
 import type { Metadata } from 'next';
 
-// Opt the route shell into static prerendering. We pass a single placeholder
-// login (Octocat - GitHub's mascot, guaranteed to exist) just to satisfy the
-// non-empty-array requirement. Real logins are generated on-demand and cached
-// per the route's `'use cache'` boundaries.
+// Opt the route shell into PPR by pre-generating a synthetic placeholder login
+// that bypasses GitHub at build. Real logins are generated on-demand.
 export function generateStaticParams() {
-  return [{ login: 'octocat' }];
+  return [{ login: SHELL_LOGIN }];
 }
 
 export async function generateMetadata({ params }: PageProps<'/u/[login]'>): Promise<Metadata> {
