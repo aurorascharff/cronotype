@@ -74,10 +74,10 @@ export default function TypesPage() {
   return (
     <div className="space-y-10">
       <header className="space-y-3">
-        <h1 className="text-2xl font-semibold tracking-tightest sm:text-3xl">The archetypes</h1>
+        <h1 className="tracking-tightest text-2xl font-semibold sm:text-3xl">The archetypes</h1>
         <p className="text-muted dark:text-muted-dark max-w-2xl text-sm sm:text-base">
-          Cronotype reads the last 90 days of public commits and sorts you into one of eight rhythms. Each
-          card shows what the type means, the exact signal that triggers it, and what drives your percentile.
+          Cronotype reads the last 90 days of public commits and sorts you into one of eight rhythms. Each card shows
+          what the type means, the exact signal that triggers it, and what drives your percentile.
         </p>
       </header>
 
@@ -90,7 +90,7 @@ export default function TypesPage() {
             <li
               key={id}
               id={id}
-              className="dark:bg-ink-2 flex scroll-mt-24 gap-4 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10 sm:p-5"
+              className="dark:bg-ink-2 flex scroll-mt-24 gap-4 rounded-xl border border-black/10 bg-white p-4 sm:p-5 dark:border-white/10"
             >
               <div className="flex h-16 w-16 shrink-0 items-center justify-center">
                 <RadialChip stats={stats} color={a.theme.accent} size={64} />
@@ -118,7 +118,7 @@ export default function TypesPage() {
         })}
       </ul>
 
-      <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 dark:border-white/10 sm:p-6">
+      <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 sm:p-6 dark:border-white/10">
         <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
           How the diagnosis works
         </h2>
@@ -126,16 +126,16 @@ export default function TypesPage() {
           <li>
             <strong className="font-semibold">Data source.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              GitHub&apos;s Search Commits API for the last 90 days of public commits authored by the handle,
-              keeping each commit&apos;s author timestamp <em>with its original timezone offset</em> so 2am in
-              Tokyo isn&apos;t mistaken for 2am in San Francisco.
+              GitHub&apos;s Search Commits API for the last 90 days of public commits authored by the handle, keeping
+              each commit&apos;s author timestamp <em>with its original timezone offset</em> so 2am in Tokyo isn&apos;t
+              mistaken for 2am in San Francisco.
             </span>
           </li>
           <li>
             <strong className="font-semibold">Bucketing.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              Each commit is binned by hour (24 buckets) and weekday (7 buckets) in its local timezone. From
-              those we derive shares: <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
+              Each commit is binned by hour (24 buckets) and weekday (7 buckets) in its local timezone. From those we
+              derive shares: <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
               <code className="font-mono text-[11px]">pctSunrise</code> (5am to 9am),{' '}
               <code className="font-mono text-[11px]">pctBusiness</code> (9am to 7pm),{' '}
               <code className="font-mono text-[11px]">pctWeekend</code>, plus an{' '}
@@ -152,8 +152,8 @@ export default function TypesPage() {
           <li>
             <strong className="font-semibold">Year history.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              The colored evolution chart uses GitHub&apos;s GraphQL contributions calendar (one call per year)
-              plus a small sample of commits per year to classify the rhythm of each year.
+              The colored evolution chart uses GitHub&apos;s GraphQL contributions calendar (one call per year) plus a
+              small sample of commits per year to classify the rhythm of each year.
             </span>
           </li>
         </ul>

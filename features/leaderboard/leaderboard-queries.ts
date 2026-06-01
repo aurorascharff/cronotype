@@ -16,7 +16,6 @@ type Store = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var __cronotype_store: Store | undefined;
 }
 

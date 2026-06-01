@@ -53,11 +53,7 @@ export function ShareActions({ shareUrl, archetypeName, accent, className }: Pro
 
 export function ShareUrl({ shareUrl }: { shareUrl: string }) {
   const display = shareUrl.replace(/^https?:\/\//, '');
-  return (
-    <span className="text-muted/70 dark:text-muted-dark/70 font-mono text-[11px] tracking-tight">
-      {display}
-    </span>
-  );
+  return <span className="text-muted/70 dark:text-muted-dark/70 font-mono text-[11px] tracking-tight">{display}</span>;
 }
 
 function XIcon({ className }: { className?: string }) {
@@ -70,7 +66,16 @@ function XIcon({ className }: { className?: string }) {
 
 function LinkIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
       <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1 1" />
       <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1-1" />
     </svg>
@@ -79,9 +84,17 @@ function LinkIcon({ className }: { className?: string }) {
 
 function CheckIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
       <path d="M5 12l4 4 10-10" />
     </svg>
   );
 }
-

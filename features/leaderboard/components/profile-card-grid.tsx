@@ -43,9 +43,7 @@ export function ProfileCard({ entry }: { entry: LeaderboardEntry }) {
           />
         </div>
         <div className="min-w-0 space-y-1">
-          <div className="text-ink dark:text-paper truncate text-sm font-semibold">
-            {profile.name ?? profile.login}
-          </div>
+          <div className="text-ink dark:text-paper truncate text-sm font-semibold">{profile.name ?? profile.login}</div>
           <div className="text-muted dark:text-muted-dark truncate text-xs">@{profile.login}</div>
           <div className="flex items-center justify-between gap-2">
             <div className="truncate text-xs font-medium" style={{ color: archetype.theme.accent }}>

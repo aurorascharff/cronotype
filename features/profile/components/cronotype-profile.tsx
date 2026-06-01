@@ -40,11 +40,7 @@ export async function CronotypeProfile({ login }: Props) {
             <ShareUrl shareUrl={shareUrl} />
           </div>
           <div className="pointer-events-auto">
-            <ShareActions
-              shareUrl={shareUrl}
-              archetypeName={archetype.name}
-              accent={archetype.theme.accent}
-            />
+            <ShareActions shareUrl={shareUrl} archetypeName={archetype.name} accent={archetype.theme.accent} />
           </div>
         </div>
       </div>
@@ -78,7 +74,7 @@ function EmptyProfile({ login }: { login: string }) {
 export function CronotypeProfileSkeleton() {
   return (
     <div
-      className="dark:bg-ink-2 text-muted/40 dark:text-muted-dark/40 w-full overflow-hidden rounded-xl border border-black/10 bg-white [aspect-ratio:auto] dark:border-white/10 sm:[aspect-ratio:1200/630]"
+      className="dark:bg-ink-2 text-muted/40 dark:text-muted-dark/40 [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10"
       aria-hidden
     >
       <div className="grid h-full grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">

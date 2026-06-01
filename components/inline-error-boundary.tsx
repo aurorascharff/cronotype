@@ -13,7 +13,7 @@ type Props = {
 function InlineErrorFallback(props: Props, { unstable_retry: retry }: ErrorInfo) {
   return (
     <ProfileErrorCard
-      title={props.title ?? "Something went wrong."}
+      title={props.title ?? 'Something went wrong.'}
       body={props.body ?? 'Try again to refetch.'}
       onRetry={() => retry()}
       retryLabel={props.retryLabel ?? 'Try again'}

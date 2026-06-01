@@ -17,7 +17,7 @@ export default function ProfileErrorBoundary({
 
   return (
     <ProfileErrorCard
-      title="We couldn&apos;t diagnose this developer."
+      title="We couldn't diagnose this developer."
       body="Their commit history might be private, or GitHub is being moody. Give it a minute and try again, or pick someone else."
       onRetry={reset}
     />

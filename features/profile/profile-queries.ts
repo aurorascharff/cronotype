@@ -49,11 +49,7 @@ async function gh(url: string, init: RequestInit = {}): Promise<Response> {
 
 type ContributionDay = { date: string; contributionCount: number };
 
-async function fetchContributionCalendar(
-  login: string,
-  fromISO: string,
-  toISO: string,
-): Promise<ContributionDay[]> {
+async function fetchContributionCalendar(login: string, fromISO: string, toISO: string): Promise<ContributionDay[]> {
   if (!process.env.GITHUB_TOKEN) {
     throw new GitHubError('GraphQL contributions require GITHUB_TOKEN', 401);
   }
@@ -91,7 +87,11 @@ async function fetchContributionCalendar(
   }
   if (!res.ok) throw new GitHubError(`GitHub GraphQL error (${res.status})`, res.status);
   const j = (await res.json()) as {
-    data?: { user?: { contributionsCollection?: { contributionCalendar?: { weeks: Array<{ contributionDays: ContributionDay[] }> } } } };
+    data?: {
+      user?: {
+        contributionsCollection?: { contributionCalendar?: { weeks: Array<{ contributionDays: ContributionDay[] }> } };
+      };
+    };
     errors?: Array<{ message: string }>;
   };
   if (j.errors?.length) throw new GitHubError(j.errors[0].message, 400);
@@ -133,7 +133,13 @@ type SearchCommitItem = {
   repository: { full_name: string };
 };
 
-async function fetchCommitsInRange(login: string, fromISO: string, toISO: string, depth = 0, maxPages = 10): Promise<Commit[]> {
+async function fetchCommitsInRange(
+  login: string,
+  fromISO: string,
+  toISO: string,
+  depth = 0,
+  maxPages = 10,
+): Promise<Commit[]> {
   const q = `author:${login} author-date:${fromISO}..${toISO}`;
   const commits: Commit[] = [];
   let truncated = false;
@@ -203,16 +209,12 @@ async function getStatsForCached(login: string, window: Window): Promise<ReturnT
   cacheTag(`stats-${login.toLowerCase()}-${window}`);
   cacheLife('hours');
 
-  if (MOCK) return syntheticStatsFor(mockArchetypeFor(login), 220 + (login.length * 17) % 180);
+  if (MOCK) return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
 
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 3600_000);
-  const commits = await fetchCommitsInRange(
-    login,
-    from.toISOString().slice(0, 10),
-    to.toISOString().slice(0, 10),
-  );
+  const commits = await fetchCommitsInRange(login, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10));
   return buildStats(commits);
 }
 
@@ -332,14 +334,16 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
     return { months: [], partial: true, yearlyArchetypes: [] };
   }
 
-  const out = byYear
-    .flatMap(y => y.months)
-    .sort((a, b) => a.month.localeCompare(b.month));
+  const out = byYear.flatMap(y => y.months).sort((a, b) => a.month.localeCompare(b.month));
 
   let start = 0;
   while (start < out.length && out[start].count === 0) start++;
   let end = out.length;
-  while (end > start && out[end - 1].count === 0 && out[end - 1].month > `${thisYear}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`) {
+  while (
+    end > start &&
+    out[end - 1].count === 0 &&
+    out[end - 1].month > `${thisYear}-${String(new Date().getUTCMonth() + 1).padStart(2, '0')}`
+  ) {
     end--;
   }
 
@@ -391,7 +395,7 @@ function mockProfile(login: string): ProfileSummary {
     avatarUrl: `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`,
     bio: null,
     createdAt: '2017-01-01T00:00:00Z',
-    followers: 1200 + (login.length * 137) % 8000,
+    followers: 1200 + ((login.length * 137) % 8000),
     login,
     name: titleCase(login),
     publicRepos: 40,

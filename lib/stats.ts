@@ -88,7 +88,10 @@ function detectBimodal(hourly: number[]): boolean {
   const pcts = hourly.map(v => (v / total) * 100);
 
   const day = pcts.slice(9, 18).reduce((a, b) => a + b, 0);
-  const night = pcts.slice(22).concat(pcts.slice(0, 4)).reduce((a, b) => a + b, 0);
+  const night = pcts
+    .slice(22)
+    .concat(pcts.slice(0, 4))
+    .reduce((a, b) => a + b, 0);
   const valley = pcts.slice(18, 22).reduce((a, b) => a + b, 0);
 
   return day > 25 && night > 20 && valley < day * 0.45;

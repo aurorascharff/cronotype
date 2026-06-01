@@ -46,11 +46,7 @@
 
   .dark body {
     background-color: var(--color-ink);
-    background-image: radial-gradient(
-      ellipse 70% 50% at 10% -5%,
-      rgba(255, 255, 255, 0.04),
-      transparent 60%
-    );
+    background-image: radial-gradient(ellipse 70% 50% at 10% -5%, rgba(255, 255, 255, 0.04), transparent 60%);
     background-attachment: fixed;
   }
 
@@ -66,7 +62,7 @@
   }
 
   input {
-    @apply border-border dark:border-border-dark dark:bg-white/5 placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-lg border bg-white px-3 py-2 text-sm outline-none transition-colors focus:ring-2 focus:ring-current/20;
+    @apply border-border dark:border-border-dark placeholder-muted/70 dark:placeholder-muted-dark/70 w-full rounded-lg border bg-white px-3 py-2 text-sm transition-colors outline-none focus:ring-2 focus:ring-current/20 dark:bg-white/5;
   }
 }
 
