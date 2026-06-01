@@ -15,7 +15,7 @@
   /* The accent. Used sparingly - on the verdict word, halo chart, percentile. */
   --color-brand: #06b6d4;
   --color-brand-2: #22d3ee;
-  --color-on-brand: #08090b;
+  --color-on-brand: #ffffff;
 
   --font-mono: var(--font-geist-mono);
   --font-sans: var(--font-geist-sans);
