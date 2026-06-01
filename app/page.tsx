@@ -9,16 +9,13 @@ export default function HomePage() {
         <h1 className="mx-auto max-w-xl text-2xl leading-tight font-semibold tracking-tightest text-center sm:text-4xl">
           What type of developer are you?
         </h1>
-
         <p className="text-muted dark:text-muted-dark mx-auto max-w-md text-center text-sm">
           Enter a GitHub handle and get a commit-time archetype, timeline, and shareable profile card.
         </p>
-
         <div className="mx-auto max-w-md">
           <UsernameForm />
         </div>
       </section>
-
       <Suspense fallback={<RecentDiagnosedSkeleton limit={12} />}>
         <RecentDiagnosed limit={12} />
       </Suspense>

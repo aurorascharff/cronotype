@@ -1,9 +1,5 @@
 import type { ArchetypeId } from '@/types/cronotype';
 
-/**
- * Synthesize a plausible commit distribution for a label. Used for the
- * historical evolution strip until we wire up real multi-year data.
- */
 export function syntheticStatsFor(id: ArchetypeId, total = 200) {
   const hourly = new Array<number>(24).fill(0);
   const weekday = new Array<number>(7).fill(0);

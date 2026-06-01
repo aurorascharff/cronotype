@@ -2,7 +2,6 @@ import { ProfileCardGrid, ProfileCardGridSkeleton } from '@/features/leaderboard
 import { getRecentClassified } from '@/features/leaderboard/leaderboard-queries';
 
 type Props = {
-  /** Login to exclude from the rail (typically the profile being viewed). */
   excludeLogin?: string;
   limit?: number;
 };

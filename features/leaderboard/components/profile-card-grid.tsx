@@ -6,10 +6,6 @@ type Props = {
   entries: LeaderboardEntry[];
 };
 
-/**
- * Shared profile card. Neutral translucent tile, halo chart up top, verdict
- * + handle below. The only color comes from the chart spokes.
- */
 export function ProfileCardGrid({ entries }: Props) {
   if (entries.length === 0) {
     return (

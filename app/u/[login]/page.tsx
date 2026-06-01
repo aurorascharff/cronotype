@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import HistoryErrorBoundary from '@/components/history-error-boundary';
+import InlineErrorBoundary from '@/components/inline-error-boundary';
 import { RecentDiagnosed, RecentDiagnosedSkeleton } from '@/features/leaderboard/components/recent-diagnosed';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
@@ -63,11 +63,14 @@ export default function ProfilePage({ params }: PageProps<'/u/[login]'>) {
       </Suspense>
 
       <Suspense fallback={<EvolutionStripSkeleton />}>
-        <HistoryErrorBoundary>
+        <InlineErrorBoundary
+          title="We couldn't load this history right now."
+          body="Your main diagnosis is still visible. Try again to fetch the full timeline."
+        >
           {params.then(({ login }) => (
             <EvolutionStrip login={login.toLowerCase()} />
           ))}
-        </HistoryErrorBoundary>
+        </InlineErrorBoundary>
       </Suspense>
 
       <Suspense fallback={<RecentDiagnosedSkeleton limit={8} />}>

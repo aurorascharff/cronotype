@@ -1,15 +1,11 @@
 import type { HourStats } from '@/types/cronotype';
 
-/** A commit with an author timestamp and local-timezone offset. */
 export type Commit = {
-  /** ISO author date (UTC). */
   authoredAt: string;
-  /** Offset in MINUTES east of UTC, as GitHub reports. */
   tzOffsetMinutes: number | null;
   repo: string;
 };
 
-/** Build the histogram from commits, accounting for each commit's local timezone. */
 export function buildStats(commits: Commit[]): HourStats {
   const hourly = new Array<number>(24).fill(0);
   const weekday = new Array<number>(7).fill(0);
@@ -22,7 +18,6 @@ export function buildStats(commits: Commit[]): HourStats {
     if (Number.isNaN(dt.getTime())) continue;
 
     const offsetMin = c.tzOffsetMinutes ?? 0;
-    // Apply local offset to UTC instant.
     const local = new Date(dt.getTime() + offsetMin * 60_000);
     const hour = local.getUTCHours();
     const wday = local.getUTCDay();

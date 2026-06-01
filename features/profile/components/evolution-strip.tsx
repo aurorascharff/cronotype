@@ -236,7 +236,6 @@ function buildYearMarks(
   const thisYear = new Date().getUTCFullYear();
   archetypeByYear.set(thisYear, currentId);
 
-  // Total commits + first month index for every year present in the range.
   const commitsByYear = new Map<number, number>();
   const firstIdxByYear = new Map<number, number>();
   months.forEach((m, i) => {
@@ -245,9 +244,6 @@ function buildYearMarks(
     if (!firstIdxByYear.has(y)) firstIdxByYear.set(y, i);
   });
 
-  // One mark per year that had any activity, regardless of whether the
-  // archetype sample succeeded. Years without a known type fall back to a
-  // neutral dot so the timeline stays complete.
   const marks = Array.from(firstIdxByYear.entries())
     .filter(([year]) => (commitsByYear.get(year) ?? 0) > 0)
     .sort((a, b) => a[0] - b[0])
@@ -282,9 +278,6 @@ type Era = {
   endPct: number;
 };
 
-// Turn the per-year marks into contiguous colored eras spanning the full x-axis.
-// Consecutive years of the same archetype merge into one era; unclassified years
-// inherit the previous era's color so the line stays continuous.
 function buildEras(marks: Mark[], pointCount: number, fallback: string): Era[] {
   if (marks.length === 0 || pointCount < 2) {
     return [{ color: fallback, endPct: 100, label: null, startPct: 0, yearLabel: '' }];

@@ -53,7 +53,6 @@ function seed(s: Store) {
   }
 }
 
-/** Records a login as recently diagnosed. The actual profile/stats live in the cached `computeCronotype`. */
 export function recordEntry(login: string, classifiedAt: string) {
   store().recent.set(login.toLowerCase(), {
     classifiedAt,
@@ -61,11 +60,6 @@ export function recordEntry(login: string, classifiedAt: string) {
   });
 }
 
-/**
- * Returns the recently diagnosed entries. Reads the registry of logins from the store
- * and fans out to `computeCronotype` per login — which is itself `'use cache'`, so each
- * entry hits the same cache as the profile page.
- */
 export async function getRecentClassified(limit = 6): Promise<LeaderboardEntry[]> {
   const records = await readRecentRegistry();
 

@@ -11,11 +11,8 @@ export const metadata: Metadata = {
 };
 
 type Detail = {
-  /** One-line description shown directly under the name. */
   meaning: string;
-  /** The exact rule from the classifier. */
   signal: string;
-  /** What pushes your percentile higher inside this archetype. */
   percentile: string;
 };
 
@@ -62,7 +59,6 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   },
 };
 
-// Order matches the classifier’s priority: more specific signals are checked first.
 const ORDER: ArchetypeId[] = [
   'touch-grass',
   'vampire',
