@@ -81,11 +81,7 @@ export async function regenerateUserAndRedirect(handle: string, showTimeline: bo
   redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
 }
 
-export async function regenerateHistory(
-  handle: string,
-  failedMonthlyYears: number[],
-  failedArchetypeYears: number[],
-) {
+export async function regenerateHistory(handle: string, failedMonthlyYears: number[], failedArchetypeYears: number[]) {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);

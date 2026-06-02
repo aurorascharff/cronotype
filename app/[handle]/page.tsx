@@ -2,7 +2,10 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSection, ProfileCardSectionSkeleton } from '@/features/profile/components/profile-card-section';
-import { ProfileHistorySection, ProfileHistorySectionSkeleton } from '@/features/profile/components/profile-history-section';
+import {
+  ProfileHistorySection,
+  ProfileHistorySectionSkeleton,
+} from '@/features/profile/components/profile-history-section';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 

@@ -17,6 +17,12 @@ export function SiteHeader() {
           >
             Types
           </Link>
+          <Link
+            href="/private"
+            className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper hidden h-9 items-center rounded-lg px-3 text-sm transition-colors sm:inline-flex"
+          >
+            Private
+          </Link>
           <a
             href="https://github.com/aurorascharff/cronotype"
             target="_blank"
