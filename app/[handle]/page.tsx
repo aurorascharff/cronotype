@@ -6,6 +6,8 @@ import { ProfileHistorySection } from '@/features/profile/components/profile-his
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 
+export const unstable_prefetch = 'force-runtime';
+
 export async function generateMetadata({ params }: PageProps<'/[handle]'>): Promise<Metadata> {
   const { handle: rawHandle } = await params;
   const handle = rawHandle.toLowerCase();

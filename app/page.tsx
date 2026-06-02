@@ -4,6 +4,8 @@ import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/compone
 import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
 
+export const unstable_prefetch = 'force-runtime';
+
 function parsePage(value: string | string[] | undefined): number {
   const n = Number(value);
   return n > 0 && Number.isInteger(n) ? n : 1;
