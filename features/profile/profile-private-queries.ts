@@ -1,9 +1,10 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
+import { classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import type { ArchetypeId, ProfileSummary } from '@/types/cronotype';
+import { getSignalCommitsFor } from './profile-queries';
 
 // Private profile reads are intentionally isolated from the normal cached profile
 // queries. GitHub OAuth Apps require the broad `repo` scope for private repo
@@ -85,9 +86,12 @@ export async function computePrivateCronotype(token: string): Promise<PrivateCro
     .toISOString()
     .slice(0, 10);
   const fromISO = new Date(Date.parse(`${toISO}T00:00:00Z`) - 90 * 24 * 3600_000).toISOString().slice(0, 10);
-  const commits = await fetchPrivateCommits(token, profile.login, fromISO, toISO);
-  const stats = buildStats(signalCommits(commits));
-  const archetype = stats.total === 0 ? ARCHETYPES['touch-grass'] : classify(stats);
+  const [publicCommits, visibleCommits] = await Promise.all([
+    getSignalCommitsFor(profile.login, '90d'),
+    fetchPrivateCommits(token, profile.login, fromISO, toISO).then(signalCommits),
+  ]);
+  const stats = buildStats(dedupe([...publicCommits, ...visibleCommits]));
+  const archetype = classify(stats);
   const percentile = percentileFor(archetype, stats);
 
   return {

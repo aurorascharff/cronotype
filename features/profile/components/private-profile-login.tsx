@@ -3,13 +3,13 @@ import { privateOAuthConfigured } from '@/features/profile/profile-private-queri
 export function PrivateProfileIntro() {
   return (
     <section className="space-y-4">
-      <p className="text-muted dark:text-muted-dark text-sm">Private experiment</p>
+      <p className="text-muted dark:text-muted-dark text-sm">Private cronotype</p>
       <h1 className="tracking-tightest text-4xl leading-tight font-semibold sm:text-5xl">
         Include private commits once.
       </h1>
       <p className="text-muted dark:text-muted-dark max-w-xl text-sm sm:text-base">
         Sign in with GitHub, compute a 90-day cronotype using commits your account can see, then keep the result only in
-        this browser long enough to view or download it. GitHub's classic private repo scope is broad; Cronotype only
+        this browser long enough to view or download it. GitHub&apos;s classic private repo scope is broad; Cronotype only
         makes read requests and does not save the token.
       </p>
       <p className="text-muted dark:text-muted-dark max-w-xl text-sm">
@@ -39,8 +39,8 @@ export function PrivateProfileLoginCard() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight">GitHub OAuth</h2>
           <p className="text-muted dark:text-muted-dark text-sm">
-            Requests GitHub's classic private repo scope so commit search can include private repositories. Revoke access
-            when you're done.
+            Requests GitHub&apos;s classic private repo scope so commit search can include private repositories. Revoke access
+            when you&apos;re done.
           </p>
         </div>
         {privateOAuthConfigured() ? (
