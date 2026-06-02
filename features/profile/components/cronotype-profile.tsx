@@ -7,7 +7,7 @@ import { ShareActions, ShareUrl } from '@/components/share-block';
 import { computeCronotype } from '@/features/profile/profile-service';
 import { GitHubError } from '@/features/profile/profile-queries';
 import { QUIET_THEME } from '@/lib/archetypes';
-import { formatFollowers } from '@/lib/format';
+import { formatCount, formatFollowers } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
 import type { HourStats, ProfileSummary } from '@/types/cronotype';
 
@@ -124,7 +124,7 @@ function NoRecentProfileCard({
 
           <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
             <ProfileStat label="Signal" value="0" accent={theme.accent} />
-            <ProfileStat label="Followers" value={formatFollowers(profile.followers)} />
+            <ProfileStat label="Followers" value={formatCount(profile.followers)} />
             <ProfileStat label="Repos" value={String(profile.publicRepos)} />
             <ProfileStat label="Joined" value={joined} />
           </dl>
