@@ -40,7 +40,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   'sunrise-sniper': {
     meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
     percentile: 'Higher with more pre-9am commits. The more morning-weighted the graph is, the sharper the shot.',
-    signal: 'More than 25% of signal commits land between 5am and 9am.',
+    signal: 'More than 20% of signal commits land between 5am and 9am.',
   },
   'touch-grass': {
     meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',

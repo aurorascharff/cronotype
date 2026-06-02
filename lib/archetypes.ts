@@ -97,7 +97,7 @@ export function classify(stats: HourStats): Archetype {
 
   if (stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
   if (stats.pctNocturnal > 30) return ARCHETYPES.vampire;
-  if (stats.pctSunrise > 25) return ARCHETYPES['sunrise-sniper'];
+  if (stats.pctSunrise > 20) return ARCHETYPES['sunrise-sniper'];
   if (hasLunchSpike(stats)) return ARCHETYPES['lunch-bandit'];
   if (stats.pctWeekend > 40) return ARCHETYPES['weekend-warrior'];
   if (isWorkdayRhythm(stats)) return ARCHETYPES['nine-to-fiver'];
