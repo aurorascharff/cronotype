@@ -187,11 +187,8 @@ function githubFetch(token: string, url: string, extraHeaders: Record<string, st
     if (res.status === 401) throw new GitHubError('GitHub auth failed.', 401);
     if (res.status === 403 || res.status === 429) {
       const remaining = res.headers.get('x-ratelimit-remaining');
-      const resetAt = res.headers.get('x-ratelimit-reset');
       if (remaining === '0') {
-        const wait = resetAt ? Math.max(0, Number(resetAt) * 1000 - Date.now()) : 60_000;
-        const mins = Math.ceil(wait / 60_000);
-        throw new GitHubError(`GitHub rate limit hit. Resets in ~${mins} minute${mins === 1 ? '' : 's'}.`, 403);
+        throw new GitHubError('GitHub rate limit hit. Try again in a minute.', 403);
       }
       throw new GitHubError('GitHub blocked the request (secondary rate limit). Try again in a minute.', 403);
     }
