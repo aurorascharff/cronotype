@@ -27,7 +27,7 @@ export async function SuggestedUsers() {
           <li key={handle}>
             <Link
               href={{ pathname: `/${handle}` }}
-              className="dark:bg-ink-2 group flex min-w-0 flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 transition-colors hover:border-black/30 sm:p-4 dark:border-white/10 dark:hover:border-white/30"
+              className="dark:bg-ink-2 group flex min-h-32 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-black/10 bg-white p-3 text-center transition-colors hover:border-black/30 sm:p-4 dark:border-white/10 dark:hover:border-white/30"
             >
               {profile?.avatarUrl ? (
                 <Image
@@ -60,7 +60,7 @@ export function SuggestedUsersSkeleton() {
       {Array.from({ length: SUGGESTED_SKELETON_COUNT }).map((_, i) => (
         <li
           key={i}
-          className="dark:bg-ink-2 flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 sm:p-4 dark:border-white/10"
+          className="dark:bg-ink-2 flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl border border-black/10 bg-white p-3 sm:p-4 dark:border-white/10"
         >
           <div className="skeleton h-12 w-12 rounded-full" />
           <div className="skeleton h-3 w-16 rounded" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -38,32 +39,13 @@ export function DownloadPrivateCard({ handle }: Props) {
       type="button"
       onClick={download}
       disabled={downloading}
-      aria-busy={downloading}
-      icon={<DownloadIcon />}
+      isPending={downloading}
+      icon={<Download className="h-2.5 w-2.5" />}
       iconPosition="start"
       size="xs"
       variant="secondary"
     >
-      <span>{downloading ? 'Downloading' : 'Download'}</span>
+      <span>Download</span>
     </Button>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-2.5 w-2.5"
-      aria-hidden
-    >
-      <path d="M12 3v12" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M5 21h14" />
-    </svg>
   );
 }

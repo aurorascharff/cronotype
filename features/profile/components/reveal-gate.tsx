@@ -48,22 +48,13 @@ export function RevealGate({ handle }: Props) {
           disabled={busy}
           aria-busy={busy}
           className="h-10 shrink-0 px-4 text-sm"
-          icon={busy ? <Spinner /> : null}
           iconPosition="start"
+          isPending={busy}
           variant="primary"
         >
           <span>{busy ? 'Revealing' : 'Reveal'}</span>
         </Button>
       </div>
     </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden className="animate-spin">
-      <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" />
-      <path d="M10.5 6a4.5 4.5 0 0 0-4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
   );
 }

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { LoaderCircle } from 'lucide-react';
 import { DownloadTimeline } from '@/features/profile/components/download-timeline';
 import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
 import { getTimelineChart, GitHubError } from '@/features/profile/profile-queries';
@@ -285,7 +286,7 @@ export function EvolutionStripSkeleton() {
 
         <div className="relative h-32 sm:h-40">
           <div className="text-muted/60 dark:text-muted-dark/60 absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <Spinner />
+            <LoaderCircle className="text-muted/40 dark:text-muted-dark/40 h-5 w-5 animate-spin" aria-hidden />
             <span className="text-[11px] font-medium tracking-wide uppercase">Loading, crunching your history</span>
           </div>
         </div>
@@ -298,22 +299,5 @@ export function EvolutionStripSkeleton() {
         </div>
       </div>
     </>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      className="text-muted/40 dark:text-muted-dark/40 h-5 w-5 animate-spin"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="9" strokeOpacity="0.25" />
-      <path d="M21 12a9 9 0 0 0-9-9" />
-    </svg>
   );
 }

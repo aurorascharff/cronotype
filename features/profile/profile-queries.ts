@@ -10,6 +10,8 @@ import type { ArchetypeId, CronotypeResult, ProfileSummary, Window } from '@/typ
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
+const HIGH_YEAR_COMMIT_THRESHOLD = 1000;
+const YEAR_ARCHETYPE_SAMPLE_SIZE = 35;
 
 export class GitHubError extends Error {
   status: number;
@@ -195,13 +197,14 @@ async function fetchCommitsInRange(
   toISO: string,
   depth = 0,
   maxPages = 10,
+  perPage = 100,
 ): Promise<Commit[]> {
   const q = `author:${login} author-date:${fromISO}..${toISO}`;
   const commits: Commit[] = [];
   let truncated = false;
 
   for (let page = 1; page <= maxPages; page++) {
-    const url = `${API}/search/commits?q=${encodeURIComponent(q)}&per_page=100&page=${page}&sort=author-date&order=desc`;
+    const url = `${API}/search/commits?q=${encodeURIComponent(q)}&per_page=${perPage}&page=${page}&sort=author-date&order=desc`;
     const res = await gh(url, { headers: { Accept: 'application/vnd.github.cloak-preview+json' } });
     if (!res.ok) {
       if (page === 1 && res.status === 422) return [];
@@ -221,7 +224,7 @@ async function fetchCommitsInRange(
         tzOffsetMinutes: tz,
       });
     }
-    if (!j.items || j.items.length < 100) break;
+    if (!j.items || j.items.length < perPage) break;
   }
 
   if (truncated && depth < 3) {
@@ -229,8 +232,8 @@ async function fetchCommitsInRange(
     const to = new Date(toISO).getTime();
     const mid = new Date((from + to) / 2).toISOString().slice(0, 10);
     const [a, b] = await Promise.all([
-      fetchCommitsInRange(login, fromISO, mid, depth + 1, maxPages),
-      fetchCommitsInRange(login, mid, toISO, depth + 1, maxPages),
+      fetchCommitsInRange(login, fromISO, mid, depth + 1, maxPages, perPage),
+      fetchCommitsInRange(login, mid, toISO, depth + 1, maxPages, perPage),
     ]);
     return dedupe([...a, ...b]);
   }
@@ -421,14 +424,15 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   };
 }
 
-async function getYearArchetype(login: string, year: number): Promise<ArchetypeId | null> {
+async function getYearArchetype(login: string, year: number, commitCount: number): Promise<ArchetypeId | null> {
   'use cache: remote';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
 
   if (MOCK) return mockArchetypeFor(`${login}-${year}`);
 
-  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1);
+  const perPage = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_SIZE : 100;
+  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1, perPage);
   const signal = signalCommits(sampleCommits);
   if (signal.length === 0) return null;
   return classify(buildStats(signal)).id;
@@ -727,7 +731,8 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
   const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
   for (const year of yearsWithCommits) {
     try {
-      const value = await getYearArchetype(login, year);
+      const yearData = byYear.find(y => y.year === year);
+      const value = await getYearArchetype(login, year, yearData?.commits ?? 0);
       archetypeResults.push({ status: 'fulfilled', value });
     } catch (reason) {
       archetypeResults.push({ status: 'rejected', reason });

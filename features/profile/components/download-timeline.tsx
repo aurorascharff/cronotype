@@ -1,5 +1,6 @@
 'use client';
 
+import { Download } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -38,31 +39,13 @@ export function DownloadTimeline({ handle }: Props) {
       type="button"
       onClick={download}
       disabled={downloading}
-      icon={<DownloadIcon />}
+      isPending={downloading}
+      icon={<Download className="h-2.5 w-2.5" />}
       iconPosition="start"
       size="xs"
       variant="secondary"
     >
-      <span className="inline-block min-w-18 text-left">{downloading ? 'Downloading' : 'Download'}</span>
+      <span className="inline-block min-w-18 text-left">Download</span>
     </Button>
-  );
-}
-
-function DownloadIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-2.5 w-2.5"
-      aria-hidden
-    >
-      <path d="M12 4v12" />
-      <path d="M7 11l5 5 5-5" />
-      <path d="M5 20h14" />
-    </svg>
   );
 }

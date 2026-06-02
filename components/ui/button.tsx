@@ -1,4 +1,8 @@
+'use client';
+
+import { LoaderCircle } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useFormStatus } from 'react-dom';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary';
@@ -7,6 +11,7 @@ type ButtonSize = 'sm' | 'xs';
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode;
   iconPosition?: 'start' | 'end';
+  isPending?: boolean;
   size?: ButtonSize;
   variant?: ButtonVariant;
 };
@@ -16,6 +21,7 @@ export function Button({
   className,
   icon,
   iconPosition = 'end',
+  isPending = false,
   size = 'sm',
   type = 'button',
   variant = 'secondary',
@@ -35,10 +41,21 @@ export function Button({
         className,
       )}
       {...props}
+      aria-busy={props['aria-busy'] ?? isPending}
     >
-      {iconPosition === 'start' && icon}
+      {iconPosition === 'start' && (isPending ? <Spinner size={size} /> : icon)}
       {children}
-      {iconPosition === 'end' && icon}
+      {iconPosition === 'end' && (isPending ? <Spinner size={size} /> : icon)}
     </button>
   );
+}
+
+export function SubmitButton(props: Omit<ButtonProps, 'isPending' | 'type'>) {
+  const { pending } = useFormStatus();
+  return <Button {...props} type="submit" disabled={props.disabled ?? pending} isPending={pending} />;
+}
+
+function Spinner({ size }: { size: ButtonSize }) {
+  const dimension = size === 'xs' ? 10 : 12;
+  return <LoaderCircle width={dimension} height={dimension} className="shrink-0 animate-spin" aria-hidden />;
 }
