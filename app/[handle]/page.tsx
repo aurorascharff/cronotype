@@ -6,7 +6,7 @@ import {
   ProfileHistorySection,
   ProfileHistorySectionSkeleton,
 } from '@/features/profile/components/profile-history-section';
-import { getProfile, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import { getProfileOrNull } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 
@@ -80,10 +80,6 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
 
 async function ensureGitHubProfile(handle: string) {
   if (!isValidGitHubHandle(handle)) notFound();
-  try {
-    await getProfile(handle);
-  } catch (err) {
-    if (isGitHubNotFoundError(err)) notFound();
-    throw err;
-  }
+  const profile = await getProfileOrNull(handle);
+  if (!profile) notFound();
 }

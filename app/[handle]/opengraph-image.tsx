@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
-import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import { computeCronotype, getProfileOrNull, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import type { ProfileSummary } from '@/types/cronotype';
@@ -63,6 +63,8 @@ function meaningSizeFor(text: string) {
 
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
   const { handle } = await params;
+  const profileExists = await getProfileOrNull(handle);
+  if (!profileExists) notFound();
 
   let result;
   try {

@@ -168,10 +168,16 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
 }
 
 export async function getProfile(login: string): Promise<ProfileSummary> {
+  const profile = await getProfileOrNull(login);
+  if (profile) return profile;
+  throw new GitHubError(`User @${login.toLowerCase()} not found on GitHub`, 404);
+}
+
+export async function getProfileOrNull(login: string): Promise<ProfileSummary | null> {
   return getProfileCached(login.toLowerCase());
 }
 
-async function getProfileCached(login: string): Promise<ProfileSummary> {
+async function getProfileCached(login: string): Promise<ProfileSummary | null> {
   'use cache: remote';
   cacheTag(`profile-${login}`);
   cacheLife('cronotype');
@@ -181,7 +187,7 @@ async function getProfileCached(login: string): Promise<ProfileSummary> {
   }
 
   const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
-  if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
+  if (res.status === 404) return null;
   if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
   const fetchedAtDate = dateHeaderToDayKey(res.headers.get('date'));
   const j = await res.json();
