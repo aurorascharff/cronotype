@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { Crossfade } from '@/components/ui/crossfade';
 import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/components/top-revealed';
 import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
@@ -19,14 +20,26 @@ export default function HomePage() {
       </section>
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Top revealed</h2>
-        <Suspense fallback={<TopRevealedSkeleton />}>
-          <TopRevealed />
-        </Suspense>
-      </section>
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-        <Suspense fallback={<SuggestedUsersSkeleton />}>
-          <SuggestedUsers />
+        <Suspense
+          fallback={
+            <>
+              <TopRevealedSkeleton />
+              <section className="space-y-4 pt-8 sm:pt-12">
+                <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
+                <SuggestedUsersSkeleton />
+              </section>
+            </>
+          }
+        >
+          <Crossfade>
+            <>
+              <TopRevealed />
+              <section className="space-y-4 pt-8 sm:pt-12">
+                <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
+                <SuggestedUsers />
+              </section>
+            </>
+          </Crossfade>
         </Suspense>
       </section>
     </div>

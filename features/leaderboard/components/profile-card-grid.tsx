@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { RadialChip } from '@/components/ui/radial-chip';
@@ -6,8 +5,15 @@ import { getCardClassification, getCardProfile } from '@/features/leaderboard/le
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 
-export function ProfileCardSlot({ handle }: { handle: string }) {
+export async function ProfileCardSlot({ handle }: { handle: string }) {
   const avatarUrl = `https://github.com/${handle}.png?size=96`;
+  const [profile, classification] = await Promise.all([getCardProfile(handle), getCardClassification(handle)]);
+  const color = classification
+    ? classification.stats.total === 0
+      ? QUIET_THEME.accent
+      : classification.archetype.theme.accent
+    : null;
+
   return (
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
       <Link
@@ -17,9 +23,11 @@ export function ProfileCardSlot({ handle }: { handle: string }) {
       >
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
-            <Suspense fallback={<ClassifyingRing />}>
-              <CardChip handle={handle} />
-            </Suspense>
+            {classification ? (
+              <RadialChip stats={classification.stats} color={color ?? QUIET_THEME.accent} size={112} />
+            ) : (
+              <ClassifyingRing failed />
+            )}
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -30,9 +38,7 @@ export function ProfileCardSlot({ handle }: { handle: string }) {
             className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
           />
         </div>
-        <Suspense fallback={<CardMetaSkeleton handle={handle} />}>
-          <CardMeta handle={handle} />
-        </Suspense>
+        <CardMeta handle={handle} profile={profile} classification={classification} />
       </Link>
       <a
         href={`https://github.com/${handle}`}
@@ -49,15 +55,15 @@ export function ProfileCardSlot({ handle }: { handle: string }) {
   );
 }
 
-async function CardChip({ handle }: { handle: string }) {
-  const result = await getCardClassification(handle);
-  if (!result) return <ClassifyingRing failed />;
-  const color = result.stats.total === 0 ? QUIET_THEME.accent : result.archetype.theme.accent;
-  return <RadialChip stats={result.stats} color={color} size={112} />;
-}
-
-async function CardMeta({ handle }: { handle: string }) {
-  const [profile, classification] = await Promise.all([getCardProfile(handle), getCardClassification(handle)]);
+function CardMeta({
+  handle,
+  profile,
+  classification,
+}: {
+  handle: string;
+  profile: Awaited<ReturnType<typeof getCardProfile>>;
+  classification: Awaited<ReturnType<typeof getCardClassification>>;
+}) {
   if (!profile) return <CardMetaFallback handle={handle} />;
   return (
     <div className="min-w-0 space-y-1">
@@ -81,22 +87,6 @@ async function CardMeta({ handle }: { handle: string }) {
       ) : (
         <span className="text-muted/40 dark:text-muted-dark/40 truncate text-xs">—</span>
       )}
-    </div>
-  );
-}
-
-function CardMetaSkeleton({ handle }: { handle: string }) {
-  return (
-    <div className="min-w-0 space-y-1">
-      <div className="skeleton h-5 w-3/4 rounded" />
-      <div className="text-muted dark:text-muted-dark flex items-baseline gap-1.5 truncate text-xs">
-        <span className="truncate">@{handle}</span>
-        <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
-          ·
-        </span>
-        <span className="skeleton inline-block h-3 w-10 rounded" />
-      </div>
-      <div className="skeleton h-4 w-1/2 rounded" />
     </div>
   );
 }

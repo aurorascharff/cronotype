@@ -531,11 +531,7 @@ function computeYearMarkers(months: MonthBucket[], width: number): Array<{ label
   }));
 }
 
-function buildYearMarks(
-  months: MonthBucket[],
-  yearly: YearArchetypeBucket[],
-  currentId: ArchetypeId,
-): TimelineMark[] {
+function buildYearMarks(months: MonthBucket[], yearly: YearArchetypeBucket[], currentId: ArchetypeId): TimelineMark[] {
   const archetypeByYear = new Map<number, ArchetypeId>();
   for (const y of yearly) {
     if (y.commits > 0) archetypeByYear.set(y.year, y.archetypeId);
