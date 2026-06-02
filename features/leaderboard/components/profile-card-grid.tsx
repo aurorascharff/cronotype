@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { RadialChip } from '@/components/radial-chip';
-import { ClassifyingRing } from '@/components/classifying-ring';
+import { ClassifyingRing } from '@/components/ui/classifying-ring';
+import { RadialChip } from '@/components/ui/radial-chip';
 import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';

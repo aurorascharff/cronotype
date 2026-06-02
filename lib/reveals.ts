@@ -2,7 +2,7 @@ import 'server-only';
 import { Redis } from '@upstash/redis';
 import { cacheLife, cacheTag } from 'next/cache';
 
-// No-ops when KV_REST_API_URL / KV_REST_API_TOKEN are missing - callers treat
+// No-ops when KV_REST_API_URL / KV_REST_API_TOKEN are missing. Callers treat
 // missing reveal state as locked and an empty featured list as unavailable.
 
 const REVEAL_KEY_PREFIX = 'reveal:v1';

@@ -1,7 +1,14 @@
 import 'server-only';
+
 import { computeCronotype } from '@/features/profile/profile-service';
 import { getMonthlyHistory } from '@/features/profile/profile-queries';
-import { buildEras, buildSmoothPath, buildYearMarks, computeYearMarkers, smooth } from '@/lib/timeline';
+import {
+  buildEras,
+  buildSmoothPath,
+  buildYearMarks,
+  computeYearMarkers,
+  smooth,
+} from '@/features/profile/timeline-utils';
 
 export type TimelineGeometry = {
   width: number;

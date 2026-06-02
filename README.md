@@ -22,16 +22,20 @@ Every generated profile lives at `/:handle`, with share/download images and a [t
 
 ## Architecture
 
-- Cache expensive GitHub reads with `use cache: remote`, `cacheTag`, and `cacheLife`
-- Use `updateTag` from server actions after reveal, regeneration, and timeline refreshes
+- Cache expensive GitHub reads in the data layer with `use cache: remote`, `cacheTag`, and `cacheLife`
+- Cache rendered profile/history output with normal `use cache`
+- Use `updateTag` from server actions after reveal and regeneration
 - Stream GitHub-heavy profile and leaderboard UI behind Suspense
 - Keep interactivity in small client leaves
 
 ```
 app/                  Pages, layouts, OG images
+components/theme/     Theme provider and theme toggle
+components/ui/        Shared UI primitives and shell helpers
+components/           Cronotype-specific shared components
 features/profile/     Queries, actions, components for a single handle
-features/leaderboard/ Recently revealed grid
-lib/                  Archetypes, reveal log, stats, timeline helpers
+features/leaderboard/ Featured handles, top revealed, suggested users
+lib/                  Shared app helpers, archetypes, formatting, reveal state
 ```
 
 ## Running it locally

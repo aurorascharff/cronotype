@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ClassifyingRing } from '@/components/classifying-ring';
+import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { HaloChart } from '@/components/halo-chart';
 import { HeroCard } from '@/components/hero-card';
 import { ShareActions, ShareUrl } from '@/components/share-block';
@@ -58,13 +58,7 @@ export async function CronotypeProfile({ handle }: Props) {
   );
 }
 
-function NoRecentProfileCard({
-  profile,
-  stats,
-}: {
-  profile: ProfileSummary;
-  stats: HourStats;
-}) {
+function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stats: HourStats }) {
   const theme = QUIET_THEME;
   const joined = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
     new Date(profile.createdAt),

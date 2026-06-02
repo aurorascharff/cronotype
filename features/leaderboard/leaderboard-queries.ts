@@ -1,6 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { FEATURED } from '@/features/leaderboard/featured';
+import { FEATURED_HANDLES } from '@/features/leaderboard/featured-handles';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify } from '@/lib/archetypes';
 import { listFeaturedReveals } from '@/lib/reveals';
@@ -18,7 +18,7 @@ export async function getTopRevealedHandles(limit = 8): Promise<string[]> {
   cacheTag('reveals');
   cacheLife('cronotype');
 
-  const revealed = await listFeaturedReveals(FEATURED.length);
+  const revealed = await listFeaturedReveals(FEATURED_HANDLES.length);
   if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(

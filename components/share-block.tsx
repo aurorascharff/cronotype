@@ -99,7 +99,7 @@ export function ShareActions({ shareUrl, archetypeName, accent, handle, classNam
 export function ShareUrl({ shareUrl }: { shareUrl: string }) {
   const display = shareUrl.replace(/^https?:\/\//, '');
   return (
-    <span className="text-muted dark:text-muted-dark block min-w-0 max-w-full truncate font-mono text-xs tracking-tight sm:text-sm">
+    <span className="text-muted dark:text-muted-dark block max-w-full min-w-0 truncate font-mono text-xs tracking-tight sm:text-sm">
       {display}
     </span>
   );

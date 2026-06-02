@@ -2,12 +2,12 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
-import { Crossfade } from '@/components/crossfade';
-import InlineErrorBoundary from '@/components/inline-error-boundary';
+import { Crossfade } from '@/components/ui/crossfade';
 import { RegenerateButton } from '@/components/regenerate-button';
 import { RevealGate } from '@/components/reveal-gate';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
+import ProfileErrorBoundary from '@/features/profile/components/profile-error-boundary';
 import { TimelinePrompt } from '@/features/profile/components/timeline-prompt';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import { hasBeenRevealed, hasTimelineLoaded } from '@/lib/reveals';
@@ -113,12 +113,12 @@ function GeneratedProfile({ handle, showTimeline }: { handle: string; showTimeli
         </header>
         <Crossfade>
           <Suspense fallback={<CronotypeProfileSkeleton />}>
-            <InlineErrorBoundary
+            <ProfileErrorBoundary
               title="We couldn't reveal this developer."
               body="GitHub is rate-limited right now. Give it a minute and try again."
             >
               <CronotypeProfile handle={handle} />
-            </InlineErrorBoundary>
+            </ProfileErrorBoundary>
           </Suspense>
         </Crossfade>
       </section>
@@ -132,12 +132,13 @@ function TimelineSection({ handle }: { handle: string }) {
     <section className="space-y-4">
       <Crossfade>
         <Suspense fallback={<EvolutionStripSkeleton />}>
-          <InlineErrorBoundary
+          <ProfileErrorBoundary
+            variant="timeline"
             title="We couldn't load this history right now."
             body="GitHub is rate-limited right now. Give it a minute and try again."
           >
             <EvolutionStrip handle={handle} />
-          </InlineErrorBoundary>
+          </ProfileErrorBoundary>
         </Suspense>
       </Crossfade>
     </section>

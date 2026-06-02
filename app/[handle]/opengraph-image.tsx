@@ -22,14 +22,15 @@ const COLORS = {
 
 async function loadGeist() {
   try {
-    const [sans, monoRegular, monoSemibold] = await Promise.all([
-      loadFont('Geist-Variable.ttf'),
+    const [sansRegular, sansSemibold, monoRegular, monoSemibold] = await Promise.all([
+      loadFont('Geist-Regular.ttf'),
+      loadFont('Geist-SemiBold.ttf'),
       loadFont('GeistMono-Regular.ttf'),
       loadFont('GeistMono-SemiBold.ttf'),
     ]);
     return [
-      { data: sans, name: 'GeistSans', style: 'normal' as const, weight: 400 as const },
-      { data: sans, name: 'GeistSans', style: 'normal' as const, weight: 600 as const },
+      { data: sansRegular, name: 'GeistSans', style: 'normal' as const, weight: 400 as const },
+      { data: sansSemibold, name: 'GeistSans', style: 'normal' as const, weight: 600 as const },
       { data: monoRegular, name: 'GeistMono', style: 'normal' as const, weight: 400 as const },
       { data: monoSemibold, name: 'GeistMono', style: 'normal' as const, weight: 600 as const },
     ];
@@ -48,9 +49,9 @@ async function loadFont(name: string) {
 }
 
 function titleSizeFor(name: string) {
-  if (name.length >= 20) return 70;
-  if (name.length >= 16) return 80;
-  return 98;
+  if (name.length >= 20) return 58;
+  if (name.length >= 16) return 64;
+  return 76;
 }
 
 function meaningSizeFor(text: string) {
@@ -416,7 +417,7 @@ function quietImage(profile: ProfileSummary, fonts?: Awaited<ReturnType<typeof l
           style={{
             color: COLORS.paper80,
             display: 'flex',
-            fontSize: 92,
+            fontSize: 76,
             fontWeight: 600,
             letterSpacing: '-0.04em',
             lineHeight: 1,

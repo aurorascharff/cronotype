@@ -1,6 +1,6 @@
 import { ARCHETYPES } from '@/lib/archetypes';
-import type { ArchetypeId } from '@/types/cronotype';
 import type { MonthBucket, YearArchetypeBucket } from '@/features/profile/profile-queries';
+import type { ArchetypeId } from '@/types/cronotype';
 
 export type Mark = {
   archetypeId: ArchetypeId | null;

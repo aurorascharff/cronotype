@@ -1,4 +1,4 @@
-export const FEATURED: string[] = [
+export const FEATURED_HANDLES: string[] = [
   'gaearon',
   'sebmarkbage',
   'acdlite',
@@ -56,8 +56,8 @@ export const FEATURED: string[] = [
   'aurorascharff',
 ];
 
-const FEATURED_SET = new Set(FEATURED);
+const FEATURED_HANDLE_SET = new Set(FEATURED_HANDLES);
 
 export function isFeaturedHandle(handle: string): boolean {
-  return FEATURED_SET.has(handle.toLowerCase());
+  return FEATURED_HANDLE_SET.has(handle.toLowerCase());
 }

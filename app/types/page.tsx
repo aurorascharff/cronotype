@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { RadialChip } from '@/components/radial-chip';
+import { RadialChip } from '@/components/ui/radial-chip';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { syntheticStatsFor } from '@/lib/synthetic';
 import type { ArchetypeId } from '@/types/cronotype';
@@ -20,12 +20,14 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   drifter: {
     meaning: 'You move through odd windows, bursts, and gaps, yet the work keeps appearing.',
     percentile: 'Fixed midpoint. Drifters are the beautiful chaos bucket, so there is no single signal to score.',
-    signal: 'The fallback when no stronger rhythm wins: no night cluster, no sunrise lean, no lunch spike, no weekend tilt.',
+    signal:
+      'The fallback when no stronger rhythm wins: no night cluster, no sunrise lean, no lunch spike, no weekend tilt.',
   },
   'insomniac-maintainer': {
     meaning: 'You split your output between the official day and the second shift after everyone logs off.',
     percentile: 'Starts at 50 and climbs with nocturnal share. The stronger the second shift, the higher it lands.',
-    signal: 'A two-shift shape: more than 25% during the day, more than 20% late at night, with a quieter evening valley.',
+    signal:
+      'A two-shift shape: more than 25% during the day, more than 20% late at night, with a quieter evening valley.',
   },
   'lunch-bandit': {
     meaning: 'You turn the quiet middle of the day into a tiny shipping heist.',
@@ -40,17 +42,20 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   'sunrise-sniper': {
     meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
     percentile: 'Higher with more pre-9am commits. The more morning-weighted the graph is, the sharper the shot.',
-    signal: 'More than 20% of signal commits land between 5am and 9am, with an early peak or a very strong morning lean.',
+    signal:
+      'More than 20% of signal commits land between 5am and 9am, with an early peak or a very strong morning lean.',
   },
   'touch-grass': {
     meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',
     percentile: 'Inverse: fewer signal commits means a higher score. The quietest non-empty graphs score highest.',
-    signal: 'Between 1 and 24 signal commits in the last 90 days. If the filtered sample is empty, the profile shows Quiet lately instead.',
+    signal:
+      'Between 1 and 24 signal commits in the last 90 days. If the filtered sample is empty, the profile shows Quiet lately instead.',
   },
   vampire: {
     meaning: 'You do your sharpest work when notifications are asleep and the world stops asking questions.',
     percentile: 'Higher with more nocturnal share. The deeper the night shift, the stronger the bite.',
-    signal: 'More than 35% of signal commits land between midnight and 5am, with a night peak or a very strong night lean.',
+    signal:
+      'More than 35% of signal commits land between midnight and 5am, with a night peak or a very strong night lean.',
   },
   'weekend-warrior': {
     meaning: 'You turn Saturday and Sunday into the part of the week where momentum finally gets room.',

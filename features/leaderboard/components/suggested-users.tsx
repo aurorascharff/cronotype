@@ -1,13 +1,13 @@
 import Link from 'next/link';
-import { FEATURED } from '@/features/leaderboard/featured';
+import { FEATURED_HANDLES } from '@/features/leaderboard/featured-handles';
 import { listFeaturedReveals } from '@/lib/reveals';
 import { connection } from 'next/server';
 
 export async function SuggestedUsers() {
   await connection();
 
-  const revealed = new Set((await listFeaturedReveals(FEATURED.length)).map(handle => handle.toLowerCase()));
-  const handles = FEATURED.filter(handle => !revealed.has(handle.toLowerCase()));
+  const revealed = new Set((await listFeaturedReveals(FEATURED_HANDLES.length)).map(handle => handle.toLowerCase()));
+  const handles = FEATURED_HANDLES.filter(handle => !revealed.has(handle.toLowerCase()));
 
   if (handles.length === 0) {
     return (
@@ -48,8 +48,11 @@ export async function SuggestedUsers() {
 export function SuggestedUsersSkeleton() {
   return (
     <ul className="grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
-      {FEATURED.map((_, i) => (
-        <li key={i} className="dark:bg-ink-2 flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 sm:p-4 dark:border-white/10">
+      {FEATURED_HANDLES.map((_, i) => (
+        <li
+          key={i}
+          className="dark:bg-ink-2 flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 sm:p-4 dark:border-white/10"
+        >
           <div className="skeleton h-12 w-12 rounded-full" />
           <div className="skeleton h-3 w-16 rounded" />
           <div className="skeleton h-3 w-12 rounded" />

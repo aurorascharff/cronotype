@@ -1,5 +1,5 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
-import { FEATURED } from '@/features/leaderboard/featured';
+import { FEATURED_HANDLES } from '@/features/leaderboard/featured-handles';
 import { getTopRevealedHandles } from '@/features/leaderboard/leaderboard-queries';
 import { connection } from 'next/server';
 
@@ -30,7 +30,7 @@ export async function TopRevealed() {
 }
 
 export function TopRevealedSkeleton() {
-  const count = Math.min(TOP_REVEALED_LIMIT, FEATURED.length);
+  const count = Math.min(TOP_REVEALED_LIMIT, FEATURED_HANDLES.length);
 
   return (
     <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">

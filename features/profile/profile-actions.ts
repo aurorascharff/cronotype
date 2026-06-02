@@ -2,7 +2,7 @@
 
 import { updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { isFeaturedHandle } from '@/features/leaderboard/featured';
+import { isFeaturedHandle } from '@/features/leaderboard/featured-handles';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 
@@ -42,10 +42,7 @@ export async function revealUser(handle: string) {
   await recordFeaturedRevealIfNeeded(lower);
 }
 
-export async function revealUserFromForm(
-  state: RevealFormState,
-  formData: FormData,
-): Promise<RevealFormState> {
+export async function revealUserFromForm(state: RevealFormState, formData: FormData): Promise<RevealFormState> {
   const handle = normalizeHandle(String(formData.get('handle') ?? ''));
   if (!handle) return { error: 'Type a GitHub username.', errorId: state.errorId + 1 };
   if (!isValidGitHubHandle(handle)) {

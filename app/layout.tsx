@@ -4,7 +4,7 @@ import { Toaster } from 'sonner';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SiteHeader } from '@/components/site-header';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@/components/theme/theme-provider';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
@@ -26,7 +26,8 @@ export const metadata: Metadata = {
         : 'http://localhost:3000'),
   ),
   openGraph: {
-    description: 'Type a GitHub handle and get a commit-time archetype, shareable card, and optional year-by-year timeline.',
+    description:
+      'Type a GitHub handle and get a commit-time archetype, shareable card, and optional year-by-year timeline.',
     siteName: 'Cronotype',
     title: 'Cronotype: What type of developer are you?',
     type: 'website',

@@ -14,10 +14,13 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - Tailwind CSS v4 with CSS custom properties as design tokens
 - React 19 with `ViewTransition` for streaming reveals; toggled via `experimental.viewTransition` in [next.config.ts](next.config.ts)
 - Feature folders: `features/profile/`, `features/leaderboard/`
+- Theme plumbing lives in `components/theme/`
+- Shared UI primitives live in `components/ui/`; Cronotype-specific shared components stay in `components/`
 - Domain verb "reveal" is the app's term for classifying a handle; don't reintroduce "diagnose"
-- Public GitHub queries use `'use cache: remote'` where durable cross-request caching protects rate limits
-- Components with slow cached data (`<CronotypeProfile>`, `<EvolutionStrip>`) sit behind Suspense so the static shell can stream
+- Public GitHub data queries use `'use cache: remote'` where durable cross-request caching protects rate limits
+- Rendered profile/history wrappers use normal `'use cache'` and sit behind Suspense so the static shell can stream
 - Components that intentionally read request-time mutable lists (`<RecentRevealed>`, `<SuggestedUsers>`) call `await connection()`
+- Skeletons are co-located with the component they represent. Don't create standalone skeleton-only files.
 - Theme: light/dark via `next-themes`; client components use `useSyncExternalStore` (not `useEffect + setMounted`) to read "mounted" state without lint errors
 - Section headers (`<h2>` titles) live in `app/**/page.tsx` outside Suspense so they paint in the static shell; feature components return only their grid/card content
 
@@ -25,7 +28,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 
 - **Search Commits API** for the 90-day hourly distribution. 30 requests/minute limit - the dominant cost. Capped to 1 page (100 commits) per profile in [features/profile/profile-queries.ts](features/profile/profile-queries.ts) to keep budget reasonable.
 - **GraphQL contributions calendar** for the multi-year history. 5000/hr pool. One call per year, fanned out serially in [features/profile/profile-queries.ts](features/profile/profile-queries.ts).
-- The recently revealed list reads featured reveal handles from KV, then caches the sorted handle list briefly with `cacheLife('minutes')`.
+- The top revealed list only displays featured handles. Reveal state lives in [lib/reveals.ts](lib/reveals.ts), backed by Upstash when configured, and the featured reveal lookups use `cacheLife('cronotype')`.
 
 ## Cache discipline
 
@@ -46,7 +49,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 
 ## Error boundaries
 
-Use `unstable_catchError` from `next/error`. [components/inline-error-boundary.tsx](components/inline-error-boundary.tsx) exposes a generic boundary that accepts a `title`, `body`, and `retryLabel`. Use it inline around Suspense children that can fail independently (e.g. the evolution chart on a profile page).
+Use `unstable_catchError` from `next/error`. Profile-page fallbacks live in [features/profile/components/profile-error-boundary.tsx](features/profile/components/profile-error-boundary.tsx) so the reveal card and timeline keep their own shapes when they fail.
 
 ## Mocking GitHub for local dev
 
