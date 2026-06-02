@@ -2,7 +2,6 @@ import { DownloadTimeline } from '@/features/profile/components/download-timelin
 import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
 import { getTimelineChart } from '@/features/profile/profile-queries';
 import { formatCount } from '@/lib/format';
-import { recordTimelineLoaded } from '@/lib/reveals';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
@@ -15,13 +14,11 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ handle }: Props) {
-  const content = await CachedEvolutionStrip({ handle });
-  await recordTimelineLoaded(handle);
-  return content;
+  return CachedEvolutionStrip({ handle });
 }
 
 async function CachedEvolutionStrip({ handle }: Props) {
-  'use cache';
+  'use cache: remote';
   cacheTag(`history-${handle}`);
   cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');

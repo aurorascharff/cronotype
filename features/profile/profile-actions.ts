@@ -4,7 +4,7 @@ import { updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
-import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
+import { recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
 
 export type RevealFormState = {
   error: string | null;
@@ -81,7 +81,7 @@ export async function regenerateUserAndRedirect(handle: string, showTimeline: bo
   redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
 }
 
-export async function regenerateHistoryAndRedirect(
+export async function regenerateHistory(
   handle: string,
   failedMonthlyYears: number[],
   failedArchetypeYears: number[],
@@ -89,5 +89,11 @@ export async function regenerateHistoryAndRedirect(
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
-  redirect(`/${lower}?history=1`);
+}
+
+export async function showHistory(handle: string) {
+  const lower = handle.toLowerCase();
+  if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
+  await recordTimelineLoaded(lower);
+  updateTag(`timeline-loaded-${lower}`);
 }

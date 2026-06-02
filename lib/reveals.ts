@@ -60,9 +60,17 @@ export async function hasBeenRevealed(handle: string): Promise<boolean> {
 }
 
 export async function hasTimelineLoaded(handle: string): Promise<boolean> {
+  return hasTimelineLoadedCached(handle.toLowerCase());
+}
+
+async function hasTimelineLoadedCached(handle: string): Promise<boolean> {
+  'use cache: remote';
+  cacheTag(`timeline-loaded-${handle}`);
+  cacheLife('cronotype');
+
   const kv = getClient();
   if (!kv) return false;
-  const value = await kv.get(timelineLoadedKey(handle.toLowerCase()));
+  const value = await kv.get(timelineLoadedKey(handle));
   return value !== null;
 }
 

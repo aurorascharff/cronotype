@@ -1,8 +1,9 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { regenerateHistoryAndRedirect } from '@/features/profile/profile-actions';
+import { regenerateHistory } from '@/features/profile/profile-actions';
 
 type Props = {
   failedArchetypeYears: number[];
@@ -12,27 +13,27 @@ type Props = {
 };
 
 export function RegenerateHistoryButton({ failedArchetypeYears, failedMonthlyYears, handle, partial }: Props) {
-  const action = regenerateHistoryAndRedirect.bind(null, handle, failedMonthlyYears, failedArchetypeYears);
-
-  return (
-    <form action={action}>
-      <SubmitButton partial={partial} />
-    </form>
-  );
-}
-
-function SubmitButton({ partial }: { partial: boolean }) {
-  const { pending } = useFormStatus();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const label = partial ? 'Retry missing data' : 'Refresh history';
+
+  function refreshHistory() {
+    startTransition(async () => {
+      await regenerateHistory(handle, failedMonthlyYears, failedArchetypeYears);
+      router.replace(`/${handle.toLowerCase()}?history=1`, { scroll: false });
+      router.refresh();
+    });
+  }
 
   return (
     <Button
-      type="submit"
+      type="button"
       disabled={pending}
       aria-busy={pending}
       className="min-w-32 justify-start"
       icon={pending ? <Spinner /> : <RefreshIcon />}
       iconPosition="start"
+      onClick={refreshHistory}
       size="xs"
       variant="secondary"
     >
