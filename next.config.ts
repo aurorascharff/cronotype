@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
     cachedNavigations: true,
     inlineCss: true,
     viewTransition: true,
+    instantInsights: {
+      validationLevel: 'warning',
+    },
+    instantNavigationDevToolsToggle: true,
+    useOffline: true,
   },
   images: {
     remotePatterns: [

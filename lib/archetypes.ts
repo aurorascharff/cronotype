@@ -83,33 +83,43 @@ function midday(s: HourStats) {
 }
 
 function hasLunchSpike(s: HourStats) {
+  const margin = stabilityMargin(s);
   const lunchSpike = midday(s);
   const neighborAvg = (((s.hourly[11] ?? 0) + (s.hourly[13] ?? 0)) / 2 / (s.total || 1)) * 100;
-  return lunchSpike > 8 && lunchSpike > neighborAvg * 1.6;
+  return lunchSpike > 8 + margin / 2 && lunchSpike > neighborAvg * (1.6 + margin / 20);
 }
 
 function isVampireRhythm(s: HourStats) {
+  const margin = stabilityMargin(s);
   const nightPeak = s.peakHour >= 0 && s.peakHour <= 4;
-  return s.pctNocturnal > 35 && (nightPeak || s.pctNocturnal > 42);
+  return s.pctNocturnal > 35 + margin && (nightPeak || s.pctNocturnal > 42 + margin);
 }
 
 function isSunriseRhythm(s: HourStats) {
+  const margin = stabilityMargin(s);
   const sunrisePeak = s.peakHour >= 5 && s.peakHour <= 8;
-  return s.pctSunrise > 20 && (sunrisePeak || s.pctSunrise > 24) && s.pctNocturnal < 30;
+  return s.pctSunrise > 20 + margin && (sunrisePeak || s.pctSunrise > 24 + margin) && s.pctNocturnal < 30;
 }
 
 function isWorkdayRhythm(s: HourStats) {
-  return s.pctBusiness > 65 && s.pctNocturnal < 20 && s.pctWeekend < 35;
+  const margin = stabilityMargin(s);
+  return s.pctBusiness > 65 + margin && s.pctNocturnal < 20 && s.pctWeekend < 35;
+}
+
+function stabilityMargin(s: HourStats) {
+  if (s.total < 50) return 5;
+  if (s.total < 100) return 3;
+  return 1;
 }
 
 export function classify(stats: HourStats): Archetype {
   if (stats.total < 25) return ARCHETYPES['touch-grass'];
 
-  if (stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
+  if (stats.total >= 35 && stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
   if (isVampireRhythm(stats)) return ARCHETYPES.vampire;
   if (isSunriseRhythm(stats)) return ARCHETYPES['sunrise-sniper'];
   if (hasLunchSpike(stats)) return ARCHETYPES['lunch-bandit'];
-  if (stats.pctWeekend > 40) return ARCHETYPES['weekend-warrior'];
+  if (stats.pctWeekend > 40 + stabilityMargin(stats)) return ARCHETYPES['weekend-warrior'];
   if (isWorkdayRhythm(stats)) return ARCHETYPES['nine-to-fiver'];
 
   return ARCHETYPES.drifter;

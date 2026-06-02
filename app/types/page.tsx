@@ -21,7 +21,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
     meaning: 'You move through odd windows, bursts, and gaps, yet the work keeps appearing.',
     percentile: 'Fixed midpoint. Drifters are the beautiful chaos bucket, so there is no single signal to score.',
     signal:
-      'The fallback when no stronger rhythm wins: no night cluster, no sunrise lean, no lunch spike, no weekend tilt.',
+      'The fallback when no stronger rhythm wins by enough: no clear night cluster, sunrise lean, lunch spike, or weekend tilt.',
   },
   'insomniac-maintainer': {
     meaning: 'You split your output between the official day and the second shift after everyone logs off.',
@@ -32,18 +32,20 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   'lunch-bandit': {
     meaning: 'You turn the quiet middle of the day into a tiny shipping heist.',
     percentile: 'Higher when noon dominates the rest of the workday. A sharper spike means a better score.',
-    signal: 'Noon is more than 8% of the signal sample and more than 1.6x the average of 11am and 1pm.',
+    signal:
+      'Noon clearly beats the surrounding hours. Small samples need a little extra separation before this wins.',
   },
   'nine-to-fiver': {
     meaning: 'You keep a steady workday pulse and still make it look clean.',
     percentile: 'Higher with a larger business-hours share. The more daytime your rhythm is, the stronger the type.',
-    signal: 'More than 65% of signal commits land from 9am to 7pm, without a strong night or weekend signature.',
+    signal:
+      'Most signal commits land from 9am to 7pm, without a strong night or weekend signature. Near-boundary samples stay Drifter.',
   },
   'sunrise-sniper': {
     meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
     percentile: 'Higher with more pre-9am commits. The more morning-weighted the graph is, the sharper the shot.',
     signal:
-      'More than 20% of signal commits land between 5am and 9am, with an early peak or a very strong morning lean.',
+      'A clear share of signal commits lands between 5am and 9am, with an early peak or a very strong morning lean.',
   },
   'touch-grass': {
     meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',
@@ -55,12 +57,12 @@ const DETAILS: Record<ArchetypeId, Detail> = {
     meaning: 'You do your sharpest work when notifications are asleep and the world stops asking questions.',
     percentile: 'Higher with more nocturnal share. The deeper the night shift, the stronger the bite.',
     signal:
-      'More than 35% of signal commits land between midnight and 5am, with a night peak or a very strong night lean.',
+      'A clear share of signal commits lands between midnight and 5am, with a night peak or a very strong night lean.',
   },
   'weekend-warrior': {
     meaning: 'You turn Saturday and Sunday into the part of the week where momentum finally gets room.',
     percentile: 'Higher with more Saturday and Sunday share. Weekend-heavy graphs rise fast.',
-    signal: 'More than 40% of signal commits land on Saturday or Sunday.',
+    signal: 'A clear weekend tilt. Small samples need to land beyond the edge before this beats Drifter.',
   },
 };
 
