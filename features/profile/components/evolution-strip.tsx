@@ -88,17 +88,24 @@ export async function EvolutionStrip({ handle }: Props) {
                 <span className="text-muted dark:text-muted-dark text-[10.5px] tabular-nums">{e.yearLabel}</span>
               </li>
             ))}
-          {hasUnknown && (
-            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
-              <span
-                className="inline-block h-px w-4 align-middle"
-                style={{
-                  backgroundImage: 'repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 8px)',
-                }}
-              />
-              <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
-            </li>
-          )}
+          {hasUnknown &&
+            eras
+              .filter(e => e.unknown)
+              .map((e, i) => (
+                <li
+                  key={`legend-missing-${i}`}
+                  className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <span
+                    className="inline-block h-px w-4 align-middle"
+                    style={{
+                      backgroundImage: 'repeating-linear-gradient(to right, currentColor 0 4px, transparent 4px 8px)',
+                    }}
+                  />
+                  <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
+                  <span className="text-[10.5px] tabular-nums">{e.yearLabel}</span>
+                </li>
+              ))}
         </ul>
 
         <div className="relative">

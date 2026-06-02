@@ -94,17 +94,26 @@ export async function GET(_req: Request, { params }: RouteContext) {
         <span style={{ color: '#8b8d96', fontSize: 22 }}>{totalCommits.toLocaleString('en')} contributions</span>
       </div>
 
-      <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 18, gap: 18, marginBottom: 18 }}>
-        {eras
-          .filter(e => e.label)
-          .slice(0, 6)
-          .map((e, i) => (
-            <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-              <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 10, width: 10 }} />
-              <span style={{ color: e.color, fontWeight: 600 }}>{e.label}</span>
-              <span style={{ color: '#8b8d96', fontSize: 16 }}>{e.yearLabel}</span>
-            </div>
-          ))}
+      <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 16, gap: 12, marginBottom: 14 }}>
+        {eras.map((e, i) => (
+          <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+            {e.unknown ? (
+              <span
+                style={{
+                  background: 'linear-gradient(90deg, currentColor 0 45%, transparent 45% 70%, currentColor 70%)',
+                  color: '#94a3b8',
+                  display: 'flex',
+                  height: 2,
+                  width: 16,
+                }}
+              />
+            ) : (
+              <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 9, width: 9 }} />
+            )}
+            <span style={{ color: e.color, fontWeight: 600 }}>{e.label ?? 'Missing data'}</span>
+            <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
+          </div>
+        ))}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
