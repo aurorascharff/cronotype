@@ -8,7 +8,6 @@ import { ShareActions, ShareUrl } from '@/features/profile/components/share-bloc
 import { computeCronotype, GitHubError } from '@/features/profile/profile-queries';
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatCount, formatFollowers } from '@/lib/format';
-import { cacheLife, cacheTag } from 'next/cache';
 import type { HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
@@ -16,11 +15,6 @@ type Props = {
 };
 
 export async function CronotypeProfile({ handle }: Props) {
-  'use cache';
-  cacheTag(`profile-${handle}`);
-  cacheTag(`cronotype-${handle}-90d`);
-  cacheLife('cronotype');
-
   let result;
   try {
     result = await computeCronotype(handle, '90d');

@@ -1,10 +1,9 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
-import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
-import { classify } from '@/lib/archetypes';
+import { computeCronotype, getProfile } from '@/features/profile/profile-queries';
 import { listFeaturedReveals } from '@/lib/reveals';
-import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
+import type { Archetype, CronotypeResult, HourStats, ProfileSummary } from '@/types/cronotype';
 
 export type LeaderboardEntry = {
   profile: ProfileSummary;
@@ -46,10 +45,9 @@ export async function getCardProfile(login: string): Promise<ProfileSummary | nu
   }
 }
 
-export async function getCardClassification(login: string): Promise<{ archetype: Archetype; stats: HourStats } | null> {
+export async function getCardCronotype(login: string): Promise<CronotypeResult | null> {
   try {
-    const stats = await getStatsFor(login, '90d');
-    return { archetype: classify(stats), stats };
+    return await computeCronotype(login, '90d');
   } catch {
     return null;
   }
