@@ -141,8 +141,9 @@ export default function TypesPage() {
           <li>
             <strong className="font-semibold">Bucketing.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
-              Each signal commit is binned by hour (24 buckets) and weekday (7 buckets) using the timestamp offset
-              GitHub returns, falling back to UTC when there is no offset. From those we derive shares:{' '}
+              Each signal commit is binned by hour (24 buckets) and weekday (7 buckets) using an explicit timestamp
+              offset when GitHub exposes one, falling back to UTC bucketing when it does not. From those we derive
+              shares:{' '}
               <code className="font-mono text-[11px]">pctNocturnal</code> (midnight to 5am),{' '}
               <code className="font-mono text-[11px]">pctSunrise</code> (5am to 9am),{' '}
               <code className="font-mono text-[11px]">pctBusiness</code> (9am to 7pm),{' '}

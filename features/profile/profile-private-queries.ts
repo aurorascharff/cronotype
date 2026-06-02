@@ -206,7 +206,7 @@ function encodeResult(result: PrivateCronotypeResult): string {
 function parseTzOffsetMinutes(iso: string): number | null {
   const m = iso.match(/([+-])(\d{2}):?(\d{2})$|Z$/);
   if (!m) return null;
-  if (iso.endsWith('Z')) return 0;
+  if (iso.endsWith('Z')) return null;
   const sign = m[1] === '-' ? -1 : 1;
   return sign * (parseInt(m[2], 10) * 60 + parseInt(m[3], 10));
 }
