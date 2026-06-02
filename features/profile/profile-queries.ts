@@ -442,7 +442,7 @@ async function getYearArchetype(login: string, year: number, commitCount: number
   const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1, perPage);
   const signal = signalCommits(sampleCommits);
   if (signal.length === 0) return null;
-  return classify(buildStats(signal)).id;
+  return classify({ ...buildStats(signal), total: commitCount }).id;
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
