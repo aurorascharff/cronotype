@@ -6,6 +6,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 // missing reveal state as locked and an empty featured list as unavailable.
 
 const REVEAL_KEY_PREFIX = 'reveal:v1';
+const TIMELINE_LOADED_KEY_PREFIX = 'timeline-loaded:v1';
 const FEATURED_REVEALS_KEY = 'reveals:featured:v1';
 const MAX_REVEALS = 10_000;
 
@@ -32,6 +33,13 @@ export async function recordFeaturedReveal(handle: string): Promise<void> {
   await kv.zremrangebyrank(FEATURED_REVEALS_KEY, 0, -MAX_REVEALS - 1);
 }
 
+export async function recordTimelineLoaded(handle: string): Promise<void> {
+  const kv = getClient();
+  if (!kv) return;
+  const normalized = handle.toLowerCase();
+  await kv.set(timelineLoadedKey(normalized), normalized);
+}
+
 export async function listFeaturedReveals(limit = MAX_REVEALS): Promise<string[]> {
   return listFeaturedRevealsCached(limit);
 }
@@ -51,6 +59,13 @@ export async function hasBeenRevealed(handle: string): Promise<boolean> {
   return hasBeenRevealedCached(handle.toLowerCase());
 }
 
+export async function hasTimelineLoaded(handle: string): Promise<boolean> {
+  const kv = getClient();
+  if (!kv) return false;
+  const value = await kv.get(timelineLoadedKey(handle.toLowerCase()));
+  return value !== null;
+}
+
 async function hasBeenRevealedCached(handle: string): Promise<boolean> {
   'use cache: remote';
   cacheTag(`reveal-${handle}`);
@@ -64,4 +79,8 @@ async function hasBeenRevealedCached(handle: string): Promise<boolean> {
 
 function revealKey(handle: string): string {
   return `${REVEAL_KEY_PREFIX}:${handle}`;
+}
+
+function timelineLoadedKey(handle: string): string {
+  return `${TIMELINE_LOADED_KEY_PREFIX}:${handle}`;
 }

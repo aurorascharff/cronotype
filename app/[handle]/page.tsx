@@ -9,7 +9,7 @@ import { RevealGate } from '@/components/reveal-gate';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
 import { isValidGitHubHandle } from '@/lib/github-handle';
-import { hasBeenRevealed } from '@/lib/reveals';
+import { hasBeenRevealed, hasTimelineLoaded } from '@/lib/reveals';
 import type { Metadata } from 'next';
 
 export async function generateMetadata({ params }: PageProps<'/[handle]'>): Promise<Metadata> {
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: PageProps<'/[handle]'>): Prom
   };
 }
 
-export default function ProfilePage({ params }: PageProps<'/[handle]'>) {
+export default function ProfilePage({ params, searchParams }: PageProps<'/[handle]'>) {
   return (
     <div className="space-y-10">
       <header>
@@ -68,8 +68,8 @@ export default function ProfilePage({ params }: PageProps<'/[handle]'>) {
       </header>
       <div className="space-y-10">
         <Suspense fallback={<ProfilePageSkeleton />}>
-          {params.then(({ handle }) => (
-            <ProfileContent handle={handle.toLowerCase()} />
+          {Promise.all([params, searchParams]).then(([{ handle }, query]) => (
+            <ProfileContent handle={handle.toLowerCase()} showTimeline={query.history === '1'} />
           ))}
         </Suspense>
       </div>
@@ -87,24 +87,22 @@ function ProfilePageSkeleton() {
         </header>
         <CronotypeProfileSkeleton />
       </section>
-      <section className="space-y-4">
-        <EvolutionStripSkeleton />
-      </section>
     </>
   );
 }
 
-async function ProfileContent({ handle }: { handle: string }) {
+async function ProfileContent({ handle, showTimeline }: { handle: string; showTimeline: boolean }) {
   if (!isValidGitHubHandle(handle)) notFound();
 
   await connection();
   const revealed = await hasBeenRevealed(handle);
   if (!revealed) return <RevealGate handle={handle} />;
 
-  return <GeneratedProfile handle={handle} />;
+  const shouldShowTimeline = showTimeline || (await hasTimelineLoaded(handle));
+  return <GeneratedProfile handle={handle} showTimeline={shouldShowTimeline} />;
 }
 
-function GeneratedProfile({ handle }: { handle: string }) {
+function GeneratedProfile({ handle, showTimeline }: { handle: string; showTimeline: boolean }) {
   return (
     <>
       <section className="space-y-4">
@@ -123,18 +121,44 @@ function GeneratedProfile({ handle }: { handle: string }) {
           </Suspense>
         </Crossfade>
       </section>
-      <section className="space-y-4">
-        <Crossfade>
-          <Suspense fallback={<EvolutionStripSkeleton />}>
-            <InlineErrorBoundary
-              title="We couldn't load this history right now."
-              body="GitHub is being moody. Try again in a minute."
-            >
-              <EvolutionStrip handle={handle} />
-            </InlineErrorBoundary>
-          </Suspense>
-        </Crossfade>
-      </section>
+      {showTimeline ? <TimelineSection handle={handle} /> : <TimelinePrompt handle={handle} />}
     </>
+  );
+}
+
+function TimelineSection({ handle }: { handle: string }) {
+  return (
+    <section className="space-y-4">
+      <Crossfade>
+        <Suspense fallback={<EvolutionStripSkeleton />}>
+          <InlineErrorBoundary
+            title="We couldn't load this history right now."
+            body="GitHub is rate-limited right now. Give it a minute and try again."
+          >
+            <EvolutionStrip handle={handle} />
+          </InlineErrorBoundary>
+        </Suspense>
+      </Crossfade>
+    </section>
+  );
+}
+
+function TimelinePrompt({ handle }: { handle: string }) {
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
+      <div className="dark:bg-ink-2 flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-4 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between sm:p-5 dark:border-white/10">
+        <p className="text-muted dark:text-muted-dark max-w-xl text-sm">
+          The long-term chart takes a little more GitHub data, so load it when you want the full history.
+        </p>
+        <Link
+          href={`/${handle}?history=1`}
+          prefetch={false}
+          className="bg-brand text-on-brand dark:text-ink ring-brand/20 hover:ring-brand/40 inline-flex h-10 shrink-0 items-center justify-center rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,box-shadow] hover:brightness-105"
+        >
+          View history chart
+        </Link>
+      </div>
+    </section>
   );
 }

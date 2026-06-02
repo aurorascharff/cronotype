@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   description:
-    'What type of developer are you? Type a GitHub handle and get a commit-time archetype, year-by-year timeline, and a shareable card.',
+    'What type of developer are you? Type a GitHub handle and get a commit-time archetype, shareable card, and optional year-by-year timeline.',
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL ??
       (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         : 'http://localhost:3000'),
   ),
   openGraph: {
-    description: 'Type a GitHub handle and get a commit-time archetype, year-by-year timeline, and a shareable card.',
+    description: 'Type a GitHub handle and get a commit-time archetype, shareable card, and optional year-by-year timeline.',
     siteName: 'Cronotype',
     title: 'Cronotype: What type of developer are you?',
     type: 'website',

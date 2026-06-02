@@ -37,7 +37,7 @@ export function RevealGate({ handle }: Props) {
           </p>
           <p className="text-muted dark:text-muted-dark mt-1 text-sm">
             {busy
-              ? 'Fetching GitHub activity, caching the profile, and preparing the timeline.'
+              ? 'Fetching GitHub activity, caching the profile, and preparing the card.'
               : 'This profile has not been generated here yet.'}
           </p>
         </div>

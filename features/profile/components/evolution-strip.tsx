@@ -1,6 +1,7 @@
 import { DownloadTimeline } from '@/components/download-timeline';
 import { getTimelineChart } from '@/features/profile/timeline-chart';
 import { formatCount } from '@/lib/format';
+import { recordTimelineLoaded } from '@/lib/reveals';
 import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
@@ -13,6 +14,12 @@ const PAD_TOP = 12;
 const PAD_BOT = 4;
 
 export async function EvolutionStrip({ handle }: Props) {
+  const content = await CachedEvolutionStrip({ handle });
+  await recordTimelineLoaded(handle);
+  return content;
+}
+
+async function CachedEvolutionStrip({ handle }: Props) {
   'use cache';
   cacheTag(`history-${handle}`);
   cacheTag(`cronotype-${handle}-90d`);
