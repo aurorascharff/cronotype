@@ -4,8 +4,6 @@ import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/compone
 import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
 
-export const prefetch = 'force-runtime';
-
 export default function HomePage() {
   return (
     <div className="space-y-12 sm:space-y-16">
