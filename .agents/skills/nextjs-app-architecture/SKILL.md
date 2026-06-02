@@ -264,6 +264,10 @@ Use `params.then()` instead of `await params` to keep the page synchronous. Cont
 
 The feature exports the async component and a sibling skeleton. The page imports both and places the boundary. Don't pre-wrap the component in `<Suspense>` inside the feature, that hides the boundary and prevents grouping siblings under a shared parent (e.g. detail + replies inside one `params.then()`).
 
+If a page uses a transition wrapper, place it in the page next to the `<Suspense>` boundary. Feature components should render content and skeletons, not loading or transition wrappers.
+
+Do not create page-local wrapper components whose only job is to group boundary content, such as `HomeLists` or `HomeListsSkeleton`. Keep the resolved JSX and fallback JSX inline in the page so the loading shape, headings, and grouped reveal behavior are visible at the boundary.
+
 ```tsx
 // features/post/components/post-detail.tsx
 export async function PostDetail({ id }: { id: string }) {
@@ -333,11 +337,13 @@ Boundary placement:
 ### Suspense boundary placement rules
 
 1. First section gets its own Suspense with a known-height skeleton fallback
-2. Section headings stay outside Suspense (in the static shell)
-3. Variable-height sections: group everything below them in the same Suspense
+2. Section headings stay outside Suspense when their final position is stable
+3. Variable-height sections: group everything below them in the same Suspense, including any headings that would otherwise paint in the wrong vertical position
 4. Fixed-height sections: own boundary is safe
 5. Variable-length lists: show 2-5 skeleton items, not the real count
 6. Inner Suspense content stays out of the outer skeleton
+7. Never use `fallback={null}` for visible UI. If a boundary covers UI, give it a real shaped fallback, or group it with a sibling boundary that already has the correct fallback.
+8. If the top section's final height is not known, group the following sections in the same boundary so they reveal together and don't jump underneath it.
 
 ### Layout-level Suspense
 

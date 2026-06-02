@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ViewTransition } from 'react';
 import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { HaloChart } from '@/features/profile/components/halo-chart';
 import { HeroCard } from '@/features/profile/components/hero-card';
@@ -64,10 +65,7 @@ function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stat
   );
 
   return (
-    <article
-      className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10"
-      style={{ viewTransitionName: 'hero-card' }}
-    >
+    <article className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10">
       <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
         No 90d signal
       </div>
@@ -77,51 +75,53 @@ function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stat
           <HaloChart stats={stats} theme={theme} avatarUrl={profile.avatarUrl} size={220} />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-3">
-          <div className="text-muted dark:text-muted-dark flex flex-wrap items-baseline gap-x-2 text-xs sm:text-sm">
-            <a
-              href={`https://github.com/${profile.login}`}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="hover:text-ink dark:hover:text-paper transition-colors"
+        <ViewTransition enter="auto" default="none">
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="text-muted dark:text-muted-dark flex flex-wrap items-baseline gap-x-2 text-xs sm:text-sm">
+              <a
+                href={`https://github.com/${profile.login}`}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="hover:text-ink dark:hover:text-paper transition-colors"
+              >
+                @{profile.login}
+              </a>
+              <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
+                ·
+              </span>
+              <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
+            </div>
+            <h1
+              className="tracking-tightest text-4xl leading-[0.98] font-semibold break-words min-[420px]:text-5xl sm:text-6xl"
+              style={{
+                backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
             >
-              @{profile.login}
-            </a>
-            <span aria-hidden className="text-muted/40 dark:text-muted-dark/40">
-              ·
-            </span>
-            <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
+              Quiet lately
+            </h1>
+            <p className="text-muted dark:text-muted-dark max-w-md text-sm sm:text-base">
+              This profile is here, and the long-term timeline still has shape. There just aren&apos;t recent authored
+              signal commits to classify a current rhythm.
+            </p>
+
+            <Link
+              href="/types"
+              className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper w-fit text-xs underline-offset-2 transition-colors hover:underline"
+              style={{ color: theme.accent }}
+            >
+              No current 90d type →
+            </Link>
+
+            <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
+              <ProfileStat label="Signal" value="0" accent={theme.accent} />
+              <ProfileStat label="Followers" value={formatCount(profile.followers)} />
+              <ProfileStat label="Repos" value={String(profile.publicRepos)} />
+              <ProfileStat label="Joined" value={joined} />
+            </dl>
           </div>
-          <h1
-            className="tracking-tightest text-4xl leading-[0.98] font-semibold break-words min-[420px]:text-5xl sm:text-6xl"
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Quiet lately
-          </h1>
-          <p className="text-muted dark:text-muted-dark max-w-md text-sm sm:text-base">
-            This profile is here, and the long-term timeline still has shape. There just aren&apos;t recent authored
-            signal commits to classify a current rhythm.
-          </p>
-
-          <Link
-            href="/types"
-            className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper w-fit text-xs underline-offset-2 transition-colors hover:underline"
-            style={{ color: theme.accent }}
-          >
-            No current 90d type →
-          </Link>
-
-          <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
-            <ProfileStat label="Signal" value="0" accent={theme.accent} />
-            <ProfileStat label="Followers" value={formatCount(profile.followers)} />
-            <ProfileStat label="Repos" value={String(profile.publicRepos)} />
-            <ProfileStat label="Joined" value={joined} />
-          </dl>
-        </div>
+        </ViewTransition>
       </div>
     </article>
   );
@@ -158,8 +158,11 @@ export function CronotypeProfileSkeleton() {
           </div>
           <div className="flex min-w-0 flex-col gap-3">
             <div className="skeleton h-4 w-32 rounded" />
-            <div className="skeleton h-10 w-3/5 rounded min-[420px]:h-12 sm:h-14" />
-            <div className="skeleton h-4 w-4/5 max-w-md rounded" />
+            <div className="skeleton h-10 w-4/5 max-w-md rounded min-[420px]:h-12 sm:h-[3.65rem]" />
+            <div className="space-y-1">
+              <div className="skeleton h-4 w-4/5 max-w-md rounded sm:h-5" />
+              <div className="skeleton h-4 w-3/5 max-w-sm rounded sm:h-5" />
+            </div>
             <div className="skeleton h-3 w-32 rounded" />
             <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
               {[0, 1, 2, 3].map(i => (

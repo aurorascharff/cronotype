@@ -105,7 +105,3 @@
   animation-duration: 0.28s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-
-::view-transition-group(hero-card) {
-  animation-duration: 0.35s;
-}
