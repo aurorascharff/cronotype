@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { RadialChip } from '@/components/ui/radial-chip';
 import { getCardCronotype, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
@@ -6,9 +7,9 @@ import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 
 export async function ProfileCardSlot({ handle }: { handle: string }) {
-  const avatarUrl = `https://github.com/${handle}.png?size=96`;
   const cronotype = await getCardCronotype(handle);
   const profile = cronotype?.profile ?? (await getCardProfile(handle));
+  const avatarUrl = profile?.avatarUrl;
   const color = cronotype
     ? cronotype.stats.total === 0
       ? QUIET_THEME.accent
@@ -26,14 +27,19 @@ export async function ProfileCardSlot({ handle }: { handle: string }) {
               <ClassifyingRing failed />
             )}
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={avatarUrl}
-            alt=""
-            width={48}
-            height={48}
-            className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
-          />
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
+              alt=""
+              width={48}
+              height={48}
+              className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
+            />
+          ) : (
+            <div className="bg-muted/10 dark:bg-muted-dark/10 absolute flex h-12 w-12 items-center justify-center rounded-full border border-black/10 text-xs font-semibold uppercase dark:border-white/10">
+              {handle.slice(0, 2)}
+            </div>
+          )}
         </div>
         <CardMeta handle={handle} profile={profile} cronotype={cronotype} />
       </Link>

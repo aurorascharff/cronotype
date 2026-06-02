@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
     useOffline: true,
     viewTransition: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        hostname: 'avatars.githubusercontent.com',
+        protocol: 'https',
+      },
+    ],
+  },
   reactCompiler: true,
   typedRoutes: true,
 };

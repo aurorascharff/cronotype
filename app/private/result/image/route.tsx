@@ -250,6 +250,8 @@ export async function GET() {
         <div style={{ alignItems: 'baseline', color: COLORS.mutedDark, display: 'flex', gap: 10 }}>
           <span style={{ fontSize: 24 }}>@{profile.login}</span>
           <span style={{ color: COLORS.mutedDivider, fontSize: 28 }}>·</span>
+          <span style={{ fontSize: 20 }}>private cronotype</span>
+          <span style={{ color: COLORS.mutedDivider, fontSize: 28 }}>·</span>
           <span style={{ fontSize: 20 }}>{formatFollowers(profile.followers)}</span>
         </div>
         <div
@@ -320,7 +322,7 @@ export async function GET() {
           top: 40,
         }}
       >
-        Private
+        Last 90 days
       </div>
 
       <div

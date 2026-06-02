@@ -46,6 +46,15 @@ export async function getCardProfile(login: string): Promise<ProfileSummary | nu
   }
 }
 
+export async function getSuggestedProfiles(handles: string[]): Promise<Array<ProfileSummary | null>> {
+  'use cache: remote';
+  cacheTag('leaderboard');
+  cacheTag('suggested-profiles');
+  cacheLife('cronotype');
+
+  return Promise.all(handles.map(handle => getCardProfile(handle)));
+}
+
 export async function getCardCronotype(login: string): Promise<CronotypeResult | null> {
   try {
     return await computeCronotype(login, '90d');
