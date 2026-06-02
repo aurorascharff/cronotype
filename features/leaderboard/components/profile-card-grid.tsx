@@ -16,11 +16,7 @@ export async function ProfileCardSlot({ handle }: { handle: string }) {
 
   return (
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
-      <Link
-        href={{ pathname: `/${handle}` }}
-        prefetch={false}
-        className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4"
-      >
+      <Link href={{ pathname: `/${handle}` }} className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
             {classification ? (
