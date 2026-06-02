@@ -6,6 +6,7 @@ import {
   privateOAuthConfigured,
   setPrivateResultCookie,
 } from '@/features/profile/profile-private-queries';
+import { GitHubError } from '@/features/profile/profile-queries';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -28,7 +29,10 @@ export async function GET(request: Request) {
     const result = await computePrivateCronotype(token);
     await setPrivateResultCookie(result);
     return NextResponse.redirect(new URL('/private/result', url.origin));
-  } catch {
+  } catch (err) {
+    if (err instanceof GitHubError && (err.status === 403 || err.status === 429)) {
+      return NextResponse.redirect(new URL('/private?error=github-rate-limit', url.origin));
+    }
     return NextResponse.redirect(new URL('/private?error=github', url.origin));
   }
 }

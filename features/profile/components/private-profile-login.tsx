@@ -9,8 +9,8 @@ export function PrivateProfileIntro() {
       </h1>
       <p className="text-muted dark:text-muted-dark max-w-xl text-sm sm:text-base">
         Sign in with GitHub, compute a 90-day cronotype using commits your account can see, then keep the result only in
-        this browser long enough to view or download it. GitHub&apos;s classic private repo scope is broad; Cronotype only
-        makes read requests and does not save the token.
+        this browser long enough to view or download it. GitHub&apos;s classic private repo scope is broad; Cronotype
+        only makes read requests and does not save the token.
       </p>
       <p className="text-muted dark:text-muted-dark max-w-xl text-sm">
         After you download the card, revoke the GitHub authorization from your GitHub settings.
@@ -39,8 +39,8 @@ export function PrivateProfileLoginCard() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight">GitHub OAuth</h2>
           <p className="text-muted dark:text-muted-dark text-sm">
-            Requests GitHub&apos;s classic private repo scope so commit search can include private repositories. Revoke access
-            when you&apos;re done.
+            Requests GitHub&apos;s classic private repo scope so commit search can include private repositories. Revoke
+            access when you&apos;re done.
           </p>
         </div>
         {privateOAuthConfigured() ? (
@@ -82,7 +82,9 @@ export function PrivateProfileAuthError({ error }: { error: string }) {
       ? 'Add GITHUB_OAUTH_CLIENT_ID and GITHUB_OAUTH_CLIENT_SECRET to try this.'
       : error === 'oauth-state'
         ? 'GitHub sign-in expired. Try again.'
-        : 'GitHub could not complete the private run. Try again in a moment.';
+        : error === 'github-rate-limit'
+          ? 'GitHub is rate limiting requests right now. Wait a minute, then try again.'
+          : 'GitHub could not complete the private run. Try again in a moment.';
 
   return (
     <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-200">

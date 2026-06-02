@@ -1,6 +1,7 @@
+import { notFound } from 'next/navigation';
 import { DownloadTimeline } from '@/features/profile/components/download-timeline';
 import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
-import { getTimelineChart } from '@/features/profile/profile-queries';
+import { getTimelineChart, GitHubError } from '@/features/profile/profile-queries';
 import { formatCount } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -23,6 +24,19 @@ async function CachedEvolutionStrip({ handle }: Props) {
   cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');
 
+  let chart;
+  try {
+    chart = await getTimelineChart(handle, {
+      height: H,
+      padBottom: PAD_BOT,
+      padTop: PAD_TOP,
+      width: W,
+    });
+  } catch (err) {
+    if (err instanceof GitHubError && err.status === 404) notFound();
+    throw err;
+  }
+
   const {
     archetype,
     areaPath,
@@ -36,12 +50,7 @@ async function CachedEvolutionStrip({ handle }: Props) {
     totalCommits,
     yTicks,
     yearMarkers,
-  } = await getTimelineChart(handle, {
-    height: H,
-    padBottom: PAD_BOT,
-    padTop: PAD_TOP,
-    width: W,
-  });
+  } = chart;
 
   if (!hasData) {
     return (

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import type { ArchetypeId, ProfileSummary } from '@/types/cronotype';
-import { getSignalCommitsFor } from './profile-queries';
+import { getSignalCommitsFor, GitHubError } from './profile-queries';
 
 // Private profile reads are intentionally isolated from the normal cached profile
 // queries. GitHub OAuth Apps require the broad `repo` scope for private repo
@@ -183,6 +183,19 @@ function githubFetch(token: string, url: string, extraHeaders: Record<string, st
       'X-GitHub-Api-Version': '2022-11-28',
       ...extraHeaders,
     },
+  }).then(res => {
+    if (res.status === 401) throw new GitHubError('GitHub auth failed.', 401);
+    if (res.status === 403 || res.status === 429) {
+      const remaining = res.headers.get('x-ratelimit-remaining');
+      const resetAt = res.headers.get('x-ratelimit-reset');
+      if (remaining === '0') {
+        const wait = resetAt ? Math.max(0, Number(resetAt) * 1000 - Date.now()) : 60_000;
+        const mins = Math.ceil(wait / 60_000);
+        throw new GitHubError(`GitHub rate limit hit. Resets in ~${mins} minute${mins === 1 ? '' : 's'}.`, 403);
+      }
+      throw new GitHubError('GitHub blocked the request (secondary rate limit). Try again in a minute.', 403);
+    }
+    return res;
   });
 }
 
