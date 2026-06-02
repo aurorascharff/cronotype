@@ -11,7 +11,9 @@ const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
 const HIGH_YEAR_COMMIT_THRESHOLD = 1000;
+const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
 const YEAR_ARCHETYPE_SAMPLE_SIZE = 35;
+const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 15;
 
 export class GitHubError extends Error {
   status: number;
@@ -431,7 +433,12 @@ async function getYearArchetype(login: string, year: number, commitCount: number
 
   if (MOCK) return mockArchetypeFor(`${login}-${year}`);
 
-  const perPage = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_SIZE : 100;
+  const perPage =
+    commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD
+      ? HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
+      : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
+        ? YEAR_ARCHETYPE_SAMPLE_SIZE
+        : 100;
   const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1, perPage);
   const signal = signalCommits(sampleCommits);
   if (signal.length === 0) return null;
@@ -726,7 +733,7 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
     .filter(y => y.year >= startYear && y.year <= endYear && y.commits > 0)
     .filter(y => y.year !== thisYear)
     .map(y => y.year)
-    .sort((a, b) => a - b);
+    .sort((a, b) => b - a);
 
   const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
   for (const year of yearsWithCommits) {
@@ -741,26 +748,28 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
   }
 
   const yearlyArchetypes: YearArchetypeBucket[] = [];
-  let failed = 0;
+  const attemptedYears = new Set<number>();
   archetypeResults.forEach((r, i) => {
     const year = yearsWithCommits[i];
     const yearData = byYear.find(y => y.year === year);
     if (!yearData) return;
+    attemptedYears.add(year);
     if (r.status === 'fulfilled' && r.value) {
       yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
     } else {
-      failed++;
       failedArchetypeSet.add(year);
     }
   });
 
-  if (yearsWithCommits.length > 0 && failed / yearsWithCommits.length > 0.5) {
-    partial = true;
-  }
-
   if (archetypeResults.length < yearsWithCommits.length) {
     partial = true;
   }
+
+  for (const year of yearsWithCommits) {
+    if (!attemptedYears.has(year)) failedArchetypeSet.add(year);
+  }
+
+  if (failedArchetypeSet.size > 0) partial = true;
 
   return {
     failedArchetypeYears: [...failedArchetypeSet].sort((a, b) => b - a),
