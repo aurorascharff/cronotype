@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { computeCronotype } from '@/features/profile/profile-service';
+import { computeCronotype } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import type { ProfileSummary } from '@/types/cronotype';

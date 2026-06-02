@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { HaloChart } from '@/components/halo-chart';
+import { HaloChart } from '@/features/profile/components/halo-chart';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 

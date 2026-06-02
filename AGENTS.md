@@ -14,6 +14,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - Tailwind CSS v4 with CSS custom properties as design tokens
 - React 19 with `ViewTransition` for streaming reveals; toggled via `experimental.viewTransition` in [next.config.ts](next.config.ts)
 - Feature folders: `features/profile/`, `features/leaderboard/`
+- Feature roots should stay readable: keep `<feature>-queries.ts` / `<feature>-actions.ts` at the root, colocate one-owner helper code inside those files, and use named subfolders like `data/` when a feature has static data.
 - Theme plumbing lives in `components/theme/`
 - Shared UI primitives live in `components/ui/`; Cronotype-specific shared components stay in `components/`
 - Domain verb "reveal" is the app's term for classifying a handle; don't reintroduce "diagnose"

@@ -33,8 +33,8 @@ app/                  Pages, layouts, OG images
 components/theme/     Theme provider and theme toggle
 components/ui/        Shared UI primitives and shell helpers
 components/           Cronotype-specific shared components
-features/profile/     Queries, actions, components for a single handle
-features/leaderboard/ Featured handles, top revealed, suggested users
+features/profile/     Profile queries/actions and profile-owned components
+features/leaderboard/ Leaderboard queries, components, featured handle data
 lib/                  Shared app helpers, archetypes, formatting, reveal state
 ```
 

@@ -1,6 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { FEATURED_HANDLES } from '@/features/leaderboard/featured-handles';
+import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { getProfile, getStatsFor } from '@/features/profile/profile-queries';
 import { classify } from '@/lib/archetypes';
 import { listFeaturedReveals } from '@/lib/reveals';

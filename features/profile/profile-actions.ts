@@ -2,7 +2,7 @@
 
 import { updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { isFeaturedHandle } from '@/features/leaderboard/featured-handles';
+import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 import { recordFeaturedReveal, recordReveal } from '@/lib/reveals';
 

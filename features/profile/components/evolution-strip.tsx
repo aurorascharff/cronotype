@@ -1,5 +1,5 @@
-import { DownloadTimeline } from '@/components/download-timeline';
-import { getTimelineChart } from '@/features/profile/timeline-chart';
+import { DownloadTimeline } from '@/features/profile/components/download-timeline';
+import { getTimelineChart } from '@/features/profile/profile-queries';
 import { formatCount } from '@/lib/format';
 import { recordTimelineLoaded } from '@/lib/reveals';
 import { cacheLife, cacheTag } from 'next/cache';

@@ -1,5 +1,5 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
-import { FEATURED_HANDLES } from '@/features/leaderboard/featured-handles';
+import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { getTopRevealedHandles } from '@/features/leaderboard/leaderboard-queries';
 import { connection } from 'next/server';
 

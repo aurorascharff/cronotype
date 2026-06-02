@@ -1,10 +1,10 @@
 import 'server-only';
+import { cache } from 'react';
 import { cacheLife, cacheTag } from 'next/cache';
-import { ARCHETYPES } from '@/lib/archetypes';
-import { classify } from '@/lib/archetypes';
+import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import { syntheticStatsFor } from '@/lib/synthetic';
-import type { ArchetypeId, ProfileSummary, Window } from '@/types/cronotype';
+import type { ArchetypeId, CronotypeResult, ProfileSummary, Window } from '@/types/cronotype';
 
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
@@ -33,6 +33,24 @@ function headers(extra: Record<string, string> = {}): HeadersInit {
     h.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
   return h;
+}
+
+export const computeCronotype = cache(async (login: string, window: Window = '90d'): Promise<CronotypeResult> => {
+  const normalized = login.toLowerCase();
+  return computeCronotypeCached(normalized, window);
+});
+
+async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
+  'use cache: remote';
+  cacheTag(`cronotype-${login}-${window}`);
+  cacheLife('cronotype');
+
+  const [profile, stats] = await Promise.all([getProfile(login), getStatsFor(login, window)]);
+
+  const archetype = classify(stats);
+  const percentile = percentileFor(archetype, stats);
+
+  return { archetype, percentile, profile, stats, window };
 }
 
 const MAX_CONCURRENT = 4;
@@ -291,6 +309,32 @@ export type MonthlyHistory = {
   failedArchetypeYears: number[];
 };
 
+export type TimelineGeometry = {
+  width: number;
+  height: number;
+  padTop: number;
+  padBottom: number;
+};
+
+type TimelineMark = {
+  archetypeId: ArchetypeId | null;
+  color: string | null;
+  commits: number;
+  idx: number;
+  label: string | null;
+  year: number;
+};
+
+type TimelineEra = {
+  color: string;
+  commits: number;
+  label: string | null;
+  yearLabel: string;
+  startPct: number;
+  endPct: number;
+  unknown: boolean;
+};
+
 type YearMonthly = {
   months: MonthBucket[];
   archetypeId: ArchetypeId | null;
@@ -368,6 +412,200 @@ export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> 
   const lower = login.toLowerCase();
   const today = await getTodayKey();
   return getMonthlyHistoryCached(lower, today);
+}
+
+export async function getTimelineChart(login: string, geometry: TimelineGeometry) {
+  const lower = login.toLowerCase();
+
+  const [{ failedArchetypeYears, failedMonthlyYears, months, yearlyArchetypes, partial }, { archetype, profile }] =
+    await Promise.all([getMonthlyHistory(lower), computeCronotype(lower, '90d')]);
+
+  if (months.length < 2) {
+    return {
+      archetype,
+      eras: [],
+      failedArchetypeYears,
+      failedMonthlyYears,
+      hasData: false,
+      months,
+      partial,
+      profile,
+      totalCommits: 0,
+      yTicks: [],
+      yearlyArchetypes,
+      yearMarkers: [],
+    };
+  }
+
+  const smoothed = smooth(
+    months.map(m => m.count),
+    2,
+  );
+  const max = Math.max(1, ...smoothed);
+  const usableH = geometry.height - geometry.padTop - geometry.padBottom;
+
+  const points = smoothed.map((v, i) => ({
+    x: (i / (smoothed.length - 1)) * geometry.width,
+    y: geometry.padTop + usableH - (v / max) * usableH,
+  }));
+
+  const linePath = buildSmoothPath(points);
+  const areaPath = `${linePath} L${geometry.width},${geometry.height - geometry.padBottom} L0,${geometry.height - geometry.padBottom} Z`;
+  const yearMarkers = computeYearMarkers(months, geometry.width);
+  const marks = buildYearMarks(months, yearlyArchetypes, archetype.id);
+  const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
+  const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
+  const yTicks = [max, max / 2].map(value => ({
+    value: Math.round(value),
+    y: geometry.padTop + usableH - (value / max) * usableH,
+  }));
+
+  return {
+    archetype,
+    areaPath,
+    eras,
+    failedArchetypeYears,
+    failedMonthlyYears,
+    hasData: true,
+    linePath,
+    months,
+    partial,
+    profile,
+    yTicks,
+    totalCommits,
+    yearMarkers,
+    yearlyArchetypes,
+  };
+}
+
+function smooth(values: number[], radius: number): number[] {
+  if (radius <= 0) return values;
+  const out: number[] = [];
+  for (let i = 0; i < values.length; i++) {
+    let sum = 0;
+    let n = 0;
+    for (let j = Math.max(0, i - radius); j <= Math.min(values.length - 1, i + radius); j++) {
+      sum += values[j];
+      n++;
+    }
+    out.push(sum / n);
+  }
+  return out;
+}
+
+function buildSmoothPath(points: Array<{ x: number; y: number }>): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M${points[0].x},${points[0].y}`;
+
+  let d = `M${points[0].x},${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] ?? points[i];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] ?? p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+  }
+  return d;
+}
+
+function computeYearMarkers(months: MonthBucket[], width: number): Array<{ label: string; x: number }> {
+  const seen = new Map<number, number>();
+  months.forEach((m, i) => {
+    const y = Number(m.month.slice(0, 4));
+    if (!seen.has(y)) seen.set(y, i);
+  });
+
+  const entries = Array.from(seen.entries());
+  const step = Math.max(1, Math.ceil(entries.length / 6));
+  const picked = entries.filter((_, i) => i % step === 0 || i === entries.length - 1);
+
+  return picked.map(([year, idx]) => ({
+    label: String(year),
+    x: (idx / (months.length - 1)) * width,
+  }));
+}
+
+function buildYearMarks(
+  months: MonthBucket[],
+  yearly: YearArchetypeBucket[],
+  currentId: ArchetypeId,
+): TimelineMark[] {
+  const archetypeByYear = new Map<number, ArchetypeId>();
+  for (const y of yearly) {
+    if (y.commits > 0) archetypeByYear.set(y.year, y.archetypeId);
+  }
+
+  const lastYear = months.length > 0 ? Number(months[months.length - 1].month.slice(0, 4)) : 2026;
+  archetypeByYear.set(lastYear, currentId);
+
+  const commitsByYear = new Map<number, number>();
+  const firstIdxByYear = new Map<number, number>();
+  months.forEach((m, i) => {
+    const y = Number(m.month.slice(0, 4));
+    commitsByYear.set(y, (commitsByYear.get(y) ?? 0) + m.count);
+    if (!firstIdxByYear.has(y)) firstIdxByYear.set(y, i);
+  });
+
+  return Array.from(firstIdxByYear.entries())
+    .filter(([year]) => (commitsByYear.get(year) ?? 0) > 0)
+    .sort((a, b) => a[0] - b[0])
+    .map(([year, idx]) => {
+      const archetypeId = archetypeByYear.get(year) ?? null;
+      const archetype = archetypeId ? ARCHETYPES[archetypeId] : null;
+      return {
+        archetypeId,
+        color: archetype?.theme.accent ?? null,
+        commits: commitsByYear.get(year) ?? 0,
+        idx,
+        label: archetype?.name ?? null,
+        year,
+      };
+    });
+}
+
+function buildEras(marks: TimelineMark[], pointCount: number, fallback: string): TimelineEra[] {
+  if (marks.length === 0 || pointCount < 2) {
+    return [{ color: fallback, commits: 0, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
+  }
+
+  const pct = (idx: number) => (idx / (pointCount - 1)) * 100;
+
+  const eras: TimelineEra[] = [];
+  let lastColor = marks[0].color ?? fallback;
+
+  for (let i = 0; i < marks.length; i++) {
+    const m = marks[i];
+    const unknown = !m.archetypeId;
+    const color = unknown ? '#94a3b8' : (m.color ?? lastColor);
+    const startPct = i === 0 ? 0 : pct(m.idx);
+    const endPct = i === marks.length - 1 ? 100 : pct(marks[i + 1].idx);
+    if (!unknown) lastColor = color;
+
+    const prev = eras[eras.length - 1];
+    if (prev && prev.unknown === unknown && prev.color === color && prev.label === m.label) {
+      prev.commits += m.commits;
+      prev.endPct = endPct;
+      prev.yearLabel = `${prev.yearLabel.split('-')[0]}-${m.year}`;
+    } else {
+      eras.push({
+        color,
+        commits: m.commits,
+        endPct,
+        label: m.label,
+        startPct,
+        unknown,
+        yearLabel: String(m.year),
+      });
+    }
+  }
+
+  return eras;
 }
 
 async function getMonthlyHistoryCached(login: string, today: string): Promise<MonthlyHistory> {

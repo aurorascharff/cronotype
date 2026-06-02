@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getTimelineChart } from '@/features/profile/timeline-chart';
+import { getTimelineChart } from '@/features/profile/profile-queries';
 
 const size = { width: 1200, height: 630 };
 

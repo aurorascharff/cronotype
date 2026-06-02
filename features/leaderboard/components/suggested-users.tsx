@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FEATURED_HANDLES } from '@/features/leaderboard/featured-handles';
+import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { listFeaturedReveals } from '@/lib/reveals';
 import { connection } from 'next/server';
 
