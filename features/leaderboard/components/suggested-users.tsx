@@ -3,15 +3,11 @@ import { FEATURED } from '@/features/leaderboard/featured';
 import { listFeaturedReveals } from '@/lib/reveals';
 import { connection } from 'next/server';
 
-const SUGGESTED_LIMIT = 24;
-
 export async function SuggestedUsers() {
   await connection();
 
   const revealed = new Set((await listFeaturedReveals(FEATURED.length)).map(handle => handle.toLowerCase()));
-  const handles = FEATURED
-    .filter(handle => !revealed.has(handle.toLowerCase()))
-    .slice(0, SUGGESTED_LIMIT);
+  const handles = FEATURED.filter(handle => !revealed.has(handle.toLowerCase()));
 
   if (handles.length === 0) {
     return (
@@ -50,11 +46,9 @@ export async function SuggestedUsers() {
 }
 
 export function SuggestedUsersSkeleton() {
-  const count = Math.min(SUGGESTED_LIMIT, FEATURED.length);
-
   return (
     <ul className="grid grid-cols-2 gap-3 min-[420px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6" aria-hidden>
-      {Array.from({ length: count }).map((_, i) => (
+      {FEATURED.map((_, i) => (
         <li key={i} className="dark:bg-ink-2 flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 sm:p-4 dark:border-white/10">
           <div className="skeleton h-12 w-12 rounded-full" />
           <div className="skeleton h-3 w-16 rounded" />
