@@ -1,4 +1,5 @@
 import 'server-only';
+
 import { cacheLife, cacheTag } from 'next/cache';
 import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { computeCronotype, getProfile } from '@/features/profile/profile-queries';

@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { privateOAuthAuthorizeUrl, privateOAuthConfigured } from '@/features/private/private-github';
+import { privateOAuthAuthorizeUrl, privateOAuthConfigured } from '@/features/profile/profile-private-queries';
 
 export async function GET(request: Request) {
   if (!privateOAuthConfigured()) {

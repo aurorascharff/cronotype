@@ -1,10 +1,19 @@
 import 'server-only';
+
+import { cookies } from 'next/headers';
 import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
-import type { ArchetypeId, HourStats, ProfileSummary } from '@/types/cronotype';
+import type { ArchetypeId, ProfileSummary } from '@/types/cronotype';
+
+// Private profile reads are intentionally isolated from the normal cached profile
+// queries. They run once with the visitor's short-lived GitHub token, refuse
+// write-capable OAuth scopes, and store only the derived result in a short-lived
+// HTTP-only cookie. Do not add `use cache` here.
 
 const API = 'https://api.github.com';
 const UA = 'cronotype.dev';
+const COOKIE_NAME = 'cronotype-private-result';
+const MAX_AGE_SECONDS = 60 * 10;
 
 type GitHubTokenResponse = {
   access_token?: string;
@@ -12,7 +21,7 @@ type GitHubTokenResponse = {
   error_description?: string;
 };
 
-type SearchCommitItem = {
+type PrivateSearchCommitItem = {
   commit: {
     author?: { date?: string };
     committer?: { date?: string };
@@ -22,13 +31,35 @@ type SearchCommitItem = {
   repository?: { full_name?: string };
 };
 
+const WRITE_CAPABLE_OAUTH_SCOPES = new Set([
+  'admin:gpg_key',
+  'admin:org',
+  'admin:org_hook',
+  'admin:public_key',
+  'admin:repo_hook',
+  'delete:packages',
+  'delete_repo',
+  'gist',
+  'notifications',
+  'project',
+  'repo',
+  'user',
+  'workflow',
+  'write:discussion',
+  'write:gpg_key',
+  'write:org',
+  'write:packages',
+  'write:public_key',
+  'write:repo_hook',
+]);
+
 export type PrivateCronotypeResult = {
   archetypeId: ArchetypeId;
   createdAt: string;
   percentile: number;
   profile: ProfileSummary;
   source: 'github-oauth';
-  stats: HourStats;
+  stats: ReturnType<typeof buildStats>;
   window: '90d';
 };
 
@@ -40,7 +71,6 @@ export function privateOAuthAuthorizeUrl(origin: string, state: string): string 
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', process.env.GITHUB_OAUTH_CLIENT_ID ?? '');
   url.searchParams.set('redirect_uri', `${origin}/api/github/private/callback`);
-  url.searchParams.set('scope', 'read:user repo');
   url.searchParams.set('state', state);
   return url.toString();
 }
@@ -91,8 +121,32 @@ export async function computePrivateCronotype(token: string): Promise<PrivateCro
   };
 }
 
+export async function setPrivateResultCookie(result: PrivateCronotypeResult) {
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, encodeResult(result), {
+    httpOnly: true,
+    maxAge: MAX_AGE_SECONDS,
+    path: '/private',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+}
+
+export async function getPrivateResultCookie(): Promise<PrivateCronotypeResult | null> {
+  const cookieStore = await cookies();
+  const value = cookieStore.get(COOKIE_NAME)?.value;
+  if (!value) return null;
+
+  try {
+    return JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as PrivateCronotypeResult;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchViewerProfile(token: string): Promise<ProfileSummary> {
   const res = await githubFetch(token, `${API}/user`);
+  assertReadOnlyOAuthScopes(res);
   if (!res.ok) throw new Error(`Could not read GitHub profile (${res.status}).`);
   const user = await res.json();
   return {
@@ -118,7 +172,7 @@ async function fetchPrivateCommits(token: string, login: string, fromISO: string
       break;
     }
 
-    const json = (await res.json()) as { items?: SearchCommitItem[] };
+    const json = (await res.json()) as { items?: PrivateSearchCommitItem[] };
     const items = json.items ?? [];
     for (const item of items) {
       const authoredAt = item.commit.author?.date ?? item.commit.committer?.date;
@@ -147,6 +201,24 @@ function githubFetch(token: string, url: string, extraHeaders: Record<string, st
       ...extraHeaders,
     },
   });
+}
+
+function assertReadOnlyOAuthScopes(res: Response) {
+  const scopes = res.headers
+    .get('x-oauth-scopes')
+    ?.split(',')
+    .map(scope => scope.trim())
+    .filter(Boolean);
+  if (!scopes?.length) return;
+
+  const writeScopes = scopes.filter(scope => WRITE_CAPABLE_OAUTH_SCOPES.has(scope));
+  if (writeScopes.length > 0) {
+    throw new Error(`Refusing GitHub token with write-capable OAuth scope: ${writeScopes.join(', ')}`);
+  }
+}
+
+function encodeResult(result: PrivateCronotypeResult): string {
+  return Buffer.from(JSON.stringify(result), 'utf8').toString('base64url');
 }
 
 function parseTzOffsetMinutes(iso: string): number | null {

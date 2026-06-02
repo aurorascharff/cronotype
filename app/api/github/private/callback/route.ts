@@ -4,8 +4,8 @@ import {
   computePrivateCronotype,
   exchangeCodeForToken,
   privateOAuthConfigured,
-} from '@/features/private/private-github';
-import { setPrivateResultCookie } from '@/features/private/private-result-cookie';
+  setPrivateResultCookie,
+} from '@/features/profile/profile-private-queries';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

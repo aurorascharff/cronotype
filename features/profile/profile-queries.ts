@@ -1,4 +1,5 @@
 import 'server-only';
+
 import { cache } from 'react';
 import { cacheLife, cacheTag } from 'next/cache';
 import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';

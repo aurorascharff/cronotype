@@ -1,4 +1,5 @@
 import 'server-only';
+
 import { Redis } from '@upstash/redis';
 import { cacheLife, cacheTag } from 'next/cache';
 
