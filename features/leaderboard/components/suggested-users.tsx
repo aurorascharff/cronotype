@@ -3,7 +3,7 @@ import { FEATURED } from '@/features/leaderboard/featured';
 import { listFeaturedReveals } from '@/lib/reveals';
 import { connection } from 'next/server';
 
-const SUGGESTED_LIMIT = 12;
+const SUGGESTED_LIMIT = 24;
 
 export async function SuggestedUsers() {
   await connection();
