@@ -36,6 +36,26 @@ export async function ProfileHistorySection({ handle: rawHandle, showTimeline }:
   );
 }
 
+export function ProfileHistorySectionSkeleton() {
+  return (
+    <section className="space-y-4">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
+        <div className="skeleton h-3 w-24 rounded-full" aria-hidden />
+      </header>
+      <div
+        className="dark:bg-ink-2 flex min-h-40 items-center justify-center rounded-xl border border-black/10 bg-white p-6 text-center dark:border-white/10"
+        aria-hidden
+      >
+        <div className="flex w-full max-w-sm flex-col items-center gap-3">
+          <div className="skeleton h-4 w-40 rounded-full" />
+          <div className="skeleton h-3 w-56 rounded-full" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function TimelineErrorCard({ title, situation }: { title: string; situation: string }) {
   return (
     <>

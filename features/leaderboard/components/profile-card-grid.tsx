@@ -1,17 +1,18 @@
 import Link from 'next/link';
 import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { RadialChip } from '@/components/ui/radial-chip';
-import { getCardClassification, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
+import { getCardCronotype, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 
 export async function ProfileCardSlot({ handle }: { handle: string }) {
   const avatarUrl = `https://github.com/${handle}.png?size=96`;
-  const [profile, classification] = await Promise.all([getCardProfile(handle), getCardClassification(handle)]);
-  const color = classification
-    ? classification.stats.total === 0
+  const cronotype = await getCardCronotype(handle);
+  const profile = cronotype?.profile ?? (await getCardProfile(handle));
+  const color = cronotype
+    ? cronotype.stats.total === 0
       ? QUIET_THEME.accent
-      : classification.archetype.theme.accent
+      : cronotype.archetype.theme.accent
     : null;
 
   return (
@@ -19,8 +20,8 @@ export async function ProfileCardSlot({ handle }: { handle: string }) {
       <Link href={{ pathname: `/${handle}` }} className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
-            {classification ? (
-              <RadialChip stats={classification.stats} color={color ?? QUIET_THEME.accent} size={112} />
+            {cronotype ? (
+              <RadialChip stats={cronotype.stats} color={color ?? QUIET_THEME.accent} size={112} />
             ) : (
               <ClassifyingRing failed />
             )}
@@ -34,7 +35,7 @@ export async function ProfileCardSlot({ handle }: { handle: string }) {
             className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
           />
         </div>
-        <CardMeta handle={handle} profile={profile} classification={classification} />
+        <CardMeta handle={handle} profile={profile} cronotype={cronotype} />
       </Link>
       <a
         href={`https://github.com/${handle}`}
@@ -54,11 +55,11 @@ export async function ProfileCardSlot({ handle }: { handle: string }) {
 function CardMeta({
   handle,
   profile,
-  classification,
+  cronotype,
 }: {
   handle: string;
   profile: Awaited<ReturnType<typeof getCardProfile>>;
-  classification: Awaited<ReturnType<typeof getCardClassification>>;
+  cronotype: Awaited<ReturnType<typeof getCardCronotype>>;
 }) {
   if (!profile) return <CardMetaFallback handle={handle} />;
   return (
@@ -71,14 +72,14 @@ function CardMeta({
         </span>
         <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
       </div>
-      {classification ? (
+      {cronotype ? (
         <div
           className="truncate text-xs font-medium"
           style={{
-            color: classification.stats.total === 0 ? QUIET_THEME.accent : classification.archetype.theme.accent,
+            color: cronotype.stats.total === 0 ? QUIET_THEME.accent : cronotype.archetype.theme.accent,
           }}
         >
-          {classification.stats.total === 0 ? 'Quiet lately' : classification.archetype.name}
+          {cronotype.stats.total === 0 ? 'Quiet lately' : cronotype.archetype.name}
         </div>
       ) : (
         <span className="text-muted/40 dark:text-muted-dark/40 truncate text-xs">—</span>

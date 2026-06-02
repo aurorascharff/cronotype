@@ -2,14 +2,11 @@ import { LoadMore } from '@/components/ui/load-more';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { getTopRevealedHandles } from '@/features/leaderboard/leaderboard-queries';
-import { connection } from 'next/server';
 import type { Route } from 'next';
 
 const TOP_REVEALED_PAGE_SIZE = 12;
 
 export async function TopRevealed({ page = 1 }: { page?: number }) {
-  await connection();
-
   const limit = page * TOP_REVEALED_PAGE_SIZE;
   const handles = await getTopRevealedHandles(limit + 1);
   const visible = handles.slice(0, limit);
