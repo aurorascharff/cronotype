@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { Button } from '@/components/ui/button';
 
 type Props = {
   handle: string;
@@ -23,7 +24,7 @@ export function TimelinePrompt({ handle }: Props) {
   function loadHistory() {
     setLoading(true);
     startTransition(() => {
-      router.push(`/${handle}?history=1`, { scroll: false });
+      router.replace(`/${handle}?history=1`, { scroll: false });
     });
   }
 
@@ -34,13 +35,9 @@ export function TimelinePrompt({ handle }: Props) {
         <p className="text-muted dark:text-muted-dark max-w-xl text-sm">
           The long-term chart takes a little more GitHub data, so load it when you want the full history.
         </p>
-        <button
-          type="button"
-          onClick={loadHistory}
-          className="bg-brand text-on-brand dark:text-ink ring-brand/20 hover:ring-brand/40 inline-flex h-10 shrink-0 items-center justify-center rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,box-shadow] hover:brightness-105"
-        >
+        <Button type="button" onClick={loadHistory} className="h-10 shrink-0 px-4 text-sm" variant="primary">
           View history chart
-        </button>
+        </Button>
       </div>
     </section>
   );

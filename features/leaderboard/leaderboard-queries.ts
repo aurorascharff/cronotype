@@ -20,6 +20,7 @@ export async function getTopRevealedHandles(limit = 8): Promise<string[]> {
 
   const revealed = await listFeaturedReveals(FEATURED_HANDLES.length);
   if (revealed.length === 0) return [];
+  const recent = revealed.slice(0, Math.min(4, limit));
 
   const profiles = await Promise.all(
     revealed.map(async (handle, index) => {
@@ -35,7 +36,23 @@ export async function getTopRevealedHandles(limit = 8): Promise<string[]> {
     return followerDelta || a.index - b.index;
   });
 
-  return profiles.slice(0, limit).map(p => p.handle);
+  const handles: string[] = [];
+  const seen = new Set<string>();
+  for (const handle of recent) {
+    const key = handle.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    handles.push(handle);
+  }
+  for (const p of profiles) {
+    const key = p.handle.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    handles.push(p.handle);
+    if (handles.length >= limit) break;
+  }
+
+  return handles;
 }
 
 export async function getCardProfile(login: string): Promise<ProfileSummary | null> {

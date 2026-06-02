@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { revealUserFromForm } from '@/features/profile/profile-actions';
 
 export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
@@ -69,19 +70,16 @@ export function UsernameForm({ size = 'lg' }: { size?: 'lg' | 'md' }) {
           }
         />
       </div>
-      <button
+      <Button
         type="submit"
         disabled={busy}
         aria-label="Reveal this developer"
-        className={
-          large
-            ? 'bg-brand text-on-brand dark:text-ink group/btn ring-brand/20 hover:ring-brand/40 inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:opacity-60'
-            : 'bg-brand text-on-brand dark:text-ink group/btn ring-brand/20 hover:ring-brand/40 inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:opacity-60'
-        }
+        className={large ? 'group/btn shrink-0 px-4 text-sm' : 'group/btn shrink-0 px-3 text-xs'}
+        icon={busy ? <Spinner /> : <Arrow />}
+        variant="primary"
       >
         <span>{busy ? 'Revealing' : 'Reveal'}</span>
-        {busy ? <Spinner /> : <Arrow />}
-      </button>
+      </Button>
     </form>
   );
 }

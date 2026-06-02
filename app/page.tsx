@@ -4,7 +4,12 @@ import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/compone
 import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
 
-export default function HomePage() {
+function parsePage(value: string | string[] | undefined): number {
+  const n = Number(value);
+  return n > 0 && Number.isInteger(n) ? n : 1;
+}
+
+export default function HomePage({ searchParams }: PageProps<'/'>) {
   return (
     <div className="space-y-12 sm:space-y-16">
       <section className="space-y-5 pt-4 sm:pt-10">
@@ -32,13 +37,15 @@ export default function HomePage() {
           }
         >
           <Crossfade>
-            <>
-              <TopRevealed />
-              <section className="space-y-4 pt-8 sm:pt-12">
-                <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-                <SuggestedUsers />
-              </section>
-            </>
+            {searchParams.then(query => (
+              <>
+                <TopRevealed />
+                <section className="space-y-4 pt-8 sm:pt-12">
+                  <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
+                  <SuggestedUsers page={parsePage(query.suggested)} />
+                </section>
+              </>
+            ))}
           </Crossfade>
         </Suspense>
       </section>

@@ -1,4 +1,5 @@
 import { DownloadTimeline } from '@/features/profile/components/download-timeline';
+import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
 import { getTimelineChart } from '@/features/profile/profile-queries';
 import { formatCount } from '@/lib/format';
 import { recordTimelineLoaded } from '@/lib/reveals';
@@ -25,13 +26,25 @@ async function CachedEvolutionStrip({ handle }: Props) {
   cacheTag(`cronotype-${handle}-90d`);
   cacheLife('cronotype');
 
-  const { archetype, areaPath, eras, hasData, linePath, months, partial, totalCommits, yTicks, yearMarkers } =
-    await getTimelineChart(handle, {
-      height: H,
-      padBottom: PAD_BOT,
-      padTop: PAD_TOP,
-      width: W,
-    });
+  const {
+    archetype,
+    areaPath,
+    eras,
+    failedArchetypeYears,
+    failedMonthlyYears,
+    hasData,
+    linePath,
+    months,
+    partial,
+    totalCommits,
+    yTicks,
+    yearMarkers,
+  } = await getTimelineChart(handle, {
+    height: H,
+    padBottom: PAD_BOT,
+    padTop: PAD_TOP,
+    width: W,
+  });
 
   if (!hasData) {
     return (
@@ -61,14 +74,17 @@ async function CachedEvolutionStrip({ handle }: Props) {
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         <div className="flex items-center gap-2">
-          <span className="text-muted dark:text-muted-dark text-[10.5px] font-medium tracking-wide uppercase tabular-nums">
-            Total {formatCount(totalCommits)} contributions
-          </span>
           {partial && (
             <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
               Partial · GitHub rate limit
             </span>
           )}
+          <RegenerateHistoryButton
+            failedArchetypeYears={failedArchetypeYears}
+            failedMonthlyYears={failedMonthlyYears}
+            handle={handle}
+            partial={partial}
+          />
           <DownloadTimeline handle={handle} />
         </div>
       </header>
@@ -217,6 +233,15 @@ async function CachedEvolutionStrip({ handle }: Props) {
               {yr.label}
             </span>
           ))}
+        </div>
+
+        <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
+          <p className="text-muted dark:text-muted-dark text-[10px] font-medium tracking-wide uppercase">
+            Total contributions
+          </p>
+          <p className="text-ink dark:text-paper mt-1 text-2xl leading-none font-semibold tracking-tight tabular-nums">
+            {formatCount(totalCommits)}
+          </p>
         </div>
       </div>
     </>

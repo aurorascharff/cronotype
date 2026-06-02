@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { Button } from '@/components/ui/button';
 import { revealUser } from '@/features/profile/profile-actions';
 
 type Props = {
@@ -41,16 +42,18 @@ export function RevealGate({ handle }: Props) {
               : 'This profile has not been generated here yet.'}
           </p>
         </div>
-        <button
+        <Button
           type="button"
           onClick={reveal}
           disabled={busy}
           aria-busy={busy}
-          className="bg-brand text-on-brand dark:text-ink ring-brand/20 hover:ring-brand/40 inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:cursor-wait disabled:opacity-70"
+          className="h-10 shrink-0 px-4 text-sm"
+          icon={busy ? <Spinner /> : null}
+          iconPosition="start"
+          variant="primary"
         >
-          {busy ? <Spinner /> : null}
           <span>{busy ? 'Revealing' : 'Reveal'}</span>
-        </button>
+        </Button>
       </div>
     </div>
   );
