@@ -9,6 +9,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 const REVEAL_KEY_PREFIX = 'reveal:v1';
 const TIMELINE_LOADED_KEY_PREFIX = 'timeline-loaded:v1';
 const FEATURED_REVEALS_KEY = 'reveals:featured:v1';
+const FEATURED_REVEALS_SEQUENCE_KEY = 'reveals:featured:sequence:v1';
 const MAX_REVEALS = 10_000;
 
 function getClient(): Redis | null {
@@ -30,7 +31,8 @@ export async function recordFeaturedReveal(handle: string): Promise<void> {
   const kv = getClient();
   if (!kv) return;
   const normalized = handle.toLowerCase();
-  await kv.zadd(FEATURED_REVEALS_KEY, { member: normalized, score: Date.now() });
+  const score = await kv.incr(FEATURED_REVEALS_SEQUENCE_KEY);
+  await kv.zadd(FEATURED_REVEALS_KEY, { member: normalized, score });
   await kv.zremrangebyrank(FEATURED_REVEALS_KEY, 0, -MAX_REVEALS - 1);
 }
 

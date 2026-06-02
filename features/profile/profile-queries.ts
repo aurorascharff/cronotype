@@ -14,6 +14,7 @@ const HIGH_YEAR_COMMIT_THRESHOLD = 1000;
 const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
 const YEAR_ARCHETYPE_SAMPLE_SIZE = 35;
 const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 15;
+const YEAR_ARCHETYPE_SAMPLE_PAGES = 3;
 
 export class GitHubError extends Error {
   status: number;
@@ -437,9 +438,10 @@ async function getYearArchetype(login: string, year: number, commitCount: number
       : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
         ? YEAR_ARCHETYPE_SAMPLE_SIZE
         : 100;
-  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, 1, perPage);
+  const maxPages = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_PAGES : 1;
+  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, maxPages, perPage);
   const signal = signalCommits(sampleCommits);
-  if (signal.length === 0) return null;
+  if (signal.length === 0) return sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null;
   return classify({ ...buildStats(signal), total: commitCount }).id;
 }
 
