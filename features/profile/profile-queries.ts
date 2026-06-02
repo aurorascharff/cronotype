@@ -329,7 +329,7 @@ async function getSignalCommitsForCached(
 }
 
 export type MonthBucket = { month: string; count: number };
-export type YearArchetypeBucket = { year: number; archetypeId: ArchetypeId; commits: number };
+export type YearArchetypeBucket = { year: number; archetypeId: ArchetypeId | null; commits: number };
 export type MonthlyHistory = {
   months: MonthBucket[];
   yearlyArchetypes: YearArchetypeBucket[];
@@ -353,6 +353,7 @@ type TimelineMark = {
   commits: number;
   idx: number;
   label: string | null;
+  missing: boolean;
   year: number;
 };
 
@@ -569,7 +570,7 @@ function computeYearMarkers(months: MonthBucket[], width: number): Array<{ label
 }
 
 function buildYearMarks(months: MonthBucket[], yearly: YearArchetypeBucket[], currentId: ArchetypeId): TimelineMark[] {
-  const archetypeByYear = new Map<number, ArchetypeId>();
+  const archetypeByYear = new Map<number, ArchetypeId | null>();
   for (const y of yearly) {
     if (y.commits > 0) archetypeByYear.set(y.year, y.archetypeId);
   }
@@ -589,14 +590,17 @@ function buildYearMarks(months: MonthBucket[], yearly: YearArchetypeBucket[], cu
     .filter(([year]) => (commitsByYear.get(year) ?? 0) > 0)
     .sort((a, b) => a[0] - b[0])
     .map(([year, idx]) => {
-      const archetypeId = archetypeByYear.get(year) ?? null;
+      const hasClassification = archetypeByYear.has(year);
+      const archetypeId = hasClassification ? (archetypeByYear.get(year) ?? null) : null;
       const archetype = archetypeId ? ARCHETYPES[archetypeId] : null;
+      const noSignal = hasClassification && !archetypeId;
       return {
         archetypeId,
-        color: archetype?.theme.accent ?? null,
+        color: noSignal ? '#9ca3af' : (archetype?.theme.accent ?? null),
         commits: commitsByYear.get(year) ?? 0,
         idx,
-        label: archetype?.name ?? null,
+        label: noSignal ? 'No signal' : (archetype?.name ?? null),
+        missing: !hasClassification,
         year,
       };
     });
@@ -614,7 +618,7 @@ function buildEras(marks: TimelineMark[], pointCount: number, fallback: string):
 
   for (let i = 0; i < marks.length; i++) {
     const m = marks[i];
-    const unknown = !m.archetypeId;
+    const unknown = m.missing;
     const color = unknown ? '#94a3b8' : (m.color ?? lastColor);
     const startPct = i === 0 ? 0 : pct(m.idx);
     const endPct = i === marks.length - 1 ? 100 : pct(marks[i + 1].idx);
@@ -754,7 +758,7 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
     const yearData = byYear.find(y => y.year === year);
     if (!yearData) return;
     attemptedYears.add(year);
-    if (r.status === 'fulfilled' && r.value) {
+    if (r.status === 'fulfilled') {
       yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
     } else {
       failedArchetypeSet.add(year);
