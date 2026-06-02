@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSection, ProfileCardSectionSkeleton } from '@/features/profile/components/profile-card-section';
-import { ProfileHistorySection } from '@/features/profile/components/profile-history-section';
+import { ProfileHistorySection, ProfileHistorySectionSkeleton } from '@/features/profile/components/profile-history-section';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 
@@ -65,11 +65,15 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
       <div className="space-y-10">
         <Suspense fallback={<ProfileCardSectionSkeleton />}>
           <Crossfade>
+            {params.then(({ handle }) => (
+              <ProfileCardSection handle={handle} />
+            ))}
+          </Crossfade>
+        </Suspense>
+        <Suspense fallback={<ProfileHistorySectionSkeleton />}>
+          <Crossfade>
             {Promise.all([params, searchParams]).then(([{ handle }, query]) => (
-              <div className="space-y-10">
-                <ProfileCardSection handle={handle} />
-                <ProfileHistorySection handle={handle} showTimeline={query.history === '1'} />
-              </div>
+              <ProfileHistorySection handle={handle} showTimeline={query.history === '1'} />
             ))}
           </Crossfade>
         </Suspense>
