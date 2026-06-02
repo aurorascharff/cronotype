@@ -2,105 +2,360 @@ import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
 import { getPrivateResultCookie } from '@/features/profile/profile-private-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
-import { formatCount } from '@/lib/format';
+import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 
-export const size = { height: 630, width: 1200 };
+export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
+
+const COLORS = {
+  ink2: '#0f1013',
+  mutedDark: '#8b8d96',
+  mutedDivider: 'rgba(139, 141, 150, 0.25)',
+  paper: '#fafafa',
+  paper80: 'rgba(250, 250, 250, 0.8)',
+  white10: 'rgba(255, 255, 255, 0.1)',
+  white20: 'rgba(255, 255, 255, 0.2)',
+};
+
+async function loadGeist() {
+  try {
+    const [sansRegular, sansSemibold, monoRegular, monoSemibold] = await Promise.all([
+      loadFont('Geist-Regular.ttf'),
+      loadFont('Geist-SemiBold.ttf'),
+      loadFont('GeistMono-Regular.ttf'),
+      loadFont('GeistMono-SemiBold.ttf'),
+    ]);
+    return [
+      { data: sansRegular, name: 'GeistSans', style: 'normal' as const, weight: 400 as const },
+      { data: sansSemibold, name: 'GeistSans', style: 'normal' as const, weight: 600 as const },
+      { data: monoRegular, name: 'GeistMono', style: 'normal' as const, weight: 400 as const },
+      { data: monoSemibold, name: 'GeistMono', style: 'normal' as const, weight: 600 as const },
+    ];
+  } catch {
+    return undefined;
+  }
+}
+
+async function loadFont(name: string) {
+  const res = await fetch(new URL('../../../../public/fonts/' + name, import.meta.url));
+  if (!res.ok) throw new Error(`Failed to load ${name}`);
+  const data = await res.arrayBuffer();
+  const signature = String.fromCharCode(...new Uint8Array(data.slice(0, 4)));
+  if (signature.startsWith('<')) throw new Error(`Invalid font response for ${name}`);
+  return data;
+}
+
+function titleSizeFor(name: string) {
+  if (name.length >= 20) return 58;
+  if (name.length >= 16) return 64;
+  return 76;
+}
+
+function meaningSizeFor(text: string) {
+  if (text.length >= 92) return 25;
+  if (text.length >= 72) return 27;
+  return 30;
+}
 
 export async function GET() {
   const result = await getPrivateResultCookie();
   if (!result) notFound();
+
   const archetype = ARCHETYPES[result.archetypeId];
-  const displayName = result.profile.name ?? result.profile.login;
-  const signal = result.stats.total >= 100 ? '100+' : formatCount(result.stats.total);
+  const { profile, stats, percentile } = result;
+  const { theme } = archetype;
+  const fonts = await loadGeist();
+  const max = Math.max(1, ...stats.hourly);
+
+  const haloSize = 380;
+  const cx = haloSize / 2;
+  const avatarR = haloSize * 0.22;
+  const gap = haloSize * 0.04;
+  const inner = avatarR + gap;
+  const outer = haloSize * 0.46;
+  const barWidth = Math.max(4, haloSize * 0.018);
+  const titleFontSize = titleSizeFor(archetype.name);
+  const meaningFontSize = meaningSizeFor(archetype.meaning);
+  const signalSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
+
+  const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
+    <div
+      key={text}
+      style={{
+        color: theme.accent,
+        display: 'flex',
+        fontFamily: 'GeistMono, monospace',
+        fontSize: 22,
+        fontWeight: 600,
+        justifyContent: anchor === 'center' ? 'center' : anchor === 'right' ? 'flex-end' : 'flex-start',
+        left: cx + dx - 60,
+        letterSpacing: '0.02em',
+        position: 'absolute',
+        top: cx + dy - 14,
+        width: 120,
+      }}
+    >
+      {text}
+    </div>
+  );
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        alignItems: 'center',
+        background: COLORS.ink2,
+        color: COLORS.paper,
+        display: 'flex',
+        fontFamily: 'GeistSans, sans-serif',
+        gap: 56,
+        height: '100%',
+        padding: 64,
+        width: '100%',
+      }}
+    >
       <div
         style={{
           alignItems: 'center',
-          background: '#0a0a0a',
-          color: '#f7f7f4',
           display: 'flex',
-          fontFamily: 'Geist, Arial, sans-serif',
-          height: '100%',
+          height: haloSize,
           justifyContent: 'center',
-          padding: 54,
-          width: '100%',
+          position: 'relative',
+          width: haloSize,
         }}
       >
         <div
           style={{
-            background: '#111114',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: 24,
+            border: `1px solid ${theme.accent}`,
+            borderRadius: '50%',
             display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            justifyContent: 'space-between',
-            padding: 48,
-            width: '100%',
+            height: (outer + 1) * 2,
+            left: cx - (outer + 1),
+            opacity: 0.1,
+            position: 'absolute',
+            top: cx - (outer + 1),
+            width: (outer + 1) * 2,
+          }}
+        />
+        <div
+          style={{
+            border: `1px solid ${theme.accent}`,
+            borderRadius: '50%',
+            display: 'flex',
+            height: (inner - 1) * 2,
+            left: cx - (inner - 1),
+            opacity: 0.18,
+            position: 'absolute',
+            top: cx - (inner - 1),
+            width: (inner - 1) * 2,
+          }}
+        />
+
+        {[0, 6, 12, 18].map(q => {
+          const angle = (q / 24) * 360;
+          return (
+            <div
+              key={`q-${q}`}
+              style={{
+                background: theme.accent,
+                display: 'flex',
+                height: 10,
+                left: cx - 0.75,
+                opacity: 0.4,
+                position: 'absolute',
+                top: cx - outer - 8,
+                transform: `rotate(${angle}deg)`,
+                transformOrigin: `0.75px ${outer + 8}px`,
+                width: 1.5,
+              }}
+            />
+          );
+        })}
+
+        {stats.hourly.map((count, h) => {
+          const len = Math.max(2, (count / max) * (outer - inner));
+          const angle = (h / 24) * 360;
+          return (
+            <div
+              key={h}
+              style={{
+                background: theme.accent,
+                borderRadius: 1,
+                display: 'flex',
+                height: len,
+                left: cx - barWidth / 2,
+                opacity: stats.total === 0 ? 0.25 : 0.9,
+                position: 'absolute',
+                top: cx - inner - len,
+                transform: `rotate(${angle}deg)`,
+                transformOrigin: `${barWidth / 2}px ${inner + len}px`,
+                width: barWidth,
+              }}
+            />
+          );
+        })}
+
+        <div
+          style={{
+            alignItems: 'center',
+            background: theme.accent,
+            borderRadius: '50%',
+            display: 'flex',
+            height: avatarR * 2 + 4,
+            justifyContent: 'center',
+            left: cx - avatarR - 2,
+            opacity: 0.15,
+            position: 'absolute',
+            top: cx - avatarR - 2,
+            width: avatarR * 2 + 4,
+          }}
+        />
+        <div
+          style={{
+            alignItems: 'center',
+            border: `1.5px solid ${theme.accent}`,
+            borderRadius: '50%',
+            display: 'flex',
+            height: avatarR * 2,
+            justifyContent: 'center',
+            left: cx - avatarR,
+            overflow: 'hidden',
+            position: 'absolute',
+            top: cx - avatarR,
+            width: avatarR * 2,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ color: '#9ca3af', display: 'flex', fontSize: 28, gap: 14 }}>
-              <span>@{result.profile.login}</span>
-              <span>·</span>
-              <span>private cronotype</span>
-            </div>
-            <div
-              style={{
-                border: '1px solid rgba(255,255,255,0.16)',
-                borderRadius: 12,
-                color: '#9ca3af',
-                fontSize: 20,
-                letterSpacing: 2,
-                padding: '10px 14px',
-                textTransform: 'uppercase',
-              }}
-            >
-              Private
-            </div>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={profile.avatarUrl}
+            alt=""
+            width={avatarR * 2}
+            height={avatarR * 2}
+            style={{
+              borderRadius: '50%',
+              display: 'block',
+              height: avatarR * 2,
+              objectFit: 'cover',
+              width: avatarR * 2,
+            }}
+          />
+        </div>
 
-          <div style={{ alignItems: 'center', display: 'flex', gap: 54 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={result.profile.avatarUrl}
-              width={190}
-              height={190}
-              style={{
-                border: '5px solid rgba(255,255,255,0.12)',
-                borderRadius: 999,
-                objectFit: 'cover',
-              }}
-              alt=""
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div style={{ color: '#a1a1aa', fontSize: 28 }}>{displayName}</div>
-              <div
-                style={{
-                  color: archetype.theme.accent,
-                  fontSize: 96,
-                  fontWeight: 650,
-                  letterSpacing: -2,
-                  lineHeight: 0.95,
-                }}
-              >
-                {archetype.name}
-              </div>
-              <div style={{ color: '#a1a1aa', fontSize: 30, lineHeight: 1.35, maxWidth: 720 }}>{archetype.meaning}</div>
-            </div>
-          </div>
+        {tickLabel('12am', 0, -outer - 30, 'center')}
+        {tickLabel('6am', outer + 18, 0, 'left')}
+        {tickLabel('12pm', 0, outer + 18, 'center')}
+        {tickLabel('6pm', -outer - 18, 0, 'right')}
+      </div>
 
-          <div style={{ color: '#d4d4d8', display: 'flex', gap: 44, fontSize: 28 }}>
-            <span>{signal} signal commits</span>
-            <span>{formatCount(result.profile.followers)} followers</span>
-            <span>{result.percentile} percentile</span>
-          </div>
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div style={{ alignItems: 'baseline', color: COLORS.mutedDark, display: 'flex', gap: 10 }}>
+          <span style={{ fontSize: 24 }}>@{profile.login}</span>
+          <span style={{ color: COLORS.mutedDivider, fontSize: 28 }}>·</span>
+          <span style={{ fontSize: 20 }}>{formatFollowers(profile.followers)}</span>
+        </div>
+        <div
+          style={{
+            backgroundClip: 'text',
+            backgroundImage: `linear-gradient(135deg, ${theme.accent2}, ${theme.accent})`,
+            color: 'transparent',
+            display: 'flex',
+            fontSize: titleFontSize,
+            fontWeight: 600,
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
+            maxWidth: 680,
+          }}
+        >
+          {archetype.name}
+        </div>
+        <div
+          style={{
+            color: COLORS.mutedDark,
+            display: 'flex',
+            fontSize: meaningFontSize,
+            lineHeight: 1.35,
+            marginTop: 6,
+            maxWidth: 600,
+          }}
+        >
+          {archetype.meaning}
+        </div>
+        <div style={{ display: 'flex', gap: 40, marginTop: 24 }}>
+          <Stat label="PEAK" value={formatHour(stats.peakHour)} />
+          <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
+          <Stat label="SIGNAL" value={signalSize} />
+          <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
         </div>
       </div>
-    ),
-    size,
+
+      <div
+        style={{
+          color: COLORS.mutedDark,
+          display: 'flex',
+          fontSize: 24,
+          fontWeight: 600,
+          left: 64,
+          letterSpacing: '-0.01em',
+          position: 'absolute',
+          top: 40,
+        }}
+      >
+        cronotype
+      </div>
+
+      <div
+        style={{
+          background: COLORS.white10,
+          border: `1px solid ${COLORS.white20}`,
+          borderRadius: 6,
+          color: COLORS.paper80,
+          display: 'flex',
+          fontFamily: 'GeistMono, monospace',
+          fontSize: 18,
+          fontWeight: 500,
+          letterSpacing: '0.08em',
+          padding: '8px 14px',
+          position: 'absolute',
+          right: 64,
+          textTransform: 'uppercase',
+          top: 40,
+        }}
+      >
+        Private
+      </div>
+
+      <div
+        style={{
+          color: COLORS.mutedDark,
+          display: 'flex',
+          fontFamily: 'GeistMono, monospace',
+          fontSize: 22,
+          left: 64,
+          letterSpacing: '-0.01em',
+          position: 'absolute',
+          bottom: 36,
+        }}
+      >
+        cronotype.vercel.app/private
+      </div>
+    </div>,
+    { ...size, fonts },
+  );
+}
+
+function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ color: COLORS.mutedDark, display: 'flex', fontSize: 18, letterSpacing: '0.08em' }}>{label}</div>
+      <div
+        style={{
+          color: accent ?? COLORS.paper,
+          display: 'flex',
+          fontSize: 40,
+          fontWeight: 600,
+        }}
+      >
+        {value}
+      </div>
+    </div>
   );
 }

@@ -6,9 +6,10 @@ import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import type { ArchetypeId, ProfileSummary } from '@/types/cronotype';
 
 // Private profile reads are intentionally isolated from the normal cached profile
-// queries. They run once with the visitor's short-lived GitHub token, refuse
-// write-capable OAuth scopes, and store only the derived result in a short-lived
-// HTTP-only cookie. Do not add `use cache` here.
+// queries. GitHub OAuth Apps require the broad `repo` scope for private repo
+// reads, so this flow uses the visitor's short-lived token once, makes read-only
+// API requests, and stores only the derived result in a short-lived HTTP-only
+// cookie. Do not add `use cache` here, and do not persist tokens or raw commits.
 
 const API = 'https://api.github.com';
 const UA = 'cronotype.dev';
@@ -31,28 +32,6 @@ type PrivateSearchCommitItem = {
   repository?: { full_name?: string };
 };
 
-const WRITE_CAPABLE_OAUTH_SCOPES = new Set([
-  'admin:gpg_key',
-  'admin:org',
-  'admin:org_hook',
-  'admin:public_key',
-  'admin:repo_hook',
-  'delete:packages',
-  'delete_repo',
-  'gist',
-  'notifications',
-  'project',
-  'repo',
-  'user',
-  'workflow',
-  'write:discussion',
-  'write:gpg_key',
-  'write:org',
-  'write:packages',
-  'write:public_key',
-  'write:repo_hook',
-]);
-
 export type PrivateCronotypeResult = {
   archetypeId: ArchetypeId;
   createdAt: string;
@@ -71,6 +50,7 @@ export function privateOAuthAuthorizeUrl(origin: string, state: string): string 
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', process.env.GITHUB_OAUTH_CLIENT_ID ?? '');
   url.searchParams.set('redirect_uri', `${origin}/api/github/private/callback`);
+  url.searchParams.set('scope', 'repo');
   url.searchParams.set('state', state);
   return url.toString();
 }
@@ -146,7 +126,6 @@ export async function getPrivateResultCookie(): Promise<PrivateCronotypeResult |
 
 async function fetchViewerProfile(token: string): Promise<ProfileSummary> {
   const res = await githubFetch(token, `${API}/user`);
-  assertReadOnlyOAuthScopes(res);
   if (!res.ok) throw new Error(`Could not read GitHub profile (${res.status}).`);
   const user = await res.json();
   return {
@@ -201,20 +180,6 @@ function githubFetch(token: string, url: string, extraHeaders: Record<string, st
       ...extraHeaders,
     },
   });
-}
-
-function assertReadOnlyOAuthScopes(res: Response) {
-  const scopes = res.headers
-    .get('x-oauth-scopes')
-    ?.split(',')
-    .map(scope => scope.trim())
-    .filter(Boolean);
-  if (!scopes?.length) return;
-
-  const writeScopes = scopes.filter(scope => WRITE_CAPABLE_OAUTH_SCOPES.has(scope));
-  if (writeScopes.length > 0) {
-    throw new Error(`Refusing GitHub token with write-capable OAuth scope: ${writeScopes.join(', ')}`);
-  }
 }
 
 function encodeResult(result: PrivateCronotypeResult): string {

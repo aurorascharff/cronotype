@@ -279,6 +279,12 @@ export async function getStatsFor(login: string, window: Window): Promise<Return
   return getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
 }
 
+export async function getSignalCommitsFor(login: string, window: Window): Promise<Commit[]> {
+  const today = await getTodayKey();
+  const { fromISO, toISO } = rangeFromToday(today, window);
+  return getSignalCommitsForCached(login.toLowerCase(), window, fromISO, toISO);
+}
+
 async function getStatsForCached(
   login: string,
   window: Window,
@@ -294,8 +300,27 @@ async function getStatsForCached(
     return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
   }
 
+  const commits = await getSignalCommitsForCached(login, window, fromISO, toISO);
+  return buildStats(commits);
+}
+
+async function getSignalCommitsForCached(
+  login: string,
+  window: Window,
+  fromISO: string,
+  toISO: string,
+): Promise<Commit[]> {
+  'use cache: remote';
+  cacheTag(`commits-${login}-${window}`);
+  cacheTag(`commits-${login}-${window}-${toISO}`);
+  cacheLife('cronotype');
+
+  if (MOCK) {
+    return [];
+  }
+
   const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
-  return buildStats(signalCommits(commits));
+  return signalCommits(commits);
 }
 
 export type MonthBucket = { month: string; count: number };

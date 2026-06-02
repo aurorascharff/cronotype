@@ -12,7 +12,8 @@ Reads public GitHub activity, classifies the last 90 days into one of eight deve
 
 Every generated profile lives at `/:handle`, with share/download images and a [types page](https://cronotype.vercel.app/types) explaining the categories.
 
-There is also a private experiment at `/private`: a GitHub sign-in computes a one-time private-visible profile result, stores only the derived result in a short-lived HTTP-only cookie, and asks the user to revoke access after downloading. It refuses classic write-capable OAuth scopes; real private repo access should use a GitHub App with read-only repository permissions.
+Private profiles are available at `/private` for signed-in GitHub users. The private flow requests GitHub's classic
+`repo` scope, uses it once for read requests, and stores only the derived result.
 
 ## Stack
 
@@ -29,7 +30,6 @@ There is also a private experiment at `/private`: a GitHub sign-in computes a on
 - Use `updateTag` from server actions after reveal and regeneration
 - Stream GitHub-heavy profile and leaderboard UI behind Suspense
 - Keep interactivity in small client leaves
-- Keep private profile reads in `features/profile/profile-private-queries.ts`; they are intentionally uncached and token-scoped
 
 ```
 app/                  Pages, layouts, OG images
@@ -54,4 +54,4 @@ Set `MOCK_PROFILE=1` to skip GitHub entirely while working on UI.
 
 The reveal registry is optional locally. Without `KV_REST_API_URL` and `KV_REST_API_TOKEN`, handles behave as unrevealed and the recently revealed feed is empty.
 
-For `/private`, set `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET`. Use callback URL `/api/github/private/callback`.
+For private profiles, set `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET`. Use callback URL `/api/github/private/callback`.

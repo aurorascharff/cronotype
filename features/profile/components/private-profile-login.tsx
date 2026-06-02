@@ -9,8 +9,8 @@ export function PrivateProfileIntro() {
       </h1>
       <p className="text-muted dark:text-muted-dark max-w-xl text-sm sm:text-base">
         Sign in with GitHub, compute a 90-day cronotype using commits your account can see, then keep the result only in
-        this browser long enough to view or download it. The access token is not saved, and classic write-capable OAuth
-        scopes are refused.
+        this browser long enough to view or download it. GitHub's classic private repo scope is broad; Cronotype only
+        makes read requests and does not save the token.
       </p>
       <p className="text-muted dark:text-muted-dark max-w-xl text-sm">
         After you download the card, revoke the GitHub authorization from your GitHub settings.
@@ -39,8 +39,8 @@ export function PrivateProfileLoginCard() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight">GitHub OAuth</h2>
           <p className="text-muted dark:text-muted-dark text-sm">
-            Use a GitHub App with read-only repository permissions for private repo access. Classic OAuth private repo
-            scope is intentionally not requested.
+            Requests GitHub's classic private repo scope so commit search can include private repositories. Revoke access
+            when you're done.
           </p>
         </div>
         {privateOAuthConfigured() ? (
