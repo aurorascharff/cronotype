@@ -5,7 +5,7 @@ import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { HaloChart } from '@/features/profile/components/halo-chart';
 import { HeroCard } from '@/features/profile/components/hero-card';
 import { ShareActions, ShareUrl } from '@/features/profile/components/share-block';
-import { computeCronotype, GitHubError } from '@/features/profile/profile-queries';
+import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatCount, formatFollowers } from '@/lib/format';
 import type { HourStats, ProfileSummary } from '@/types/cronotype';
@@ -19,7 +19,7 @@ export async function CronotypeProfile({ handle }: Props) {
   try {
     result = await computeCronotype(handle, '90d');
   } catch (err) {
-    if (err instanceof GitHubError && err.status === 404) notFound();
+    if (isGitHubNotFoundError(err)) notFound();
     throw err;
   }
 

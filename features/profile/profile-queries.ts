@@ -24,8 +24,20 @@ export class GitHubError extends Error {
   }
 }
 
+function gitHubErrorStatus(err: unknown): number | null {
+  if (err instanceof GitHubError) return err.status;
+  if (typeof err !== 'object' || err === null) return null;
+  const status = (err as { status?: unknown }).status;
+  return typeof status === 'number' ? status : null;
+}
+
+export function isGitHubNotFoundError(err: unknown): boolean {
+  return gitHubErrorStatus(err) === 404;
+}
+
 function isRateLimitError(err: unknown): boolean {
-  return err instanceof GitHubError && (err.status === 403 || err.status === 429);
+  const status = gitHubErrorStatus(err);
+  return status === 403 || status === 429;
 }
 
 function headers(extra: Record<string, string> = {}): HeadersInit {

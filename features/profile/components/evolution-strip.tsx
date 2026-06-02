@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { LoaderCircle } from 'lucide-react';
 import { DownloadTimeline } from '@/features/profile/components/download-timeline';
 import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
-import { getTimelineChart, GitHubError } from '@/features/profile/profile-queries';
+import { getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { formatCount } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -34,7 +34,7 @@ async function CachedEvolutionStrip({ handle }: Props) {
       width: W,
     });
   } catch (err) {
-    if (err instanceof GitHubError && err.status === 404) notFound();
+    if (isGitHubNotFoundError(err)) notFound();
     throw err;
   }
 

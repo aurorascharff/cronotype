@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSection, ProfileCardSectionSkeleton } from '@/features/profile/components/profile-card-section';
 import {
@@ -57,30 +56,20 @@ export async function generateMetadata({ params }: PageProps<'/[handle]'>): Prom
 export default function ProfilePage({ params, searchParams }: PageProps<'/[handle]'>) {
   return (
     <div className="space-y-10">
-      <header>
-        <Link
-          href="/"
-          className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
-        >
-          ← Reveal another
-        </Link>
-      </header>
-      <div className="space-y-10">
-        <Suspense fallback={<ProfileCardSectionSkeleton />}>
-          <Crossfade>
-            {params.then(({ handle }) => (
-              <ProfileCardSection handle={handle} />
-            ))}
-          </Crossfade>
-        </Suspense>
-        <Suspense fallback={<ProfileHistorySectionSkeleton />}>
-          <Crossfade>
-            {Promise.all([params, searchParams]).then(([{ handle }, query]) => (
-              <ProfileHistorySection handle={handle} showTimeline={query.history === '1'} />
-            ))}
-          </Crossfade>
-        </Suspense>
-      </div>
+      <Suspense fallback={<ProfileCardSectionSkeleton />}>
+        <Crossfade>
+          {params.then(({ handle }) => (
+            <ProfileCardSection handle={handle} />
+          ))}
+        </Crossfade>
+      </Suspense>
+      <Suspense fallback={<ProfileHistorySectionSkeleton />}>
+        <Crossfade>
+          {Promise.all([params, searchParams]).then(([{ handle }, query]) => (
+            <ProfileHistorySection handle={handle} showTimeline={query.history === '1'} />
+          ))}
+        </Crossfade>
+      </Suspense>
     </div>
   );
 }
