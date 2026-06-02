@@ -1,13 +1,10 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { getTopRevealedHandles } from '@/features/leaderboard/leaderboard-queries';
-import { connection } from 'next/server';
 
 const TOP_REVEALED_LIMIT = 12;
 
 export async function TopRevealed() {
-  await connection();
-
   const handles = await getTopRevealedHandles(TOP_REVEALED_LIMIT);
 
   if (handles.length === 0) {

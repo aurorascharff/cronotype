@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { connection } from 'next/server';
 import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { isValidGitHubHandle } from '@/lib/github-handle';
@@ -16,7 +15,6 @@ export async function ProfileCardSection({ handle: rawHandle }: Props) {
   const handle = rawHandle.toLowerCase();
   if (!isValidGitHubHandle(handle)) notFound();
 
-  await connection();
   const revealed = await hasBeenRevealed(handle);
   if (!revealed) return <RevealGate handle={handle} />;
 
