@@ -16,7 +16,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - Feature folders: `features/profile/`, `features/leaderboard/`
 - Feature roots should stay readable: keep `<feature>-queries.ts` / `<feature>-actions.ts` at the root, colocate one-owner helper code inside those files, and use named subfolders like `data/` when a feature has static data.
 - Theme plumbing lives in `components/theme/`
-- Shared UI primitives live in `components/ui/`; Cronotype-specific shared components stay in `components/`
+- Shared UI primitives, button states, UI icons, crossfade, and error boundaries live in `components/ui/`; Cronotype-specific shared components stay in `components/`
 - Domain verb "reveal" is the app's term for classifying a handle; don't reintroduce "diagnose"
 - Public GitHub data queries use `'use cache: remote'` where durable cross-request caching protects rate limits
 - Rendered profile/history wrappers use normal `'use cache'` and sit behind Suspense so the static shell can stream
@@ -28,7 +28,9 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 ## GitHub data sources
 
 - **Search Commits API** for the 90-day hourly distribution. 30 requests/minute limit - the dominant cost. Capped to 1 page (100 commits) per profile in [features/profile/profile-queries.ts](features/profile/profile-queries.ts) to keep budget reasonable.
+- **Search Commits API** for yearly archetypes. Every active history year is classified; normal years sample 100 commits, while years above 1000 contributions sample fewer commits so high-volume profiles keep their timeline shape without burning the rate-limit budget.
 - **GraphQL contributions calendar** for the multi-year history. 5000/hr pool. One call per year, fanned out serially in [features/profile/profile-queries.ts](features/profile/profile-queries.ts).
+- **GitHub OAuth private flow** in [features/profile/profile-private-queries.ts](features/profile/profile-private-queries.ts) requests the classic `repo` scope because GitHub requires it for private repo commit search. The token is used for read requests during the callback and is not stored; only the derived result is kept in the browser.
 - The top revealed list only displays featured handles. Reveal state lives in [lib/reveals.ts](lib/reveals.ts), backed by Upstash when configured, and the featured reveal lookups use `cacheLife('cronotype')`.
 
 ## Cache discipline
@@ -45,12 +47,12 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 
 ## View Transitions
 
-- Use the `<Crossfade>` wrapper in [components/crossfade.tsx](components/crossfade.tsx) for Suspense reveals that benefit from a soft fade (`<CronotypeProfile>`, `<EvolutionStrip>`).
+- Use the `<Crossfade>` wrapper in [components/ui/crossfade.tsx](components/ui/crossfade.tsx) for Suspense reveals that benefit from a soft fade (`<CronotypeProfile>`, `<EvolutionStrip>`).
 - Don't wrap small, frequently-revalidating components like `<RecentRevealed>` - the crossfade flashes during refreshes. Hard swap is fine there.
 
 ## Error boundaries
 
-Use `unstable_catchError` from `next/error`. Profile-page fallbacks live in [features/profile/components/profile-error-boundary.tsx](features/profile/components/profile-error-boundary.tsx) so the reveal card and timeline keep their own shapes when they fail.
+Use `unstable_catchError` from `next/error`. The reusable boundary primitive lives in [components/ui/error-boundary.tsx](components/ui/error-boundary.tsx); pass the profile or timeline-shaped fallback inline at the call site.
 
 ## Mocking GitHub for local dev
 
