@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getTimelineChart } from '@/features/profile/profile-queries';
+import { getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 
 const size = { width: 1200, height: 630 };
 
@@ -35,13 +35,20 @@ const PAD_BOT = 8;
 export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
 
-  const { archetype, areaPath, eras, hasData, linePath, months, profile, totalCommits, yearMarkers } =
-    await getTimelineChart(handle, {
+  let chart;
+  try {
+    chart = await getTimelineChart(handle, {
       height: H,
       padBottom: PAD_BOT,
       padTop: PAD_TOP,
       width: W,
     });
+  } catch (err) {
+    if (isGitHubNotFoundError(err)) return new Response(null, { status: 404 });
+    throw err;
+  }
+
+  const { archetype, areaPath, eras, hasData, linePath, months, profile, totalCommits, yearMarkers } = chart;
 
   const fonts = await loadGeist();
 

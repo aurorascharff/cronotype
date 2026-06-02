@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
-import { computeCronotype } from '@/features/profile/profile-queries';
+import { notFound } from 'next/navigation';
+import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import type { ProfileSummary } from '@/types/cronotype';
@@ -63,7 +64,13 @@ function meaningSizeFor(text: string) {
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
   const { handle } = await params;
 
-  const result = await computeCronotype(handle, '90d');
+  let result;
+  try {
+    result = await computeCronotype(handle, '90d');
+  } catch (err) {
+    if (isGitHubNotFoundError(err)) notFound();
+    throw err;
+  }
   const { profile, stats, archetype, percentile } = result;
 
   const fonts = await loadGeist();

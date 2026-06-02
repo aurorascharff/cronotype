@@ -87,7 +87,7 @@ export async function computePrivateCronotype(token: string): Promise<PrivateCro
     .slice(0, 10);
   const fromISO = new Date(Date.parse(`${toISO}T00:00:00Z`) - 90 * 24 * 3600_000).toISOString().slice(0, 10);
   const [publicCommits, visibleCommits] = await Promise.all([
-    getSignalCommitsFor(profile.login, '90d'),
+    getSignalCommitsFor(profile.login, '90d', toISO),
     fetchPrivateCommits(token, profile.login, fromISO, toISO).then(signalCommits),
   ]);
   const stats = buildStats(dedupe([...publicCommits, ...visibleCommits]));

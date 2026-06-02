@@ -63,7 +63,9 @@ async function computeCronotypeCached(login: string, window: Window): Promise<Cr
   cacheTag(`cronotype-${login}-${window}`);
   cacheLife('cronotype');
 
-  const [profile, stats] = await Promise.all([getProfile(login), getStatsFor(login, window)]);
+  const profile = await getProfile(login);
+  const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
+  const stats = await getStatsFor(login, window, today);
 
   const archetype = classify(stats);
   const percentile = percentileFor(archetype, stats);
@@ -181,11 +183,13 @@ async function getProfileCached(login: string): Promise<ProfileSummary> {
   const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
   if (res.status === 404) throw new GitHubError(`User @${login} not found on GitHub`, 404);
   if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
+  const fetchedAtDate = dateHeaderToDayKey(res.headers.get('date'));
   const j = await res.json();
   return {
     avatarUrl: j.avatar_url,
     bio: j.bio ?? null,
     createdAt: j.created_at,
+    fetchedAtDate,
     followers: j.followers ?? 0,
     login: j.login,
     name: j.name ?? null,
@@ -273,12 +277,20 @@ function dedupe(commits: Commit[]): Commit[] {
   return out;
 }
 
-async function getTodayKey(): Promise<string> {
-  'use cache';
-  cacheTag('today');
+function dateHeaderToDayKey(value: string | null): string {
+  if (!value) throw new GitHubError('GitHub response did not include a date header.', 502);
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) throw new GitHubError('GitHub response included an invalid date header.', 502);
+  return new Date(time).toISOString().slice(0, 10);
+}
+
+async function getGitHubDateKey(): Promise<string> {
+  'use cache: remote';
+  cacheTag('github-date');
   cacheLife('hours');
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10);
+
+  const res = await gh(`${API}/rate_limit`);
+  return dateHeaderToDayKey(res.headers.get('date'));
 }
 
 function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO: string } {
@@ -288,14 +300,18 @@ function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO
   return { fromISO: fromDate.toISOString().slice(0, 10), toISO };
 }
 
-export async function getStatsFor(login: string, window: Window): Promise<ReturnType<typeof buildStats>> {
-  const today = await getTodayKey();
+export async function getStatsFor(
+  login: string,
+  window: Window,
+  toDateKey?: string,
+): Promise<ReturnType<typeof buildStats>> {
+  const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
   return getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
 }
 
-export async function getSignalCommitsFor(login: string, window: Window): Promise<Commit[]> {
-  const today = await getTodayKey();
+export async function getSignalCommitsFor(login: string, window: Window, toDateKey?: string): Promise<Commit[]> {
+  const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
   return getSignalCommitsForCached(login.toLowerCase(), window, fromISO, toISO);
 }
@@ -459,8 +475,9 @@ async function getYearArchetype(login: string, year: number, commitCount: number
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
   const lower = login.toLowerCase();
-  const today = await getTodayKey();
-  return getMonthlyHistoryCached(lower, today);
+  const profile = await getProfile(lower);
+  const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
+  return getMonthlyHistoryCached(lower, today, profile.createdAt);
 }
 
 export async function getTimelineChart(login: string, geometry: TimelineGeometry) {
@@ -656,7 +673,7 @@ function buildEras(marks: TimelineMark[], pointCount: number, fallback: string):
   return eras;
 }
 
-async function getMonthlyHistoryCached(login: string, today: string): Promise<MonthlyHistory> {
+async function getMonthlyHistoryCached(login: string, today: string, profileCreatedAt: string): Promise<MonthlyHistory> {
   'use cache: remote';
   cacheTag(`history-${login}`);
   cacheTag(`history-${login}-${today}`);
@@ -679,8 +696,7 @@ async function getMonthlyHistoryCached(login: string, today: string): Promise<Mo
     };
   }
 
-  const profile = await getProfile(login);
-  const firstYear = new Date(profile.createdAt).getUTCFullYear();
+  const firstYear = new Date(profileCreatedAt).getUTCFullYear();
   const todayDate = new Date(`${today}T00:00:00Z`);
   const thisYear = todayDate.getUTCFullYear();
   const thisMonth = todayDate.getUTCMonth() + 1;
@@ -800,6 +816,7 @@ function mockProfile(login: string): ProfileSummary {
     avatarUrl: `https://avatars.githubusercontent.com/${encodeURIComponent(login)}`,
     bio: null,
     createdAt: '2017-01-01T00:00:00Z',
+    fetchedAtDate: '2026-06-03',
     followers: 1200 + ((login.length * 137) % 8000),
     login,
     name: titleCase(login),

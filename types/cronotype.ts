@@ -53,6 +53,7 @@ export type ProfileSummary = {
   followers: number;
   publicRepos: number;
   createdAt: string;
+  fetchedAtDate?: string;
 };
 
 export type CronotypeResult = {

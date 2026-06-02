@@ -1,10 +1,12 @@
 import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSection, ProfileCardSectionSkeleton } from '@/features/profile/components/profile-card-section';
 import {
   ProfileHistorySection,
   ProfileHistorySectionSkeleton,
 } from '@/features/profile/components/profile-history-section';
+import { getProfile, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 
@@ -58,18 +60,30 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
     <div className="space-y-10">
       <Suspense fallback={<ProfileCardSectionSkeleton />}>
         <Crossfade>
-          {params.then(({ handle }) => (
-            <ProfileCardSection handle={handle} />
-          ))}
+          {params.then(async ({ handle }) => {
+            await ensureGitHubProfile(handle);
+            return <ProfileCardSection handle={handle} />;
+          })}
         </Crossfade>
       </Suspense>
       <Suspense fallback={<ProfileHistorySectionSkeleton />}>
         <Crossfade>
-          {Promise.all([params, searchParams]).then(([{ handle }, query]) => (
-            <ProfileHistorySection handle={handle} showTimeline={query.history === '1'} />
-          ))}
+          {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
+            await ensureGitHubProfile(handle);
+            return <ProfileHistorySection handle={handle} showTimeline={query.history === '1'} />;
+          })}
         </Crossfade>
       </Suspense>
     </div>
   );
+}
+
+async function ensureGitHubProfile(handle: string) {
+  if (!isValidGitHubHandle(handle)) notFound();
+  try {
+    await getProfile(handle);
+  } catch (err) {
+    if (isGitHubNotFoundError(err)) notFound();
+    throw err;
+  }
 }

@@ -5,7 +5,7 @@ type Props = {
   children: ReactNode;
 };
 
-export default function HandleLayout(props: Props) {
+export default function HandleLayout({ children }: Props) {
   return (
     <div className="space-y-10">
       <header>
@@ -13,10 +13,10 @@ export default function HandleLayout(props: Props) {
           href="/"
           className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
         >
-          ← Reveal another
+          &larr; Reveal another
         </Link>
       </header>
-      {props.children}
+      {children}
     </div>
   );
 }
