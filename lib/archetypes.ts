@@ -88,16 +88,26 @@ function hasLunchSpike(s: HourStats) {
   return lunchSpike > 8 && lunchSpike > neighborAvg * 1.6;
 }
 
+function isVampireRhythm(s: HourStats) {
+  const nightPeak = s.peakHour >= 0 && s.peakHour <= 4;
+  return s.pctNocturnal > 35 && (nightPeak || s.pctNocturnal > 42);
+}
+
+function isSunriseRhythm(s: HourStats) {
+  const sunrisePeak = s.peakHour >= 5 && s.peakHour <= 8;
+  return s.pctSunrise > 20 && (sunrisePeak || s.pctSunrise > 24) && s.pctNocturnal < 30;
+}
+
 function isWorkdayRhythm(s: HourStats) {
-  return s.pctBusiness > 70 && s.pctNocturnal < 15 && s.pctWeekend < 35;
+  return s.pctBusiness > 65 && s.pctNocturnal < 20 && s.pctWeekend < 35;
 }
 
 export function classify(stats: HourStats): Archetype {
   if (stats.total < 25) return ARCHETYPES['touch-grass'];
 
   if (stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
-  if (stats.pctNocturnal > 30) return ARCHETYPES.vampire;
-  if (stats.pctSunrise > 20) return ARCHETYPES['sunrise-sniper'];
+  if (isVampireRhythm(stats)) return ARCHETYPES.vampire;
+  if (isSunriseRhythm(stats)) return ARCHETYPES['sunrise-sniper'];
   if (hasLunchSpike(stats)) return ARCHETYPES['lunch-bandit'];
   if (stats.pctWeekend > 40) return ARCHETYPES['weekend-warrior'];
   if (isWorkdayRhythm(stats)) return ARCHETYPES['nine-to-fiver'];
