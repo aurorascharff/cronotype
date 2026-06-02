@@ -12,26 +12,28 @@ export type LeaderboardEntry = {
   stats: HourStats;
 };
 
-export async function getRecentHandles(limit = 8): Promise<string[]> {
+export async function getTopRevealedHandles(limit = 8): Promise<string[]> {
   'use cache: remote';
   cacheTag('leaderboard');
   cacheTag('reveals');
   cacheLife('cronotype');
 
-  const candidateLimit = Math.min(FEATURED.length, Math.max(limit * 2, limit));
-  const revealed = await listFeaturedReveals(candidateLimit);
+  const revealed = await listFeaturedReveals(FEATURED.length);
   if (revealed.length === 0) return [];
 
   const profiles = await Promise.all(
-    revealed.map(async handle => {
+    revealed.map(async (handle, index) => {
       try {
-        return { handle, profile: await getProfile(handle) };
+        return { handle, index, profile: await getProfile(handle) };
       } catch {
-        return { handle, profile: null };
+        return { handle, index, profile: null };
       }
     }),
   );
-  profiles.sort((a, b) => (b.profile?.followers ?? 0) - (a.profile?.followers ?? 0));
+  profiles.sort((a, b) => {
+    const followerDelta = (b.profile?.followers ?? -1) - (a.profile?.followers ?? -1);
+    return followerDelta || a.index - b.index;
+  });
 
   return profiles.slice(0, limit).map(p => p.handle);
 }

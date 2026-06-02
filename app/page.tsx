@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { RecentRevealed, RecentRevealedSkeleton } from '@/features/leaderboard/components/recent-revealed';
+import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/components/top-revealed';
 import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
 
@@ -18,9 +18,9 @@ export default function HomePage() {
         </div>
       </section>
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Recently revealed</h2>
-        <Suspense fallback={<RecentRevealedSkeleton />}>
-          <RecentRevealed />
+        <h2 className="text-lg font-semibold tracking-tight">Top revealed</h2>
+        <Suspense fallback={<TopRevealedSkeleton />}>
+          <TopRevealed />
         </Suspense>
       </section>
       <section className="space-y-4">
