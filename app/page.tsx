@@ -39,10 +39,10 @@ export default function HomePage({ searchParams }: PageProps<'/'>) {
           <Crossfade>
             {searchParams.then(query => (
               <>
-                <TopRevealed />
+                <TopRevealed page={parsePage(query.revealed)} />
                 <section className="space-y-4 pt-8 sm:pt-12">
                   <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-                  <SuggestedUsers page={parsePage(query.suggested)} />
+                  <SuggestedUsers />
                 </section>
               </>
             ))}
