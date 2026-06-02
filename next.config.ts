@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
     },
   },
   experimental: {
+    staleTimes: {
+      dynamic: 30,
+    },
     cachedNavigations: true,
     inlineCss: true,
     instantInsights: {
