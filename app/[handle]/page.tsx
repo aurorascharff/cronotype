@@ -8,6 +8,7 @@ import { RegenerateButton } from '@/components/regenerate-button';
 import { RevealGate } from '@/components/reveal-gate';
 import { CronotypeProfile, CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { EvolutionStrip, EvolutionStripSkeleton } from '@/features/profile/components/evolution-strip';
+import { TimelinePrompt } from '@/features/profile/components/timeline-prompt';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import { hasBeenRevealed, hasTimelineLoaded } from '@/lib/reveals';
 import type { Metadata } from 'next';
@@ -139,26 +140,6 @@ function TimelineSection({ handle }: { handle: string }) {
           </InlineErrorBoundary>
         </Suspense>
       </Crossfade>
-    </section>
-  );
-}
-
-function TimelinePrompt({ handle }: { handle: string }) {
-  return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-      <div className="dark:bg-ink-2 flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-4 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between sm:p-5 dark:border-white/10">
-        <p className="text-muted dark:text-muted-dark max-w-xl text-sm">
-          The long-term chart takes a little more GitHub data, so load it when you want the full history.
-        </p>
-        <Link
-          href={`/${handle}?history=1`}
-          prefetch={false}
-          className="bg-brand text-on-brand dark:text-ink ring-brand/20 hover:ring-brand/40 inline-flex h-10 shrink-0 items-center justify-center rounded-lg px-4 text-sm font-semibold shadow-sm ring-1 transition-[filter,box-shadow] hover:brightness-105"
-        >
-          View history chart
-        </Link>
-      </div>
     </section>
   );
 }

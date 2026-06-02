@@ -1,46 +1,37 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { toast } from 'sonner';
-import { regenerateUser } from '@/features/profile/profile-actions';
+import { useSearchParams } from 'next/navigation';
+import { useFormStatus } from 'react-dom';
+import { regenerateUserAndRedirect } from '@/features/profile/profile-actions';
 
 type Props = {
   handle: string;
 };
 
 export function RegenerateButton({ handle }: Props) {
-  const [isWorking, setIsWorking] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const busy = isWorking || isPending;
+  const searchParams = useSearchParams();
+  const showTimeline = searchParams.get('history') === '1';
+  const action = regenerateUserAndRedirect.bind(null, handle, showTimeline);
 
-  function regenerate() {
-    if (busy) return;
-    setIsWorking(true);
-    startTransition(async () => {
-      try {
-        await regenerateUser(handle);
-        router.refresh();
-        toast.success('Regenerated from fresh data.');
-      } catch {
-        toast.error("Couldn't regenerate right now. Try again in a moment.");
-      } finally {
-        setIsWorking(false);
-      }
-    });
-  }
+  return (
+    <form action={action}>
+      <RegenerateSubmitButton />
+    </form>
+  );
+}
+
+function RegenerateSubmitButton() {
+  const { pending } = useFormStatus();
 
   return (
     <button
-      type="button"
-      onClick={regenerate}
-      disabled={busy}
-      aria-busy={busy}
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
       className="bg-brand text-on-brand dark:text-ink group/btn ring-brand/20 hover:ring-brand/40 inline-flex min-w-28 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 transition-[filter,opacity,box-shadow] hover:brightness-105 disabled:cursor-wait disabled:opacity-70"
     >
-      <span>{busy ? 'Regenerating' : 'Regenerate'}</span>
-      {busy ? <Spinner /> : <RefreshIcon />}
+      <span>{pending ? 'Regenerating' : 'Regenerate'}</span>
+      {pending ? <Spinner /> : <RefreshIcon />}
     </button>
   );
 }

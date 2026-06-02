@@ -69,3 +69,9 @@ export async function regenerateUser(handle: string) {
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
 }
+
+export async function regenerateUserAndRedirect(handle: string, showTimeline: boolean) {
+  const lower = handle.toLowerCase();
+  await regenerateUser(lower);
+  redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
+}
