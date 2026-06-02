@@ -1,13 +1,10 @@
 import Link from 'next/link';
 import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
 import { listFeaturedReveals } from '@/lib/reveals';
-import { connection } from 'next/server';
 
 const SUGGESTED_SKELETON_COUNT = 12;
 
 export async function SuggestedUsers() {
-  await connection();
-
   const revealed = new Set((await listFeaturedReveals(FEATURED_HANDLES.length)).map(handle => handle.toLowerCase()));
   const handles = FEATURED_HANDLES.filter(handle => !revealed.has(handle.toLowerCase()));
 
@@ -25,7 +22,6 @@ export async function SuggestedUsers() {
         <li key={handle}>
           <Link
             href={{ pathname: `/${handle}` }}
-            prefetch={false}
             className="dark:bg-ink-2 group flex min-w-0 flex-col items-center gap-2 rounded-xl border border-black/10 bg-white p-3 transition-colors hover:border-black/30 sm:p-4 dark:border-white/10 dark:hover:border-white/30"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}

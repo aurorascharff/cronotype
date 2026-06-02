@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import { connection } from 'next/server';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import { hasBeenRevealed, hasTimelineLoaded } from '@/lib/reveals';
@@ -15,7 +14,6 @@ export async function ProfileHistorySection({ handle: rawHandle, showTimeline }:
   const handle = rawHandle.toLowerCase();
   if (!isValidGitHubHandle(handle)) notFound();
 
-  await connection();
   const revealed = await hasBeenRevealed(handle);
   if (!revealed) return null;
 
