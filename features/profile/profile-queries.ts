@@ -6,6 +6,12 @@ import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import { syntheticStatsFor } from '@/lib/synthetic';
 import type { ArchetypeId, CronotypeResult, ProfileSummary, Window } from '@/types/cronotype';
+import {
+  readCronotypeSnapshot,
+  readHistorySnapshot,
+  writeCronotypeSnapshot,
+  writeHistorySnapshot,
+} from './profile-snapshots';
 
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
@@ -67,14 +73,24 @@ async function computeCronotypeCached(login: string, window: Window): Promise<Cr
   cacheTag(`cronotype-${login}-${window}`);
   cacheLife('cronotype');
 
-  const profile = await getProfile(login);
-  const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
-  const stats = await getStatsFor(login, window, today);
+  try {
+    const profile = await getProfile(login);
+    const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
+    const stats = await getStatsFor(login, window, today);
 
-  const archetype = classify(stats);
-  const percentile = percentileFor(archetype, stats);
+    const archetype = classify(stats);
+    const percentile = percentileFor(archetype, stats);
+    const result = { archetype, percentile, profile, stats, window };
 
-  return { archetype, percentile, profile, stats, window };
+    await writeCronotypeSnapshot(login, result);
+    return result;
+  } catch (err) {
+    if (isRateLimitError(err)) {
+      const snapshot = await readCronotypeSnapshot(login);
+      if (snapshot) return snapshot;
+    }
+    throw err;
+  }
 }
 
 const MAX_CONCURRENT = 4;
@@ -142,18 +158,26 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
    }
   }
  `;
-  const res = await fetch(`${API}/graphql`, {
-    body: JSON.stringify({
-      query,
-      variables: { from: `${fromISO}T00:00:00Z`, login, to: `${toISO}T23:59:59Z` },
-    }),
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'User-Agent': UA,
-    },
-    method: 'POST',
-  });
+  await acquireSlot();
+  let res: Response;
+  try {
+    res = await fetch(`${API}/graphql`, {
+      body: JSON.stringify({
+        query,
+        variables: { from: `${fromISO}T00:00:00Z`, login, to: `${toISO}T23:59:59Z` },
+      }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'User-Agent': UA,
+      },
+      method: 'POST',
+    });
+  } catch (err) {
+    releaseSlot();
+    throw err;
+  }
+  releaseSlot();
   if (res.status === 401) throw new GitHubError('GitHub auth failed', 401);
   if (res.status === 403 || res.status === 429) {
     throw new GitHubError('GitHub rate limit hit.', 403);
@@ -495,9 +519,17 @@ async function getYearArchetype(login: string, year: number, commitCount: number
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
   const lower = login.toLowerCase();
-  const profile = await getProfile(lower);
-  const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
-  return getMonthlyHistoryCached(lower, today, profile.createdAt);
+  try {
+    const profile = await getProfile(lower);
+    const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
+    return getMonthlyHistoryCached(lower, today, profile.createdAt);
+  } catch (err) {
+    if (isRateLimitError(err)) {
+      const snapshot = await readHistorySnapshot(lower);
+      if (snapshot) return snapshot;
+    }
+    throw err;
+  }
 }
 
 export async function getTimelineChart(login: string, geometry: TimelineGeometry) {
@@ -707,7 +739,7 @@ async function getMonthlyHistoryCached(
     const years = [2026, 2025, 2024, 2023, 2022];
     const rawResults = await Promise.all(years.map(y => getYearMonthly(login, y)));
     const results = rawResults.filter((r): r is YearMonthly => r !== null);
-    return {
+    const history = {
       failedArchetypeYears: [],
       failedMonthlyYears: [],
       months: results.flatMap(r => r.months).sort((a, b) => a.month.localeCompare(b.month)),
@@ -718,121 +750,137 @@ async function getMonthlyHistoryCached(
         year: r.year,
       })),
     };
+    await writeHistorySnapshot(login, history);
+    return history;
   }
 
-  const firstYear = new Date(profileCreatedAt).getUTCFullYear();
-  const todayDate = new Date(`${today}T00:00:00Z`);
-  const thisYear = todayDate.getUTCFullYear();
-  const thisMonth = todayDate.getUTCMonth() + 1;
+  try {
+    const firstYear = new Date(profileCreatedAt).getUTCFullYear();
+    const todayDate = new Date(`${today}T00:00:00Z`);
+    const thisYear = todayDate.getUTCFullYear();
+    const thisMonth = todayDate.getUTCMonth() + 1;
 
-  const years: number[] = [];
-  for (let year = thisYear; year >= firstYear; year--) years.push(year);
+    const years: number[] = [];
+    for (let year = thisYear; year >= firstYear; year--) years.push(year);
 
-  const byYear: YearMonthly[] = [];
-  const failedMonthlySet = new Set<number>();
-  const failedArchetypeSet = new Set<number>();
-  let partial = false;
-  for (const year of years) {
-    try {
-      const value = await getYearMonthly(login, year);
-      if (value !== null) {
-        byYear.push(value);
-        continue;
+    const byYear: YearMonthly[] = [];
+    const failedMonthlySet = new Set<number>();
+    const failedArchetypeSet = new Set<number>();
+    let partial = false;
+    for (const year of years) {
+      try {
+        const value = await getYearMonthly(login, year);
+        if (value !== null) {
+          byYear.push(value);
+          continue;
+        }
+        partial = true;
+        failedMonthlySet.add(year);
+      } catch {
+        partial = true;
+        failedMonthlySet.add(year);
       }
-      partial = true;
-      failedMonthlySet.add(year);
-    } catch {
-      partial = true;
-      failedMonthlySet.add(year);
     }
-  }
 
-  if (byYear.length === 0) {
-    return {
-      failedArchetypeYears: [],
-      failedMonthlyYears: [...failedMonthlySet],
-      months: [],
-      partial: true,
-      yearlyArchetypes: [],
-    };
-  }
+    if (byYear.length === 0) {
+      const snapshot = await readHistorySnapshot(login);
+      if (snapshot) return snapshot;
+      return {
+        failedArchetypeYears: [],
+        failedMonthlyYears: [...failedMonthlySet],
+        months: [],
+        partial: true,
+        yearlyArchetypes: [],
+      };
+    }
 
-  const out = byYear.flatMap(y => y.months).sort((a, b) => a.month.localeCompare(b.month));
+    const out = byYear.flatMap(y => y.months).sort((a, b) => a.month.localeCompare(b.month));
 
-  let start = 0;
-  while (start < out.length && out[start].count === 0) start++;
-  let end = out.length;
-  while (
-    end > start &&
-    out[end - 1].count === 0 &&
-    out[end - 1].month > `${thisYear}-${String(thisMonth).padStart(2, '0')}`
-  ) {
-    end--;
-  }
+    let start = 0;
+    while (start < out.length && out[start].count === 0) start++;
+    let end = out.length;
+    while (
+      end > start &&
+      out[end - 1].count === 0 &&
+      out[end - 1].month > `${thisYear}-${String(thisMonth).padStart(2, '0')}`
+    ) {
+      end--;
+    }
 
-  const months = out.slice(start, end);
-  if (months.length === 0) {
-    return {
-      failedArchetypeYears: [],
-      failedMonthlyYears: [...failedMonthlySet],
-      months: [],
-      partial,
-      yearlyArchetypes: [],
-    };
-  }
+    const months = out.slice(start, end);
+    if (months.length === 0) {
+      const history = {
+        failedArchetypeYears: [],
+        failedMonthlyYears: [...failedMonthlySet],
+        months: [],
+        partial,
+        yearlyArchetypes: [],
+      };
+      await writeHistorySnapshot(login, history);
+      return history;
+    }
 
-  const startYear = Number(months[0].month.slice(0, 4));
-  const endYear = Number(months[months.length - 1].month.slice(0, 4));
+    const startYear = Number(months[0].month.slice(0, 4));
+    const endYear = Number(months[months.length - 1].month.slice(0, 4));
 
-  const yearsWithCommits = byYear
-    .filter(y => y.year >= startYear && y.year <= endYear && y.commits > 0)
-    .filter(y => y.year !== thisYear)
-    .map(y => y.year)
-    .sort((a, b) => b - a);
+    const yearsWithCommits = byYear
+      .filter(y => y.year >= startYear && y.year <= endYear && y.commits > 0)
+      .filter(y => y.year !== thisYear)
+      .map(y => y.year)
+      .sort((a, b) => b - a);
 
-  const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
-  for (const year of yearsWithCommits) {
-    try {
+    const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
+    for (const year of yearsWithCommits) {
+      try {
+        const yearData = byYear.find(y => y.year === year);
+        const value = await getYearArchetype(login, year, yearData?.commits ?? 0);
+        archetypeResults.push({ status: 'fulfilled', value });
+      } catch (reason) {
+        archetypeResults.push({ status: 'rejected', reason });
+        if (isRateLimitError(reason)) break;
+      }
+    }
+
+    const yearlyArchetypes: YearArchetypeBucket[] = [];
+    const attemptedYears = new Set<number>();
+    archetypeResults.forEach((r, i) => {
+      const year = yearsWithCommits[i];
       const yearData = byYear.find(y => y.year === year);
-      const value = await getYearArchetype(login, year, yearData?.commits ?? 0);
-      archetypeResults.push({ status: 'fulfilled', value });
-    } catch (reason) {
-      archetypeResults.push({ status: 'rejected', reason });
-      if (isRateLimitError(reason)) break;
+      if (!yearData) return;
+      attemptedYears.add(year);
+      if (r.status === 'fulfilled') {
+        yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
+      } else {
+        failedArchetypeSet.add(year);
+      }
+    });
+
+    if (archetypeResults.length < yearsWithCommits.length) {
+      partial = true;
     }
-  }
 
-  const yearlyArchetypes: YearArchetypeBucket[] = [];
-  const attemptedYears = new Set<number>();
-  archetypeResults.forEach((r, i) => {
-    const year = yearsWithCommits[i];
-    const yearData = byYear.find(y => y.year === year);
-    if (!yearData) return;
-    attemptedYears.add(year);
-    if (r.status === 'fulfilled') {
-      yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
-    } else {
-      failedArchetypeSet.add(year);
+    for (const year of yearsWithCommits) {
+      if (!attemptedYears.has(year)) failedArchetypeSet.add(year);
     }
-  });
 
-  if (archetypeResults.length < yearsWithCommits.length) {
-    partial = true;
+    if (failedArchetypeSet.size > 0) partial = true;
+
+    const history = {
+      failedArchetypeYears: [...failedArchetypeSet].sort((a, b) => b - a),
+      failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
+      months,
+      partial,
+      yearlyArchetypes,
+    };
+    await writeHistorySnapshot(login, history);
+    return history;
+  } catch (err) {
+    if (isRateLimitError(err)) {
+      const snapshot = await readHistorySnapshot(login);
+      if (snapshot) return snapshot;
+    }
+    throw err;
   }
-
-  for (const year of yearsWithCommits) {
-    if (!attemptedYears.has(year)) failedArchetypeSet.add(year);
-  }
-
-  if (failedArchetypeSet.size > 0) partial = true;
-
-  return {
-    failedArchetypeYears: [...failedArchetypeSet].sort((a, b) => b - a),
-    failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
-    months,
-    partial,
-    yearlyArchetypes,
-  };
 }
 
 function mockProfile(login: string): ProfileSummary {
