@@ -3,6 +3,7 @@
 import { RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { regenerateHistory } from '@/features/profile/profile-actions';
 
@@ -21,7 +22,17 @@ export function RegenerateHistoryButton({ failedArchetypeYears, failedMonthlyYea
 
   function refreshHistory() {
     startTransition(async () => {
-      await regenerateHistory(handle, failedMonthlyYears, failedArchetypeYears);
+      const result = await regenerateHistory(handle, failedMonthlyYears, failedArchetypeYears);
+      if (result.status === 'rate-limited') {
+        toast.error('GitHub is rate-limited right now. Keeping the chart you already loaded.');
+        return;
+      }
+      if (result.status === 'unchanged') {
+        toast.message('GitHub did not return more history this time.');
+        return;
+      }
+      if (result.status === 'skipped') return;
+      toast.success('History refreshed with the latest data GitHub returned.');
       router.replace(`/${handle.toLowerCase()}?history=1`, { scroll: false });
       router.refresh();
     });

@@ -3,7 +3,7 @@
 import { updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
-import { computeCronotype, getMonthlyHistory } from '@/features/profile/profile-queries';
+import { computeCronotype, getMonthlyHistory, isGitHubRateLimitError } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 import { hasBeenRevealedFresh, recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
 
@@ -94,12 +94,40 @@ export async function regenerateUserAndRedirect(handle: string, showTimeline: bo
   redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
 }
 
-export async function regenerateHistory(handle: string, failedMonthlyYears: number[], failedArchetypeYears: number[]) {
+export type RegenerateHistoryResult = {
+  status: 'refreshed' | 'rate-limited' | 'skipped' | 'unchanged';
+};
+
+function hasHistoryRetryProgress(
+  requestedMonthlyYears: number[],
+  requestedArchetypeYears: number[],
+  result: Awaited<ReturnType<typeof getMonthlyHistory>>,
+) {
+  const failedMonthly = new Set(result.failedMonthlyYears);
+  const failedArchetypes = new Set(result.failedArchetypeYears);
+  return (
+    requestedMonthlyYears.some(year => !failedMonthly.has(year)) ||
+    requestedArchetypeYears.some(year => !failedArchetypes.has(year))
+  );
+}
+
+export async function regenerateHistory(
+  handle: string,
+  failedMonthlyYears: number[],
+  failedArchetypeYears: number[],
+): Promise<RegenerateHistoryResult> {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
-  if (!(await hasBeenRevealedFresh(lower))) return;
+  if (!(await hasBeenRevealedFresh(lower))) return { status: 'skipped' };
   invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
-  await getMonthlyHistory(lower);
+  try {
+    const history = await getMonthlyHistory(lower);
+    if (!hasHistoryRetryProgress(failedMonthlyYears, failedArchetypeYears, history)) return { status: 'unchanged' };
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return { status: 'rate-limited' };
+    throw err;
+  }
+  return { status: 'refreshed' };
 }
 
 export async function showHistory(handle: string) {
