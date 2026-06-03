@@ -1,6 +1,6 @@
 'use server';
 
-import { updateTag } from 'next/cache';
+import { refresh, revalidateTag, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
 import {
@@ -21,16 +21,18 @@ export type RevealFormState = {
 const FIRST_HISTORY_YEAR = 2008;
 const LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS = 2035;
 
-function invalidateAllForHandle(handle: string) {
-  updateTag(`profile-page-${handle}`);
-  updateTag(`profile-${handle}`);
-  updateTag(`cronotype-${handle}-90d`);
-  updateTag(`stats-${handle}-90d`);
-  invalidateHistoryForHandle(handle);
+const CACHE_LIFE = 'cronotype';
+
+function revalidateAllForHandle(handle: string) {
+  revalidateTag(`profile-page-${handle}`, CACHE_LIFE);
+  revalidateTag(`profile-${handle}`, CACHE_LIFE);
+  revalidateTag(`cronotype-${handle}-90d`, CACHE_LIFE);
+  revalidateTag(`stats-${handle}-90d`, CACHE_LIFE);
+  revalidateHistoryForHandle(handle);
 }
 
-function invalidateHistoryForHandle(handle: string, years?: number[], includeAggregate = true) {
-  if (includeAggregate) updateTag(`history-${handle}`);
+function revalidateHistoryForHandle(handle: string, years?: number[], includeAggregate = true) {
+  if (includeAggregate) revalidateTag(`history-${handle}`, CACHE_LIFE);
   const yearsToRefresh = years?.length
     ? [...new Set(years)]
     : Array.from(
@@ -38,6 +40,14 @@ function invalidateHistoryForHandle(handle: string, years?: number[], includeAgg
         (_, i) => FIRST_HISTORY_YEAR + i,
       );
   for (const year of yearsToRefresh) {
+    if (year < FIRST_HISTORY_YEAR || year > LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS) continue;
+    revalidateTag(`monthly-${handle}-${year}`, CACHE_LIFE);
+    revalidateTag(`year-archetype-${handle}-${year}`, CACHE_LIFE);
+  }
+}
+
+function invalidateMissingHistoryForHandle(handle: string, years: number[]) {
+  for (const year of [...new Set(years)]) {
     if (year < FIRST_HISTORY_YEAR || year > LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS) continue;
     updateTag(`monthly-${handle}-${year}`);
     updateTag(`year-archetype-${handle}-${year}`);
@@ -82,11 +92,11 @@ export async function regenerateUser(handle: string): Promise<boolean> {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   if (!(await hasBeenRevealedFresh(lower))) return false;
-  invalidateAllForHandle(lower);
-  await computeCronotype(lower, '90d');
+  revalidateAllForHandle(lower);
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
+  refresh();
   return true;
 }
 
@@ -95,7 +105,7 @@ export async function regenerateUserAndRedirect(handle: string, showTimeline: bo
   const regenerated = await regenerateUser(lower);
   if (!regenerated) redirect(`/${lower}`);
   if (showTimeline) {
-    await getMonthlyHistory(lower);
+    revalidateTag(`history-${lower}`, CACHE_LIFE);
   }
   redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
 }
@@ -125,11 +135,11 @@ export async function regenerateHistory(
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   if (!(await hasBeenRevealedFresh(lower))) return { status: 'skipped' };
-  invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears], false);
+  invalidateMissingHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
   try {
     const warmed = await warmMissingHistoryYears(lower, failedMonthlyYears, failedArchetypeYears);
     if (!warmed) return { status: 'unchanged' };
-    updateTag(`history-${lower}`);
+    revalidateTag(`history-${lower}`, CACHE_LIFE);
     const history = await getMonthlyHistory(lower);
     if (!hasHistoryRetryProgress(failedMonthlyYears, failedArchetypeYears, history)) return { status: 'unchanged' };
   } catch (err) {
