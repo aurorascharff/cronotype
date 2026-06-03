@@ -40,15 +40,19 @@ function isRateLimitError(err: unknown): boolean {
   return status === 403 || status === 429;
 }
 
-function headers(extra: Record<string, string> = {}): HeadersInit {
+function githubHistoryToken(): string | undefined {
+  return process.env.GITHUB_HISTORY_TOKEN ?? process.env.GITHUB_TOKEN;
+}
+
+function headers(extra: Record<string, string> = {}, token = process.env.GITHUB_TOKEN): HeadersInit {
   const h: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'User-Agent': UA,
     'X-GitHub-Api-Version': '2022-11-28',
     ...extra,
   };
-  if (process.env.GITHUB_TOKEN) {
-    h.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  if (token) {
+    h.Authorization = `Bearer ${token}`;
   }
   return h;
 }
@@ -94,11 +98,11 @@ function releaseSlot() {
   }
 }
 
-async function gh(url: string, init: RequestInit = {}): Promise<Response> {
+async function gh(url: string, init: RequestInit = {}, token = process.env.GITHUB_TOKEN): Promise<Response> {
   await acquireSlot();
   let res: Response;
   try {
-    res = await fetch(url, { ...init, headers: { ...headers(), ...(init.headers ?? {}) } });
+    res = await fetch(url, { ...init, headers: { ...headers({}, token), ...(init.headers ?? {}) } });
   } catch (err) {
     releaseSlot();
     throw err;
@@ -118,8 +122,9 @@ async function gh(url: string, init: RequestInit = {}): Promise<Response> {
 type ContributionDay = { date: string; contributionCount: number };
 
 async function fetchContributionCalendar(login: string, fromISO: string, toISO: string): Promise<ContributionDay[]> {
-  if (!process.env.GITHUB_TOKEN) {
-    throw new GitHubError('GraphQL contributions require GITHUB_TOKEN', 401);
+  const token = githubHistoryToken();
+  if (!token) {
+    throw new GitHubError('GraphQL contributions require GITHUB_TOKEN or GITHUB_HISTORY_TOKEN', 401);
   }
   const query = `
   query($login: String!, $from: DateTime!, $to: DateTime!) {
@@ -143,7 +148,7 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
       variables: { from: `${fromISO}T00:00:00Z`, login, to: `${toISO}T23:59:59Z` },
     }),
     headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       'User-Agent': UA,
     },
@@ -220,6 +225,7 @@ async function fetchCommitsInRange(
   depth = 0,
   maxPages = 10,
   perPage = 100,
+  token = process.env.GITHUB_TOKEN,
 ): Promise<Commit[]> {
   const q = `author:${login} author-date:${fromISO}..${toISO}`;
   const commits: Commit[] = [];
@@ -227,7 +233,7 @@ async function fetchCommitsInRange(
 
   for (let page = 1; page <= maxPages; page++) {
     const url = `${API}/search/commits?q=${encodeURIComponent(q)}&per_page=${perPage}&page=${page}&sort=author-date&order=desc`;
-    const res = await gh(url, { headers: { Accept: 'application/vnd.github.cloak-preview+json' } });
+    const res = await gh(url, { headers: { Accept: 'application/vnd.github.cloak-preview+json' } }, token);
     if (!res.ok) {
       if (page === 1 && res.status === 422) return [];
       break;
@@ -254,8 +260,8 @@ async function fetchCommitsInRange(
     const to = new Date(toISO).getTime();
     const mid = new Date((from + to) / 2).toISOString().slice(0, 10);
     const [a, b] = await Promise.all([
-      fetchCommitsInRange(login, fromISO, mid, depth + 1, maxPages, perPage),
-      fetchCommitsInRange(login, mid, toISO, depth + 1, maxPages, perPage),
+      fetchCommitsInRange(login, fromISO, mid, depth + 1, maxPages, perPage, token),
+      fetchCommitsInRange(login, mid, toISO, depth + 1, maxPages, perPage, token),
     ]);
     return dedupe([...a, ...b]);
   }
@@ -473,7 +479,15 @@ async function getYearArchetype(login: string, year: number, commitCount: number
         ? YEAR_ARCHETYPE_SAMPLE_SIZE
         : 100;
   const maxPages = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_PAGES : 1;
-  const sampleCommits = await fetchCommitsInRange(login, `${year}-01-01`, `${year}-12-31`, 0, maxPages, perPage);
+  const sampleCommits = await fetchCommitsInRange(
+    login,
+    `${year}-01-01`,
+    `${year}-12-31`,
+    0,
+    maxPages,
+    perPage,
+    githubHistoryToken(),
+  );
   const signal = signalCommits(sampleCommits);
   if (signal.length === 0) return sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null;
   return classify({ ...buildStats(signal), total: commitCount }).id;

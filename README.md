@@ -47,6 +47,7 @@ lib/                  Shared app helpers, archetypes, formatting, reveal state
 pnpm install
 cp .env.example .env.local
 # add a GITHUB_TOKEN for GitHub REST + GraphQL requests
+# optionally add GITHUB_HISTORY_TOKEN for history chart requests
 pnpm dev
 ```
 
