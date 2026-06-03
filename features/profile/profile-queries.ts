@@ -274,9 +274,9 @@ async function fetchCommitsInRange(
   }
 
   if (truncated && depth < 3) {
-    const from = new Date(fromISO).getTime();
-    const to = new Date(toISO).getTime();
-    const mid = new Date((from + to) / 2).toISOString().slice(0, 10);
+    const from = dateKeyToDayNumber(fromISO);
+    const to = dateKeyToDayNumber(toISO);
+    const mid = dayNumberToDateKey(Math.floor((from + to) / 2));
     const [a, b] = await Promise.all([
       fetchCommitsInRange(login, fromISO, mid, depth + 1, maxPages, perPage, token),
       fetchCommitsInRange(login, mid, toISO, depth + 1, maxPages, perPage, token),
@@ -309,9 +309,53 @@ function dedupe(commits: Commit[]): Commit[] {
 
 function dateHeaderToDayKey(value: string | null): string {
   if (!value) throw new GitHubError('GitHub response did not include a date header.', 502);
-  const time = Date.parse(value);
-  if (!Number.isFinite(time)) throw new GitHubError('GitHub response included an invalid date header.', 502);
-  return new Date(time).toISOString().slice(0, 10);
+  const match = value.match(/^[A-Za-z]{3},\s+(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})\s+/);
+  const month = match ? monthIndex(match[2]) : 0;
+  if (!match || month === 0) throw new GitHubError('GitHub response included an invalid date header.', 502);
+  return `${match[3]}-${String(month).padStart(2, '0')}-${String(Number(match[1])).padStart(2, '0')}`;
+}
+
+function monthIndex(name: string): number {
+  return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(name) + 1;
+}
+
+function dateKeyToDayNumber(value: string): number {
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  if (![year, month, day].every(Number.isFinite)) throw new GitHubError('Invalid date key.', 502);
+  return daysFromCivil(year, month, day);
+}
+
+function dayNumberToDateKey(dayNumber: number): string {
+  const { day, month, year } = civilFromDays(dayNumber);
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function daysFromCivil(year: number, month: number, day: number): number {
+  let y = year;
+  let m = month;
+  y -= m <= 2 ? 1 : 0;
+  const era = Math.floor(y / 400);
+  const yoe = y - era * 400;
+  m += m > 2 ? -3 : 9;
+  const doy = Math.floor((153 * m + 2) / 5) + day - 1;
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+
+function civilFromDays(dayNumber: number) {
+  const z = dayNumber + 719468;
+  const era = Math.floor(z / 146097);
+  const doe = z - era * 146097;
+  const yoe = Math.floor((doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365);
+  let year = yoe + era * 400;
+  const doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100));
+  const mp = Math.floor((5 * doy + 2) / 153);
+  const day = doy - Math.floor((153 * mp + 2) / 5) + 1;
+  const month = mp + (mp < 10 ? 3 : -9);
+  year += month <= 2 ? 1 : 0;
+  return { day, month, year };
 }
 
 async function getGitHubDateKey(): Promise<string> {
@@ -329,9 +373,7 @@ async function getGitHubDateKeyCached(): Promise<string> {
 
 function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO: string } {
   const days = window === '90d' ? 90 : window === '1y' ? 365 : 365 * 5;
-  const toDate = new Date(`${toISO}T00:00:00Z`);
-  const fromDate = new Date(toDate.getTime() - days * 24 * 3600_000);
-  return { fromISO: fromDate.toISOString().slice(0, 10), toISO };
+  return { fromISO: dayNumberToDateKey(dateKeyToDayNumber(toISO) - days), toISO };
 }
 
 export async function getStatsFor(
@@ -782,10 +824,9 @@ async function getMonthlyHistoryCached(
     return history;
   }
 
-  const firstYear = new Date(profileCreatedAt).getUTCFullYear();
-  const todayDate = new Date(`${today}T00:00:00Z`);
-  const thisYear = todayDate.getUTCFullYear();
-  const thisMonth = todayDate.getUTCMonth() + 1;
+  const firstYear = Number(profileCreatedAt.slice(0, 4));
+  const thisYear = Number(today.slice(0, 4));
+  const thisMonth = Number(today.slice(5, 7));
 
   const years: number[] = [];
   for (let year = thisYear; year >= firstYear; year--) years.push(year);
