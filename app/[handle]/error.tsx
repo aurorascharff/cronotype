@@ -1,9 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { RegenerateButton } from '@/features/profile/components/regenerate-button';
 import { RouteStateCard } from './route-state-card';
 
 type Props = {
@@ -28,31 +25,10 @@ export default function Error({ error, reset }: Props) {
         }
       />
       <div className="flex justify-end">
-        <Suspense
-          fallback={
-            <Button type="button" disabled variant="secondary" className="h-10 px-4 text-sm">
-              Regenerate
-            </Button>
-          }
-        >
-          <ErrorRegenerateButton reset={reset} />
-        </Suspense>
+        <Button type="button" onClick={reset} variant="secondary" className="h-10 px-4 text-sm">
+          Try again
+        </Button>
       </div>
     </section>
   );
-}
-
-function ErrorRegenerateButton({ reset }: { reset: () => void }) {
-  const params = useParams<{ handle?: string }>();
-  const handle = params.handle;
-
-  if (!handle) {
-    return (
-      <Button type="button" onClick={reset} variant="secondary" className="h-10 px-4 text-sm">
-        Try again
-      </Button>
-    );
-  }
-
-  return <RegenerateButton handle={handle} />;
 }

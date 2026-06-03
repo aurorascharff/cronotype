@@ -673,20 +673,25 @@ async function getYearArchetypeCached(
   }
 }
 
+export type WarmedHistoryYears = {
+  archetypeYears: number[];
+  monthlyYears: number[];
+};
+
 export async function warmMissingHistoryYears(
   login: string,
   failedMonthlyYears: number[],
   failedArchetypeYears: number[],
-): Promise<boolean> {
+): Promise<WarmedHistoryYears> {
   const lower = login.toLowerCase();
-  let warmed = false;
+  const warmed: WarmedHistoryYears = { archetypeYears: [], monthlyYears: [] };
   const monthlyByYear = new Map<number, YearMonthly>();
 
   for (const year of [...new Set(failedMonthlyYears)]) {
     try {
       const value = await getYearMonthly(lower, year);
       monthlyByYear.set(year, value);
-      warmed = true;
+      warmed.monthlyYears.push(year);
     } catch (err) {
       if (isGitHubRateLimitError(err)) break;
       throw err;
@@ -697,8 +702,8 @@ export async function warmMissingHistoryYears(
     try {
       const yearData = monthlyByYear.get(year) ?? (await getYearMonthly(lower, year));
       if (yearData.commits <= 0) continue;
-      const archetype = await getYearArchetype(lower, year, yearData.commits);
-      warmed = true;
+      await getYearArchetype(lower, year, yearData.commits);
+      warmed.archetypeYears.push(year);
     } catch (err) {
       if (isGitHubRateLimitError(err)) break;
       throw err;

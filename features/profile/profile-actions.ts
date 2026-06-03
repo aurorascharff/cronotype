@@ -6,7 +6,6 @@ import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
 import {
   computeCronotype,
   ensureGitHubRateLimitHeadroom,
-  getMonthlyHistory,
   isGitHubHistoryUnavailableError,
   isGitHubRateLimitError,
   warmMissingHistoryYears,
@@ -22,29 +21,12 @@ export type RevealFormState = {
 const FIRST_HISTORY_YEAR = 2008;
 const LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS = 2035;
 
-const CACHE_LIFE = 'cronotype';
-
 function invalidateProfileForHandle(handle: string) {
   updateTag(`profile-page-${handle}`);
   updateTag(`profile-${handle}`);
   updateTag(`cronotype-${handle}-90d`);
   updateTag(`stats-${handle}-90d`);
   updateTag(`commits-${handle}-90d`);
-}
-
-function revalidateHistoryForHandle(handle: string, years?: number[], includeAggregate = true) {
-  if (includeAggregate) revalidateTag(`history-${handle}`, CACHE_LIFE);
-  const yearsToRefresh = years?.length
-    ? [...new Set(years)]
-    : Array.from(
-        { length: LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS - FIRST_HISTORY_YEAR + 1 },
-        (_, i) => FIRST_HISTORY_YEAR + i,
-      );
-  for (const year of yearsToRefresh) {
-    if (year < FIRST_HISTORY_YEAR || year > LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS) continue;
-    revalidateTag(`monthly-${handle}-${year}`, CACHE_LIFE);
-    revalidateTag(`year-archetype-${handle}-${year}`, CACHE_LIFE);
-  }
 }
 
 function invalidateMissingHistoryForHandle(handle: string, years: number[]) {
@@ -108,28 +90,12 @@ export async function regenerateUserAndRedirect(handle: string, showTimeline: bo
   const lower = handle.toLowerCase();
   const regenerated = await regenerateUser(lower);
   if (!regenerated) redirect(`/${lower}`);
-  if (showTimeline) {
-    revalidateTag(`history-${lower}`, CACHE_LIFE);
-  }
   redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
 }
 
 export type RegenerateHistoryResult = {
   status: 'refreshed' | 'rate-limited' | 'skipped' | 'unchanged';
 };
-
-function hasHistoryRetryProgress(
-  requestedMonthlyYears: number[],
-  requestedArchetypeYears: number[],
-  result: Awaited<ReturnType<typeof getMonthlyHistory>>,
-) {
-  const failedMonthly = new Set(result.failedMonthlyYears);
-  const failedArchetypes = new Set(result.failedArchetypeYears);
-  return (
-    requestedMonthlyYears.some(year => !failedMonthly.has(year)) ||
-    requestedArchetypeYears.some(year => !failedArchetypes.has(year))
-  );
-}
 
 export async function regenerateHistory(
   handle: string,
@@ -142,10 +108,8 @@ export async function regenerateHistory(
   invalidateMissingHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
   try {
     const warmed = await warmMissingHistoryYears(lower, failedMonthlyYears, failedArchetypeYears);
-    if (!warmed) return { status: 'unchanged' };
-    revalidateTag(`history-${lower}`, CACHE_LIFE);
-    const history = await getMonthlyHistory(lower);
-    if (!hasHistoryRetryProgress(failedMonthlyYears, failedArchetypeYears, history)) return { status: 'unchanged' };
+    if (warmed.monthlyYears.length === 0 && warmed.archetypeYears.length === 0) return { status: 'unchanged' };
+    updateTag(`history-${lower}`);
   } catch (err) {
     if (isGitHubRateLimitError(err) || isGitHubHistoryUnavailableError(err)) return { status: 'rate-limited' };
     throw err;

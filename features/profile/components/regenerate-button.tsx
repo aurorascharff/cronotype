@@ -12,6 +12,8 @@ type Props = {
 export function RegenerateButton({ handle }: Props) {
   const searchParams = useSearchParams();
   const showTimeline = searchParams.get('history') === '1';
+  // TODO(nextjs): re-enable this UI once cached RSC reads stop intermittently
+  // closing the connection after a successful regenerate.
   const action = regenerateUserAndRedirect.bind(null, handle, showTimeline);
 
   return (
