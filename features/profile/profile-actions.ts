@@ -68,6 +68,7 @@ async function recordFeaturedRevealIfNeeded(handle: string) {
 export async function revealUser(handle: string) {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
+  if (await hasBeenRevealedFresh(lower)) return;
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);

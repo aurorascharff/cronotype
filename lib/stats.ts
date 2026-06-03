@@ -35,10 +35,12 @@ export function buildStats(commits: Commit[]): HourStats {
   const tzVotes = new Map<number, number>();
 
   for (const c of commits) {
-    const utc = parseIsoMinute(c.authoredAt);
-    if (!utc) continue;
-    const offsetMin = c.tzOffsetMinutes ?? 0;
-    const local = offsetDateTime(utc, offsetMin);
+    const parsed = parseIsoMinute(c.authoredAt);
+    if (!parsed) continue;
+    const local =
+      c.tzOffsetMinutes == null
+        ? offsetDateTime(parsed, 0)
+        : { hour: parsed.hour, weekday: weekdayFromDayNumber(parsed.dayNumber) };
     const hour = local.hour;
     const wday = local.weekday;
     hourly[hour]++;
