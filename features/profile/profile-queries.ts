@@ -49,6 +49,14 @@ function githubHistoryToken(): string | undefined {
   return process.env.GITHUB_HISTORY_TOKEN ?? process.env.GITHUB_TOKEN;
 }
 
+export async function ensureGitHubRateLimitHeadroom(minRemaining = 10) {
+  const res = await gh(`${API}/rate_limit`);
+  const remaining = Number(res.headers.get('x-ratelimit-remaining') ?? '0');
+  if (Number.isFinite(remaining) && remaining < minRemaining) {
+    throw new GitHubError('GitHub rate limit hit. Try again in a minute.', 403);
+  }
+}
+
 function headers(extra: Record<string, string> = {}, token = process.env.GITHUB_TOKEN): HeadersInit {
   const h: Record<string, string> = {
     Accept: 'application/vnd.github+json',

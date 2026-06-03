@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next';
 
 const DAY = 60 * 60 * 24;
-const MINUTE = 60;
 const YEAR = 365 * DAY;
 
 const nextConfig: NextConfig = {
@@ -10,7 +9,7 @@ const nextConfig: NextConfig = {
     cronotype: {
       expire: YEAR,
       revalidate: 180 * DAY,
-      stale: 5 * MINUTE,
+      stale: 180 * DAY,
     },
   },
   experimental: {

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
 import {
   computeCronotype,
+  ensureGitHubRateLimitHeadroom,
   getMonthlyHistory,
   isGitHubHistoryUnavailableError,
   isGitHubRateLimitError,
@@ -23,12 +24,12 @@ const LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS = 2035;
 
 const CACHE_LIFE = 'cronotype';
 
-function revalidateAllForHandle(handle: string) {
-  revalidateTag(`profile-page-${handle}`, CACHE_LIFE);
-  revalidateTag(`profile-${handle}`, CACHE_LIFE);
-  revalidateTag(`cronotype-${handle}-90d`, CACHE_LIFE);
-  revalidateTag(`stats-${handle}-90d`, CACHE_LIFE);
-  revalidateHistoryForHandle(handle);
+function invalidateProfileForHandle(handle: string) {
+  updateTag(`profile-page-${handle}`);
+  updateTag(`profile-${handle}`);
+  updateTag(`cronotype-${handle}-90d`);
+  updateTag(`stats-${handle}-90d`);
+  updateTag(`commits-${handle}-90d`);
 }
 
 function revalidateHistoryForHandle(handle: string, years?: number[], includeAggregate = true) {
@@ -92,7 +93,9 @@ export async function regenerateUser(handle: string): Promise<boolean> {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   if (!(await hasBeenRevealedFresh(lower))) return false;
-  revalidateAllForHandle(lower);
+  await ensureGitHubRateLimitHeadroom();
+  invalidateProfileForHandle(lower);
+  await computeCronotype(lower, '90d');
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
