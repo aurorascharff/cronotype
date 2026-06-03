@@ -19,6 +19,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - Shared UI primitives, button states, UI icons, crossfade, and error boundaries live in `components/ui/`; Cronotype-specific shared components stay in `components/`
 - Domain verb "reveal" is the app's term for classifying a handle; don't reintroduce "diagnose"
 - Public GitHub data queries use `'use cache: remote'` where durable cross-request caching protects rate limits.
+- GitHub 403/429 is an expected operational state. Foreground profile renders should still reach the route error UI, but cached/background work must not leak GitHub rate-limit rejections as unhandled promises. If a cached helper can revalidate outside a request boundary, catch only GitHub rate-limit errors at that boundary and return an explicit fallback value; rethrow not-found and unknown errors.
 - Skeletons are co-located with the component they represent. Don't create standalone skeleton-only files.
 - Theme: light/dark via `next-themes`; client components use `useSyncExternalStore` (not `useEffect + setMounted`) to read "mounted" state without lint errors
 - Section headers (`<h2>` titles) live in `app/**/page.tsx` outside Suspense so they paint in the static shell; feature components return only their grid/card content
@@ -30,6 +31,12 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - **GraphQL contributions calendar** for the multi-year history. 5000/hr pool. One call per year, fanned out serially in [features/profile/profile-queries.ts](features/profile/profile-queries.ts).
 - **GitHub OAuth private flow** in [features/profile/profile-private-queries.ts](features/profile/profile-private-queries.ts) requests the classic `repo` scope because GitHub requires it for private repo commit search. The token is used for read requests during the callback and is not stored; only the derived result is kept in the browser.
 - The top revealed list only displays featured handles. Reveal state lives in [lib/reveals.ts](lib/reveals.ts), backed by Upstash when configured, and the featured reveal lookups use `cacheLife('cronotype')`.
+
+## Cache failure handling
+
+- Do not rely on `instrumentation.ts` or `process.on('unhandledRejection')` to keep Vercel functions alive. It may log escaped rejections, but the platform can still treat them as fatal.
+- Use `isGitHubRateLimitError` for 403/429 fallbacks. Keep the fallback small and explicit, and keep other errors loud.
+- Image routes do not have the profile page error boundary. They should return the generic/fallback image for GitHub rate limits, `notFound()` for missing users, and rethrow unknown errors.
 
 ## Error boundaries
 
