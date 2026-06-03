@@ -62,6 +62,13 @@ export async function hasBeenRevealed(handle: string): Promise<boolean> {
   return hasBeenRevealedCached(handle.toLowerCase());
 }
 
+export async function hasBeenRevealedFresh(handle: string): Promise<boolean> {
+  const kv = getClient();
+  if (!kv) return false;
+  const value = await kv.get(revealKey(handle.toLowerCase()));
+  return value !== null;
+}
+
 export async function hasTimelineLoaded(handle: string): Promise<boolean> {
   return hasTimelineLoadedCached(handle.toLowerCase());
 }

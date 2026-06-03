@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
 import { computeCronotype, getMonthlyHistory } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
-import { hasBeenRevealed, recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
+import { hasBeenRevealedFresh, recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
 
 export type RevealFormState = {
   error: string | null;
@@ -75,7 +75,7 @@ export async function revealUserFromForm(state: RevealFormState, formData: FormD
 export async function regenerateUser(handle: string): Promise<boolean> {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
-  if (!(await hasBeenRevealed(lower))) return false;
+  if (!(await hasBeenRevealedFresh(lower))) return false;
   invalidateAllForHandle(lower);
   await computeCronotype(lower, '90d');
   await recordReveal(lower);
@@ -97,7 +97,7 @@ export async function regenerateUserAndRedirect(handle: string, showTimeline: bo
 export async function regenerateHistory(handle: string, failedMonthlyYears: number[], failedArchetypeYears: number[]) {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
-  if (!(await hasBeenRevealed(lower))) return;
+  if (!(await hasBeenRevealedFresh(lower))) return;
   invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
   await getMonthlyHistory(lower);
 }
