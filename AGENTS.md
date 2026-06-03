@@ -20,6 +20,7 @@ Follow the [Next.js App Architecture](.agents/skills/nextjs-app-architecture/SKI
 - Domain verb "reveal" is the app's term for classifying a handle; don't reintroduce "diagnose"
 - Public GitHub data queries use `'use cache: remote'` where durable cross-request caching protects rate limits.
 - GitHub 403/429 is an expected operational state. Foreground profile renders should still reach the route error UI, but cached/background work must not leak GitHub rate-limit rejections as unhandled promises. If a cached helper can revalidate outside a request boundary, catch only GitHub rate-limit errors at that boundary and return an explicit fallback value; rethrow not-found and unknown errors.
+- Avoid `Date.now()` / `new Date()` in public profile render and cached-navigation paths. Prefer deterministic ISO/date-key string math; keep true request-time dates inside server actions or explicitly dynamic private flows.
 - Skeletons are co-located with the component they represent. Don't create standalone skeleton-only files.
 - Theme: light/dark via `next-themes`; client components use `useSyncExternalStore` (not `useEffect + setMounted`) to read "mounted" state without lint errors
 - Section headers (`<h2>` titles) live in `app/**/page.tsx` outside Suspense so they paint in the static shell; feature components return only their grid/card content

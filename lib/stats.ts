@@ -35,13 +35,12 @@ export function buildStats(commits: Commit[]): HourStats {
   const tzVotes = new Map<number, number>();
 
   for (const c of commits) {
-    const dt = new Date(c.authoredAt);
-    if (Number.isNaN(dt.getTime())) continue;
-
+    const utc = parseIsoMinute(c.authoredAt);
+    if (!utc) continue;
     const offsetMin = c.tzOffsetMinutes ?? 0;
-    const local = new Date(dt.getTime() + offsetMin * 60_000);
-    const hour = local.getUTCHours();
-    const wday = local.getUTCDay();
+    const local = offsetDateTime(utc, offsetMin);
+    const hour = local.hour;
+    const wday = local.weekday;
     hourly[hour]++;
     weekday[wday]++;
     if (wday === 0 || wday === 6) weekendCount++;
@@ -88,6 +87,54 @@ export function buildStats(commits: Commit[]): HourStats {
     tzOffsetHours,
     weekday,
   };
+}
+
+type IsoMinute = {
+  dayNumber: number;
+  hour: number;
+  minute: number;
+};
+
+function parseIsoMinute(value: string): IsoMinute | null {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  if (![year, month, day, hour, minute].every(Number.isFinite)) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return null;
+  }
+  return { dayNumber: daysFromCivil(year, month, day), hour, minute };
+}
+
+function offsetDateTime(value: IsoMinute, offsetMinutes: number) {
+  const total = value.hour * 60 + value.minute + offsetMinutes;
+  const dayOffset = Math.floor(total / 1440);
+  const minuteOfDay = ((total % 1440) + 1440) % 1440;
+  const dayNumber = value.dayNumber + dayOffset;
+  return {
+    hour: Math.floor(minuteOfDay / 60),
+    weekday: weekdayFromDayNumber(dayNumber),
+  };
+}
+
+function daysFromCivil(year: number, month: number, day: number): number {
+  let y = year;
+  let m = month;
+  y -= m <= 2 ? 1 : 0;
+  const era = Math.floor(y / 400);
+  const yoe = y - era * 400;
+  m += m > 2 ? -3 : 9;
+  const doy = Math.floor((153 * m + 2) / 5) + day - 1;
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+
+function weekdayFromDayNumber(dayNumber: number): number {
+  return (((dayNumber + 4) % 7) + 7) % 7;
 }
 
 function sumRange(arr: number[], from: number, to: number): number {
