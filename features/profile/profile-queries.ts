@@ -174,10 +174,10 @@ async function fetchContributionCalendar(login: string, fromISO: string, toISO: 
       method: 'POST',
     });
   } catch (err) {
-    releaseSlot();
     throw err;
+  } finally {
+    releaseSlot();
   }
-  releaseSlot();
   if (res.status === 401) throw new GitHubError('GitHub auth failed', 401);
   if (res.status === 403 || res.status === 429) {
     throw new GitHubError('GitHub rate limit hit.', 403);

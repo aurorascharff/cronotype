@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
-import { computeCronotype, getProfileOrNull, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import { hasBeenRevealed } from '@/lib/reveals';
@@ -66,9 +66,6 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   const { handle } = await params;
   const revealed = await hasBeenRevealed(handle);
   if (!revealed) return defaultImage();
-
-  const profileExists = await getProfileOrNull(handle);
-  if (!profileExists) notFound();
 
   let result;
   try {

@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getProfileOrNull, getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import { getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 
 const size = { width: 1200, height: 630 };
 
@@ -34,8 +34,6 @@ const PAD_BOT = 8;
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
-  const profileExists = await getProfileOrNull(handle);
-  if (!profileExists) return new Response(null, { status: 404 });
 
   let chart;
   try {
