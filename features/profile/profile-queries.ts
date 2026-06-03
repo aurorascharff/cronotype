@@ -15,6 +15,19 @@ const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
 const YEAR_ARCHETYPE_SAMPLE_SIZE = 35;
 const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 15;
 const YEAR_ARCHETYPE_SAMPLE_PAGES = 3;
+const GITHUB_RATE_LIMIT_MESSAGE = 'GitHub rate limit hit. Try again in a minute.';
+// TODO(nextjs): remove once failed `use cache: remote` fills/revalidations no longer escape
+// as unhandled rejections and terminate the Vercel function.
+const SHORT_RATE_LIMIT_CACHE_LIFE = { expire: 10, revalidate: 0, stale: 0 };
+
+type ProfileCacheResult =
+  | { status: 'found'; profile: ProfileSummary }
+  | { status: 'missing' }
+  | { status: 'rate-limited' };
+
+type YearArchetypeCacheResult =
+  | { status: 'ok'; archetypeId: ArchetypeId | null }
+  | { status: 'rate-limited' };
 
 export class GitHubError extends Error {
   status: number;
@@ -45,6 +58,10 @@ export function isGitHubHistoryUnavailableError(err: unknown): boolean {
   return err instanceof Error && err.message.includes('GitHub could not load commit history');
 }
 
+function gitHubRateLimitError(): GitHubError {
+  return new GitHubError(GITHUB_RATE_LIMIT_MESSAGE, 403);
+}
+
 function githubHistoryToken(): string | undefined {
   return process.env.GITHUB_HISTORY_TOKEN ?? process.env.GITHUB_TOKEN;
 }
@@ -53,7 +70,7 @@ export async function ensureGitHubRateLimitHeadroom(minRemaining = 10) {
   const res = await gh(`${API}/rate_limit`);
   const remaining = Number(res.headers.get('x-ratelimit-remaining') ?? '0');
   if (Number.isFinite(remaining) && remaining < minRemaining) {
-    throw new GitHubError('GitHub rate limit hit. Try again in a minute.', 403);
+    throw gitHubRateLimitError();
   }
 }
 
@@ -72,21 +89,32 @@ function headers(extra: Record<string, string> = {}, token = process.env.GITHUB_
 
 export const computeCronotype = cache(async (login: string, window: Window = '90d'): Promise<CronotypeResult> => {
   const normalized = login.toLowerCase();
-  return computeCronotypeCached(normalized, window);
+  const result = await computeCronotypeCached(normalized, window);
+  if (!result) throw gitHubRateLimitError();
+  return result;
 });
 
-async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
+async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult | null> {
   'use cache: remote';
   cacheTag(`cronotype-${login}-${window}`);
   cacheLife('cronotype');
 
-  const profile = await getProfile(login);
-  const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
-  const stats = await getStatsFor(login, window, today);
+  try {
+    const profile = await getProfile(login);
+    const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
+    const stats = await getStatsFor(login, window, today);
 
-  const archetype = classify(stats);
-  const percentile = percentileFor(archetype, stats);
-  return { archetype, percentile, profile, stats, window };
+    const archetype = classify(stats);
+    const percentile = percentileFor(archetype, stats);
+    return { archetype, percentile, profile, stats, window };
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return null;
+    }
+    throw err;
+  }
 }
 
 const MAX_CONCURRENT = 4;
@@ -122,7 +150,7 @@ async function gh(url: string, init: RequestInit = {}, token = process.env.GITHU
   if (res.status === 403 || res.status === 429) {
     const remaining = res.headers.get('x-ratelimit-remaining');
     if (remaining === '0') {
-      throw new GitHubError('GitHub rate limit hit. Try again in a minute.', 403);
+      throw gitHubRateLimitError();
     }
     throw new GitHubError('GitHub blocked the request (secondary rate limit). Try again in a minute.', 403);
   }
@@ -197,33 +225,47 @@ export async function getProfile(login: string): Promise<ProfileSummary> {
 }
 
 export async function getProfileOrNull(login: string): Promise<ProfileSummary | null> {
-  return getProfileCached(login.toLowerCase());
+  const result = await getProfileCached(login.toLowerCase());
+  if (result.status === 'rate-limited') throw gitHubRateLimitError();
+  return result.status === 'found' ? result.profile : null;
 }
 
-async function getProfileCached(login: string): Promise<ProfileSummary | null> {
+async function getProfileCached(login: string): Promise<ProfileCacheResult> {
   'use cache: remote';
   cacheTag(`profile-${login}`);
   cacheLife('cronotype');
 
   if (MOCK) {
-    return mockProfile(login);
+    return { profile: mockProfile(login), status: 'found' };
   }
 
-  const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
-  if (res.status === 404) return null;
-  if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
-  const fetchedAtDate = dateHeaderToDayKey(res.headers.get('date'));
-  const j = await res.json();
-  return {
-    avatarUrl: j.avatar_url,
-    bio: j.bio ?? null,
-    createdAt: j.created_at,
-    fetchedAtDate,
-    followers: j.followers ?? 0,
-    login: j.login,
-    name: j.name ?? null,
-    publicRepos: j.public_repos ?? 0,
-  };
+  try {
+    const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
+    if (res.status === 404) return { status: 'missing' };
+    if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
+    const fetchedAtDate = dateHeaderToDayKey(res.headers.get('date'));
+    const j = await res.json();
+    return {
+      profile: {
+        avatarUrl: j.avatar_url,
+        bio: j.bio ?? null,
+        createdAt: j.created_at,
+        fetchedAtDate,
+        followers: j.followers ?? 0,
+        login: j.login,
+        name: j.name ?? null,
+        publicRepos: j.public_repos ?? 0,
+      },
+      status: 'found',
+    };
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return { status: 'rate-limited' };
+    }
+    throw err;
+  }
 }
 
 type SearchCommitItem = {
@@ -359,16 +401,27 @@ function civilFromDays(dayNumber: number) {
 }
 
 async function getGitHubDateKey(): Promise<string> {
-  return getGitHubDateKeyCached();
+  const value = await getGitHubDateKeyCached();
+  if (!value) throw gitHubRateLimitError();
+  return value;
 }
 
-async function getGitHubDateKeyCached(): Promise<string> {
+async function getGitHubDateKeyCached(): Promise<string | null> {
   'use cache: remote';
   cacheTag('github-date');
   cacheLife('hours');
 
-  const res = await gh(`${API}/rate_limit`);
-  return dateHeaderToDayKey(res.headers.get('date'));
+  try {
+    const res = await gh(`${API}/rate_limit`);
+    return dateHeaderToDayKey(res.headers.get('date'));
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return null;
+    }
+    throw err;
+  }
 }
 
 function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO: string } {
@@ -383,13 +436,17 @@ export async function getStatsFor(
 ): Promise<HourStats> {
   const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
-  return getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
+  const stats = await getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
+  if (!stats) throw gitHubRateLimitError();
+  return stats;
 }
 
 export async function getSignalCommitsFor(login: string, window: Window, toDateKey?: string): Promise<Commit[]> {
   const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
-  return getSignalCommitsForCached(login.toLowerCase(), window, fromISO, toISO);
+  const commits = await getSignalCommitsForCached(login.toLowerCase(), window, fromISO, toISO);
+  if (!commits) throw gitHubRateLimitError();
+  return commits;
 }
 
 async function getStatsForCached(
@@ -397,7 +454,7 @@ async function getStatsForCached(
   window: Window,
   fromISO: string,
   toISO: string,
-): Promise<HourStats> {
+): Promise<HourStats | null> {
   'use cache: remote';
   cacheTag(`stats-${login}-${window}`);
   cacheTag(`stats-${login}-${window}-${toISO}`);
@@ -407,8 +464,22 @@ async function getStatsForCached(
     return syntheticStatsFor(mockArchetypeFor(login), 220 + ((login.length * 17) % 180));
   }
 
-  const commits = await getSignalCommitsForCached(login, window, fromISO, toISO);
-  return buildStats(commits);
+  try {
+    const commits = await getSignalCommitsForCached(login, window, fromISO, toISO);
+    if (!commits) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return null;
+    }
+    return buildStats(commits);
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return null;
+    }
+    throw err;
+  }
 }
 
 async function getSignalCommitsForCached(
@@ -416,7 +487,7 @@ async function getSignalCommitsForCached(
   window: Window,
   fromISO: string,
   toISO: string,
-): Promise<Commit[]> {
+): Promise<Commit[] | null> {
   'use cache: remote';
   cacheTag(`commits-${login}-${window}`);
   cacheTag(`commits-${login}-${window}-${toISO}`);
@@ -426,8 +497,17 @@ async function getSignalCommitsForCached(
     return [];
   }
 
-  const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
-  return signalCommits(commits);
+  try {
+    const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
+    return signalCommits(commits);
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return null;
+    }
+    throw err;
+  }
 }
 
 export type MonthBucket = { month: string; count: number };
@@ -477,10 +557,12 @@ type YearMonthly = {
 };
 
 async function getYearMonthly(login: string, year: number): Promise<YearMonthly> {
-  return getYearMonthlyCached(login.toLowerCase(), year);
+  const value = await getYearMonthlyCached(login.toLowerCase(), year);
+  if (!value) throw gitHubRateLimitError();
+  return value;
 }
 
-async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly> {
+async function getYearMonthlyCached(login: string, year: number): Promise<YearMonthly | null> {
   'use cache: remote';
   cacheTag(`monthly-${login}-${year}`);
   cacheLife('cronotype');
@@ -502,31 +584,40 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
     };
   }
 
-  const from = `${year}-01-01`;
-  const to = `${year}-12-31`;
+  try {
+    const from = `${year}-01-01`;
+    const to = `${year}-12-31`;
 
-  const days = await fetchContributionCalendar(login, from, to);
+    const days = await fetchContributionCalendar(login, from, to);
 
-  const counts = new Map<string, number>();
-  for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
-  for (const d of days) {
-    const key = d.date.slice(0, 7);
-    if (key.startsWith(String(year))) {
-      counts.set(key, (counts.get(key) ?? 0) + d.contributionCount);
+    const counts = new Map<string, number>();
+    for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
+    for (const d of days) {
+      const key = d.date.slice(0, 7);
+      if (key.startsWith(String(year))) {
+        counts.set(key, (counts.get(key) ?? 0) + d.contributionCount);
+      }
     }
+    const months = Array.from(counts.entries())
+      .map(([month, count]) => ({ count, month }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    const commitsCount = months.reduce((sum, m) => sum + m.count, 0);
+
+    return {
+      archetypeId: null,
+      commits: commitsCount,
+      months,
+      year,
+    };
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return null;
+    }
+    throw err;
   }
-  const months = Array.from(counts.entries())
-    .map(([month, count]) => ({ count, month }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-
-  const commitsCount = months.reduce((sum, m) => sum + m.count, 0);
-
-  return {
-    archetypeId: null,
-    commits: commitsCount,
-    months,
-    year,
-  };
 }
 
 async function getYearArchetype(
@@ -534,31 +625,52 @@ async function getYearArchetype(
   year: number,
   commitCount: number,
 ): Promise<ArchetypeId | null> {
+  const result = await getYearArchetypeCached(login, year, commitCount);
+  if (result.status === 'rate-limited') throw gitHubRateLimitError();
+  return result.archetypeId;
+}
+
+async function getYearArchetypeCached(
+  login: string,
+  year: number,
+  commitCount: number,
+): Promise<YearArchetypeCacheResult> {
   'use cache: remote';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
 
-  if (MOCK) return mockArchetypeFor(`${login}-${year}`);
+  if (MOCK) return { archetypeId: mockArchetypeFor(`${login}-${year}`), status: 'ok' };
 
-  const perPage =
-    commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD
-      ? HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
-      : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
-        ? YEAR_ARCHETYPE_SAMPLE_SIZE
-        : 100;
-  const maxPages = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_PAGES : 1;
-  const sampleCommits = await fetchCommitsInRange(
-    login,
-    `${year}-01-01`,
-    `${year}-12-31`,
-    0,
-    maxPages,
-    perPage,
-    githubHistoryToken(),
-  );
-  const signal = signalCommits(sampleCommits);
-  if (signal.length === 0) return sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null;
-  return classify({ ...buildStats(signal), total: commitCount }).id;
+  try {
+    const perPage =
+      commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD
+        ? HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
+        : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
+          ? YEAR_ARCHETYPE_SAMPLE_SIZE
+          : 100;
+    const maxPages = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_PAGES : 1;
+    const sampleCommits = await fetchCommitsInRange(
+      login,
+      `${year}-01-01`,
+      `${year}-12-31`,
+      0,
+      maxPages,
+      perPage,
+      githubHistoryToken(),
+    );
+    const signal = signalCommits(sampleCommits);
+    if (signal.length === 0) {
+      return { archetypeId: sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null, status: 'ok' };
+    }
+    return { archetypeId: classify({ ...buildStats(signal), total: commitCount }).id, status: 'ok' };
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) {
+      // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
+      cacheLife(SHORT_RATE_LIMIT_CACHE_LIFE);
+      return { status: 'rate-limited' };
+    }
+    throw err;
+  }
 }
 
 export async function warmMissingHistoryYears(
