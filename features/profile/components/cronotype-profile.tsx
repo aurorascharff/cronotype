@@ -54,9 +54,7 @@ export async function CronotypeProfile({ handle }: Props) {
 
 function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stats: HourStats }) {
   const theme = QUIET_THEME;
-  const joined = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
-    new Date(profile.createdAt),
-  );
+  const joined = formatJoinedMonth(profile.createdAt);
 
   return (
     <article className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10">
@@ -119,6 +117,13 @@ function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stat
       </div>
     </article>
   );
+}
+
+function formatJoinedMonth(createdAt: string) {
+  const monthIndex = Number(createdAt.slice(5, 7)) - 1;
+  const year = createdAt.slice(0, 4);
+  const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIndex];
+  return month && year.length === 4 ? `${month} ${year}` : year;
 }
 
 function ProfileStat({ label, value, accent }: { label: string; value: string; accent?: string }) {

@@ -2,7 +2,12 @@ import { notFound } from 'next/navigation';
 import { LoaderCircle } from 'lucide-react';
 import { DownloadTimeline } from '@/features/profile/components/download-timeline';
 import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
-import { getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import {
+  getTimelineChart,
+  isGitHubHistoryUnavailableError,
+  isGitHubNotFoundError,
+  isGitHubRateLimitError,
+} from '@/features/profile/profile-queries';
 import { formatCount } from '@/lib/format';
 import { cacheLife, cacheTag } from 'next/cache';
 
@@ -35,6 +40,21 @@ async function CachedEvolutionStrip({ handle }: Props) {
     });
   } catch (err) {
     if (isGitHubNotFoundError(err)) notFound();
+    if (isGitHubRateLimitError(err) || isGitHubHistoryUnavailableError(err)) {
+      return (
+        <>
+          <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+            <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+              Partial · GitHub rate limit
+            </span>
+          </header>
+          <div className="text-muted dark:text-muted-dark dark:bg-ink-2 flex h-40 items-center justify-center rounded-xl border border-black/10 bg-white text-center text-sm dark:border-white/10">
+            Couldn&apos;t load the timeline right now.
+          </div>
+        </>
+      );
+    }
     throw err;
   }
 

@@ -5,7 +5,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import { syntheticStatsFor } from '@/lib/synthetic';
-import type { ArchetypeId, CronotypeResult, ProfileSummary, Window } from '@/types/cronotype';
+import type { ArchetypeId, CronotypeResult, HourStats, ProfileSummary, Window } from '@/types/cronotype';
 
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
@@ -45,6 +45,17 @@ export function isGitHubHistoryUnavailableError(err: unknown): boolean {
   return err instanceof Error && err.message.includes('GitHub could not load commit history');
 }
 
+type RateLimitedResult = { rateLimited: true };
+const RATE_LIMITED_RESULT: RateLimitedResult = { rateLimited: true };
+
+function isRateLimitedResult(value: unknown): value is RateLimitedResult {
+  return typeof value === 'object' && value !== null && (value as { rateLimited?: unknown }).rateLimited === true;
+}
+
+function gitHubRateLimitError() {
+  return new GitHubError('GitHub rate limit hit. Try again in a minute.', 403);
+}
+
 function githubHistoryToken(): string | undefined {
   return process.env.GITHUB_HISTORY_TOKEN ?? process.env.GITHUB_TOKEN;
 }
@@ -64,21 +75,28 @@ function headers(extra: Record<string, string> = {}, token = process.env.GITHUB_
 
 export const computeCronotype = cache(async (login: string, window: Window = '90d'): Promise<CronotypeResult> => {
   const normalized = login.toLowerCase();
-  return computeCronotypeCached(normalized, window);
+  const result = await computeCronotypeCached(normalized, window);
+  if (result) return result;
+  throw gitHubRateLimitError();
 });
 
-async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult> {
+async function computeCronotypeCached(login: string, window: Window): Promise<CronotypeResult | null> {
   'use cache: remote';
   cacheTag(`cronotype-${login}-${window}`);
   cacheLife('cronotype');
 
-  const profile = await getProfile(login);
-  const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
-  const stats = await getStatsFor(login, window, today);
+  try {
+    const profile = await getProfile(login);
+    const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
+    const stats = await getStatsFor(login, window, today);
 
-  const archetype = classify(stats);
-  const percentile = percentileFor(archetype, stats);
-  return { archetype, percentile, profile, stats, window };
+    const archetype = classify(stats);
+    const percentile = percentileFor(archetype, stats);
+    return { archetype, percentile, profile, stats, window };
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return null;
+    throw err;
+  }
 }
 
 const MAX_CONCURRENT = 4;
@@ -189,10 +207,12 @@ export async function getProfile(login: string): Promise<ProfileSummary> {
 }
 
 export async function getProfileOrNull(login: string): Promise<ProfileSummary | null> {
-  return getProfileCached(login.toLowerCase());
+  const profile = await getProfileCached(login.toLowerCase());
+  if (isRateLimitedResult(profile)) throw gitHubRateLimitError();
+  return profile;
 }
 
-async function getProfileCached(login: string): Promise<ProfileSummary | null> {
+async function getProfileCached(login: string): Promise<ProfileSummary | null | RateLimitedResult> {
   'use cache: remote';
   cacheTag(`profile-${login}`);
   cacheLife('cronotype');
@@ -201,7 +221,13 @@ async function getProfileCached(login: string): Promise<ProfileSummary | null> {
     return mockProfile(login);
   }
 
-  const res = await gh(`${API}/users/${encodeURIComponent(login)}`);
+  let res: Response;
+  try {
+    res = await gh(`${API}/users/${encodeURIComponent(login)}`);
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return RATE_LIMITED_RESULT;
+    throw err;
+  }
   if (res.status === 404) return null;
   if (!res.ok) throw new GitHubError(`GitHub error (${res.status})`, res.status);
   const fetchedAtDate = dateHeaderToDayKey(res.headers.get('date'));
@@ -307,12 +333,23 @@ function dateHeaderToDayKey(value: string | null): string {
 }
 
 async function getGitHubDateKey(): Promise<string> {
+  const value = await getGitHubDateKeyCached();
+  if (value) return value;
+  throw gitHubRateLimitError();
+}
+
+async function getGitHubDateKeyCached(): Promise<string | null> {
   'use cache: remote';
   cacheTag('github-date');
   cacheLife('hours');
 
-  const res = await gh(`${API}/rate_limit`);
-  return dateHeaderToDayKey(res.headers.get('date'));
+  try {
+    const res = await gh(`${API}/rate_limit`);
+    return dateHeaderToDayKey(res.headers.get('date'));
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return null;
+    throw err;
+  }
 }
 
 function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO: string } {
@@ -326,16 +363,20 @@ export async function getStatsFor(
   login: string,
   window: Window,
   toDateKey?: string,
-): Promise<ReturnType<typeof buildStats>> {
+): Promise<HourStats> {
   const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
-  return getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
+  const stats = await getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
+  if (stats) return stats;
+  throw gitHubRateLimitError();
 }
 
 export async function getSignalCommitsFor(login: string, window: Window, toDateKey?: string): Promise<Commit[]> {
   const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
-  return getSignalCommitsForCached(login.toLowerCase(), window, fromISO, toISO);
+  const commits = await getSignalCommitsForCached(login.toLowerCase(), window, fromISO, toISO);
+  if (commits) return commits;
+  throw gitHubRateLimitError();
 }
 
 async function getStatsForCached(
@@ -343,7 +384,7 @@ async function getStatsForCached(
   window: Window,
   fromISO: string,
   toISO: string,
-): Promise<ReturnType<typeof buildStats>> {
+): Promise<HourStats | null> {
   'use cache: remote';
   cacheTag(`stats-${login}-${window}`);
   cacheTag(`stats-${login}-${window}-${toISO}`);
@@ -354,6 +395,7 @@ async function getStatsForCached(
   }
 
   const commits = await getSignalCommitsForCached(login, window, fromISO, toISO);
+  if (!commits) return null;
   return buildStats(commits);
 }
 
@@ -362,7 +404,7 @@ async function getSignalCommitsForCached(
   window: Window,
   fromISO: string,
   toISO: string,
-): Promise<Commit[]> {
+): Promise<Commit[] | null> {
   'use cache: remote';
   cacheTag(`commits-${login}-${window}`);
   cacheTag(`commits-${login}-${window}-${toISO}`);
@@ -372,7 +414,13 @@ async function getSignalCommitsForCached(
     return [];
   }
 
-  const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
+  let commits: Commit[];
+  try {
+    commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return null;
+    throw err;
+  }
   return signalCommits(commits);
 }
 
@@ -451,7 +499,13 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
 
-  const days = await fetchContributionCalendar(login, from, to);
+  let days: ContributionDay[];
+  try {
+    days = await fetchContributionCalendar(login, from, to);
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return null;
+    throw err;
+  }
 
   const counts = new Map<string, number>();
   for (let m = 0; m < 12; m++) counts.set(`${year}-${String(m + 1).padStart(2, '0')}`, 0);
@@ -475,7 +529,11 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   };
 }
 
-async function getYearArchetype(login: string, year: number, commitCount: number): Promise<ArchetypeId | null> {
+async function getYearArchetype(
+  login: string,
+  year: number,
+  commitCount: number,
+): Promise<ArchetypeId | null | undefined> {
   'use cache: remote';
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
@@ -489,15 +547,21 @@ async function getYearArchetype(login: string, year: number, commitCount: number
         ? YEAR_ARCHETYPE_SAMPLE_SIZE
         : 100;
   const maxPages = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_PAGES : 1;
-  const sampleCommits = await fetchCommitsInRange(
-    login,
-    `${year}-01-01`,
-    `${year}-12-31`,
-    0,
-    maxPages,
-    perPage,
-    githubHistoryToken(),
-  );
+  let sampleCommits: Commit[];
+  try {
+    sampleCommits = await fetchCommitsInRange(
+      login,
+      `${year}-01-01`,
+      `${year}-12-31`,
+      0,
+      maxPages,
+      perPage,
+      githubHistoryToken(),
+    );
+  } catch (err) {
+    if (isGitHubRateLimitError(err)) return undefined;
+    throw err;
+  }
   const signal = signalCommits(sampleCommits);
   if (signal.length === 0) return sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null;
   return classify({ ...buildStats(signal), total: commitCount }).id;
@@ -529,8 +593,8 @@ export async function warmMissingHistoryYears(
     try {
       const yearData = monthlyByYear.get(year) ?? (await getYearMonthly(lower, year));
       if (!yearData || yearData.commits <= 0) continue;
-      await getYearArchetype(lower, year, yearData.commits);
-      warmed = true;
+      const archetype = await getYearArchetype(lower, year, yearData.commits);
+      if (archetype !== undefined) warmed = true;
     } catch (err) {
       if (isGitHubRateLimitError(err)) break;
       throw err;
@@ -796,7 +860,13 @@ async function getMonthlyHistoryCached(
   }
 
   if (byYear.length === 0) {
-    throw new GitHubError('GitHub could not load commit history. Try again in a minute.', 503);
+    return {
+      failedArchetypeYears: [],
+      failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
+      months: [],
+      partial: true,
+      yearlyArchetypes: [],
+    };
   }
 
   const out = byYear.flatMap(y => y.months).sort((a, b) => a.month.localeCompare(b.month));
@@ -837,6 +907,10 @@ async function getMonthlyHistoryCached(
     try {
       const yearData = byYear.find(y => y.year === year);
       const value = await getYearArchetype(login, year, yearData?.commits ?? 0);
+      if (value === undefined) {
+        archetypeResults.push({ reason: gitHubRateLimitError(), status: 'rejected' });
+        break;
+      }
       archetypeResults.push({ status: 'fulfilled', value });
     } catch (reason) {
       archetypeResults.push({ status: 'rejected', reason });
