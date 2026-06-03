@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { computeCronotype, getProfileOrNull, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
+import { hasBeenRevealed } from '@/lib/reveals';
 import type { ProfileSummary } from '@/types/cronotype';
 
 export const alt = 'Cronotype profile';
@@ -63,6 +64,9 @@ function meaningSizeFor(text: string) {
 
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
   const { handle } = await params;
+  const revealed = await hasBeenRevealed(handle);
+  if (!revealed) return defaultImage();
+
   const profileExists = await getProfileOrNull(handle);
   if (!profileExists) notFound();
 
@@ -354,6 +358,11 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
     </div>,
     { ...size, fonts },
   );
+}
+
+async function defaultImage() {
+  const { default: image } = await import('../opengraph-image');
+  return image();
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: string }) {

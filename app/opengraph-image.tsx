@@ -177,30 +177,21 @@ function AuraRings() {
       />
       <div
         style={{
-          background: COLORS.muted,
-          borderRadius: 999,
+          alignItems: 'center',
+          color: COLORS.muted,
           display: 'flex',
-          height: 48,
-          opacity: 0.7,
+          fontFamily: 'GeistMono, monospace',
+          fontSize: 42,
+          fontWeight: 600,
+          height: 82,
+          justifyContent: 'center',
+          opacity: 0.75,
           position: 'absolute',
-          transform: 'rotate(28deg) translateY(-18px)',
-          transformOrigin: '50% 100%',
-          width: 4,
+          width: 82,
         }}
-      />
-      <div
-        style={{
-          background: COLORS.muted,
-          borderRadius: 999,
-          display: 'flex',
-          height: 34,
-          opacity: 0.48,
-          position: 'absolute',
-          transform: 'rotate(116deg) translateY(-13px)',
-          transformOrigin: '50% 100%',
-          width: 4,
-        }}
-      />
+      >
+        ?
+      </div>
     </div>
   );
 }
@@ -216,7 +207,7 @@ export default async function OpenGraphImage() {
         color: COLORS.paper,
         display: 'flex',
         fontFamily: 'GeistSans, sans-serif',
-        gap: 72,
+        gap: 56,
         height: '100%',
         overflow: 'hidden',
         padding: 64,
@@ -228,17 +219,11 @@ export default async function OpenGraphImage() {
         <AuraRings />
       </div>
 
-      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 14, minWidth: 0 }}>
-        <div
-          style={{
-            color: COLORS.muted,
-            display: 'flex',
-            fontFamily: 'GeistMono, monospace',
-            fontSize: 24,
-            letterSpacing: 0,
-          }}
-        >
-          cronotype
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div style={{ alignItems: 'baseline', color: COLORS.muted, display: 'flex', gap: 10 }}>
+          <span style={{ fontSize: 24 }}>@github-handle</span>
+          <span style={{ color: COLORS.mutedDivider, fontSize: 28 }}>·</span>
+          <span style={{ fontSize: 20 }}>?</span>
         </div>
         <h1
           style={{
@@ -248,7 +233,6 @@ export default async function OpenGraphImage() {
             fontWeight: 600,
             letterSpacing: 0,
             lineHeight: 1,
-            margin: 0,
             maxWidth: 600,
           }}
         >
@@ -260,17 +244,33 @@ export default async function OpenGraphImage() {
             display: 'flex',
             fontSize: 29,
             lineHeight: 1.34,
-            margin: '8px 0 0',
+            marginTop: 6,
             maxWidth: 590,
           }}
         >
           Type a GitHub handle and reveal a commit-time archetype, shareable card, and history chart.
         </p>
-        <div style={{ display: 'flex', gap: 36, marginTop: 18 }}>
-          <Stat label="PEAK" value="6pm" />
-          <Stat label="NOCTURNAL" value="?" />
-          <Stat label="TYPE" value="You" accent={COLORS.cyan} />
+        <div style={{ display: 'flex', gap: 40, marginTop: 24 }}>
+          <Stat label="PEAK" value="-" />
+          <Stat label="NOCTURNAL" value="-" />
+          <Stat label="SIGNAL" value="-" />
+          <Stat label="TYPE" value="?" accent={COLORS.cyan} />
         </div>
+      </div>
+
+      <div
+        style={{
+          color: COLORS.muted,
+          display: 'flex',
+          fontSize: 24,
+          fontWeight: 600,
+          left: 64,
+          letterSpacing: '-0.01em',
+          position: 'absolute',
+          top: 40,
+        }}
+      >
+        cronotype
       </div>
 
       <div

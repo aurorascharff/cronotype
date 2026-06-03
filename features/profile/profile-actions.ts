@@ -3,8 +3,9 @@
 import { updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
+import { computeCronotype, getMonthlyHistory } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
-import { recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
+import { hasBeenRevealed, recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
 
 export type RevealFormState = {
   error: string | null;
@@ -71,25 +72,34 @@ export async function revealUserFromForm(state: RevealFormState, formData: FormD
   redirect(`/${handle}`);
 }
 
-export async function regenerateUser(handle: string) {
+export async function regenerateUser(handle: string): Promise<boolean> {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
+  if (!(await hasBeenRevealed(lower))) return false;
   invalidateAllForHandle(lower);
+  await computeCronotype(lower, '90d');
   await recordReveal(lower);
   updateTag(`reveal-${lower}`);
   await recordFeaturedRevealIfNeeded(lower);
+  return true;
 }
 
 export async function regenerateUserAndRedirect(handle: string, showTimeline: boolean) {
   const lower = handle.toLowerCase();
-  await regenerateUser(lower);
+  const regenerated = await regenerateUser(lower);
+  if (!regenerated) redirect(`/${lower}`);
+  if (showTimeline) {
+    await getMonthlyHistory(lower);
+  }
   redirect(`/${lower}${showTimeline ? '?history=1' : ''}`);
 }
 
 export async function regenerateHistory(handle: string, failedMonthlyYears: number[], failedArchetypeYears: number[]) {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
+  if (!(await hasBeenRevealed(lower))) return;
   invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
+  await getMonthlyHistory(lower);
 }
 
 export async function showHistory(handle: string) {

@@ -39,7 +39,7 @@ export function Button({
         variant === 'primary' &&
           'bg-brand text-on-brand dark:text-ink border border-cyan-300/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_1px_2px_rgba(0,0,0,0.20)] ring-1 ring-cyan-400/25 enabled:hover:border-cyan-200/80 enabled:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.46),0_4px_14px_rgba(6,182,212,0.20)] enabled:active:translate-y-px enabled:active:shadow-[inset_0_1px_2px_rgba(0,0,0,0.18)] dark:border-cyan-200/50 dark:ring-cyan-200/20',
         variant === 'secondary' &&
-          'text-muted dark:text-muted-dark dark:bg-ink-2 border border-black/10 bg-white/60 shadow-sm enabled:hover:border-black/25 enabled:hover:text-ink dark:border-white/10 dark:enabled:hover:border-white/25 dark:enabled:hover:text-paper',
+          'text-muted dark:text-muted-dark dark:bg-ink-2 enabled:hover:text-ink dark:enabled:hover:text-paper border border-black/10 bg-white/60 shadow-sm enabled:hover:border-black/25 dark:border-white/10 dark:enabled:hover:border-white/25',
         className,
       )}
       {...props}

@@ -32,8 +32,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   'lunch-bandit': {
     meaning: 'You turn the quiet middle of the day into a tiny shipping heist.',
     percentile: 'Higher when noon dominates the rest of the workday. A sharper spike means a better score.',
-    signal:
-      'Noon clearly beats the surrounding hours. Small samples need a little extra separation before this wins.',
+    signal: 'Noon clearly beats the surrounding hours. Small samples need a little extra separation before this wins.',
   },
   'nine-to-fiver': {
     meaning: 'You keep a steady workday pulse and still make it look clean.',

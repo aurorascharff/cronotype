@@ -693,7 +693,11 @@ function buildEras(marks: TimelineMark[], pointCount: number, fallback: string):
   return eras;
 }
 
-async function getMonthlyHistoryCached(login: string, today: string, profileCreatedAt: string): Promise<MonthlyHistory> {
+async function getMonthlyHistoryCached(
+  login: string,
+  today: string,
+  profileCreatedAt: string,
+): Promise<MonthlyHistory> {
   'use cache: remote';
   cacheTag(`history-${login}`);
   cacheTag(`history-${login}-${today}`);
