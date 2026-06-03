@@ -40,6 +40,11 @@ export function isGitHubRateLimitError(err: unknown): boolean {
   return status === 403 || status === 429;
 }
 
+export function isGitHubHistoryUnavailableError(err: unknown): boolean {
+  if (gitHubErrorStatus(err) !== 503) return false;
+  return err instanceof Error && err.message.includes('GitHub could not load commit history');
+}
+
 function githubHistoryToken(): string | undefined {
   return process.env.GITHUB_HISTORY_TOKEN ?? process.env.GITHUB_TOKEN;
 }
@@ -496,6 +501,43 @@ async function getYearArchetype(login: string, year: number, commitCount: number
   const signal = signalCommits(sampleCommits);
   if (signal.length === 0) return sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null;
   return classify({ ...buildStats(signal), total: commitCount }).id;
+}
+
+export async function warmMissingHistoryYears(
+  login: string,
+  failedMonthlyYears: number[],
+  failedArchetypeYears: number[],
+): Promise<boolean> {
+  const lower = login.toLowerCase();
+  let warmed = false;
+  const monthlyByYear = new Map<number, YearMonthly>();
+
+  for (const year of [...new Set(failedMonthlyYears)]) {
+    try {
+      const value = await getYearMonthly(lower, year);
+      if (value !== null) {
+        monthlyByYear.set(year, value);
+        warmed = true;
+      }
+    } catch (err) {
+      if (isGitHubRateLimitError(err)) break;
+      throw err;
+    }
+  }
+
+  for (const year of [...new Set(failedArchetypeYears)]) {
+    try {
+      const yearData = monthlyByYear.get(year) ?? (await getYearMonthly(lower, year));
+      if (!yearData || yearData.commits <= 0) continue;
+      await getYearArchetype(lower, year, yearData.commits);
+      warmed = true;
+    } catch (err) {
+      if (isGitHubRateLimitError(err)) break;
+      throw err;
+    }
+  }
+
+  return warmed;
 }
 
 export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {

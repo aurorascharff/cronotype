@@ -3,7 +3,13 @@
 import { updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { isFeaturedHandle } from '@/features/leaderboard/data/featured-handles';
-import { computeCronotype, getMonthlyHistory, isGitHubRateLimitError } from '@/features/profile/profile-queries';
+import {
+  computeCronotype,
+  getMonthlyHistory,
+  isGitHubHistoryUnavailableError,
+  isGitHubRateLimitError,
+  warmMissingHistoryYears,
+} from '@/features/profile/profile-queries';
 import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 import { hasBeenRevealedFresh, recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
 
@@ -23,8 +29,8 @@ function invalidateAllForHandle(handle: string) {
   invalidateHistoryForHandle(handle);
 }
 
-function invalidateHistoryForHandle(handle: string, years?: number[]) {
-  updateTag(`history-${handle}`);
+function invalidateHistoryForHandle(handle: string, years?: number[], includeAggregate = true) {
+  if (includeAggregate) updateTag(`history-${handle}`);
   const yearsToRefresh = years?.length
     ? [...new Set(years)]
     : Array.from(
@@ -119,12 +125,15 @@ export async function regenerateHistory(
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
   if (!(await hasBeenRevealedFresh(lower))) return { status: 'skipped' };
-  invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
+  invalidateHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears], false);
   try {
+    const warmed = await warmMissingHistoryYears(lower, failedMonthlyYears, failedArchetypeYears);
+    if (!warmed) return { status: 'unchanged' };
+    updateTag(`history-${lower}`);
     const history = await getMonthlyHistory(lower);
     if (!hasHistoryRetryProgress(failedMonthlyYears, failedArchetypeYears, history)) return { status: 'unchanged' };
   } catch (err) {
-    if (isGitHubRateLimitError(err)) return { status: 'rate-limited' };
+    if (isGitHubRateLimitError(err) || isGitHubHistoryUnavailableError(err)) return { status: 'rate-limited' };
     throw err;
   }
   return { status: 'refreshed' };

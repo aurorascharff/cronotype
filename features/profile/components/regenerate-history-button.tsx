@@ -22,7 +22,13 @@ export function RegenerateHistoryButton({ failedArchetypeYears, failedMonthlyYea
 
   function refreshHistory() {
     startTransition(async () => {
-      const result = await regenerateHistory(handle, failedMonthlyYears, failedArchetypeYears);
+      let result;
+      try {
+        result = await regenerateHistory(handle, failedMonthlyYears, failedArchetypeYears);
+      } catch {
+        toast.error('GitHub is rate-limited right now. Keeping the chart you already loaded.');
+        return;
+      }
       if (result.status === 'rate-limited') {
         toast.error('GitHub is rate-limited right now. Keeping the chart you already loaded.');
         return;
