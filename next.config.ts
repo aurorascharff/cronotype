@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
   cacheLife: {
     cronotype: {
       expire: YEAR,
-      revalidate: 180 * DAY,
-      stale: 180 * DAY,
+      revalidate: 90 * DAY,
+      stale: 90 * DAY,
     },
   },
   experimental: {

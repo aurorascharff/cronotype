@@ -7,7 +7,7 @@ import { HeroCard } from '@/features/profile/components/hero-card';
 import { ShareActions, ShareUrl } from '@/features/profile/components/share-block';
 import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 import { QUIET_THEME } from '@/lib/archetypes';
-import { formatCount, formatFollowers } from '@/lib/format';
+import { formatCount, formatDateKey, formatFollowers } from '@/lib/format';
 import type { HourStats, ProfileSummary } from '@/types/cronotype';
 
 type Props = {
@@ -55,11 +55,15 @@ export async function CronotypeProfile({ handle }: Props) {
 function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stats: HourStats }) {
   const theme = QUIET_THEME;
   const joined = formatJoinedMonth(profile.createdAt);
+  const generatedAt = formatDateKey(profile.fetchedAtDate);
 
   return (
     <article className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10">
-      <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
-        No 90d signal
+      <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 flex flex-col items-end rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
+        <span>No 90d signal</span>
+        {generatedAt ? (
+          <span className="text-muted dark:text-muted-dark text-[9px]">Generated {generatedAt}</span>
+        ) : null}
       </div>
 
       <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">

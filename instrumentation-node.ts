@@ -13,7 +13,9 @@ function isGitHubRateLimitRejection(reason: unknown): boolean {
 
 process.on('unhandledRejection', reason => {
   if (isGitHubRateLimitRejection(reason)) {
-    process.stderr.write(`[instrumentation] GitHub rate-limit rejection escaped async revalidation: ${String(reason)}\n`);
+    process.stderr.write(
+      `[instrumentation] GitHub rate-limit rejection escaped async revalidation: ${String(reason)}\n`,
+    );
     return;
   }
 

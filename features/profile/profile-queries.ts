@@ -25,9 +25,7 @@ type ProfileCacheResult =
   | { status: 'missing' }
   | { status: 'rate-limited' };
 
-type YearArchetypeCacheResult =
-  | { status: 'ok'; archetypeId: ArchetypeId | null }
-  | { status: 'rate-limited' };
+type YearArchetypeCacheResult = { status: 'ok'; archetypeId: ArchetypeId | null } | { status: 'rate-limited' };
 
 export class GitHubError extends Error {
   status: number;
@@ -429,11 +427,7 @@ function rangeFromToday(toISO: string, window: Window): { fromISO: string; toISO
   return { fromISO: dayNumberToDateKey(dateKeyToDayNumber(toISO) - days), toISO };
 }
 
-export async function getStatsFor(
-  login: string,
-  window: Window,
-  toDateKey?: string,
-): Promise<HourStats> {
+export async function getStatsFor(login: string, window: Window, toDateKey?: string): Promise<HourStats> {
   const today = toDateKey ?? (await getProfile(login)).fetchedAtDate ?? (await getGitHubDateKey());
   const { fromISO, toISO } = rangeFromToday(today, window);
   const stats = await getStatsForCached(login.toLowerCase(), window, fromISO, toISO);
@@ -620,11 +614,7 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   }
 }
 
-async function getYearArchetype(
-  login: string,
-  year: number,
-  commitCount: number,
-): Promise<ArchetypeId | null> {
+async function getYearArchetype(login: string, year: number, commitCount: number): Promise<ArchetypeId | null> {
   const result = await getYearArchetypeCached(login, year, commitCount);
   if (result.status === 'rate-limited') throw gitHubRateLimitError();
   return result.archetypeId;
