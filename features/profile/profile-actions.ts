@@ -11,6 +11,9 @@ export type RevealFormState = {
   errorId: number;
 };
 
+const FIRST_HISTORY_YEAR = 2008;
+const LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS = 2035;
+
 function invalidateAllForHandle(handle: string) {
   updateTag(`profile-page-${handle}`);
   updateTag(`profile-${handle}`);
@@ -21,12 +24,14 @@ function invalidateAllForHandle(handle: string) {
 
 function invalidateHistoryForHandle(handle: string, years?: number[]) {
   updateTag(`history-${handle}`);
-  const thisYear = new Date().getUTCFullYear();
   const yearsToRefresh = years?.length
     ? [...new Set(years)]
-    : Array.from({ length: thisYear - 2008 + 1 }, (_, i) => 2008 + i);
+    : Array.from(
+        { length: LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS - FIRST_HISTORY_YEAR + 1 },
+        (_, i) => FIRST_HISTORY_YEAR + i,
+      );
   for (const year of yearsToRefresh) {
-    if (year < 2008 || year > thisYear) continue;
+    if (year < FIRST_HISTORY_YEAR || year > LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS) continue;
     updateTag(`monthly-${handle}-${year}`);
     updateTag(`year-archetype-${handle}-${year}`);
   }
