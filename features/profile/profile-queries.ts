@@ -35,7 +35,7 @@ export function isGitHubNotFoundError(err: unknown): boolean {
   return gitHubErrorStatus(err) === 404;
 }
 
-function isRateLimitError(err: unknown): boolean {
+export function isGitHubRateLimitError(err: unknown): boolean {
   const status = gitHubErrorStatus(err);
   return status === 403 || status === 429;
 }
@@ -798,7 +798,7 @@ async function getMonthlyHistoryCached(
       archetypeResults.push({ status: 'fulfilled', value });
     } catch (reason) {
       archetypeResults.push({ status: 'rejected', reason });
-      if (isRateLimitError(reason)) break;
+      if (isGitHubRateLimitError(reason)) break;
     }
   }
 

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { notFound } from 'next/navigation';
-import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import { computeCronotype, isGitHubNotFoundError, isGitHubRateLimitError } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
 import { hasBeenRevealed } from '@/lib/reveals';
@@ -72,6 +72,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
     result = await computeCronotype(handle, '90d');
   } catch (err) {
     if (isGitHubNotFoundError(err)) notFound();
+    if (isGitHubRateLimitError(err)) return defaultImage();
     throw err;
   }
   const { profile, stats, archetype, percentile } = result;

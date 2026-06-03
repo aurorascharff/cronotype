@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import { getTimelineChart, isGitHubNotFoundError, isGitHubRateLimitError } from '@/features/profile/profile-queries';
 
 const size = { width: 1200, height: 630 };
 
@@ -45,6 +45,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
     });
   } catch (err) {
     if (isGitHubNotFoundError(err)) return new Response(null, { status: 404 });
+    if (isGitHubRateLimitError(err)) return timelineUnavailableImage();
     throw err;
   }
 
@@ -193,5 +194,26 @@ export async function GET(_req: Request, { params }: RouteContext) {
       </div>
     </div>,
     { ...size, fonts },
+  );
+}
+
+function timelineUnavailableImage() {
+  return new ImageResponse(
+    <div
+      style={{
+        alignItems: 'center',
+        background: '#08090b',
+        color: '#8b8d96',
+        display: 'flex',
+        fontFamily: 'GeistSans, sans-serif',
+        fontSize: 34,
+        height: '100%',
+        justifyContent: 'center',
+        width: '100%',
+      }}
+    >
+      GitHub is rate limiting the timeline. Try again in a moment.
+    </div>,
+    size,
   );
 }
