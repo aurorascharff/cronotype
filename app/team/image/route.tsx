@@ -8,7 +8,7 @@ import type { HourStats } from '@/types/cronotype';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
-const OG_PREVIEW_ENTRIES = 10;
+const OG_PREVIEW_ENTRIES = 9;
 const DOWNLOAD_COLUMNS = 4;
 
 const COLORS = {
@@ -99,7 +99,7 @@ async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; n
     variant === 'download'
       ? Math.min(DOWNLOAD_COLUMNS, Math.max(1, selected.length))
       : overflowCount > 0
-        ? 6
+        ? 5
         : visualCardCount <= 4
           ? Math.max(1, visualCardCount)
           : visualCardCount <= 8
@@ -151,9 +151,10 @@ async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; n
 
       {counts.length > 0 ? (
         <div style={{ display: 'flex', gap: 12, marginTop: 22, width: '100%' }}>
-          {counts.slice(0, 5).map(count => (
+          {counts.slice(0, 4).map(count => (
             <TypePill key={count.name} count={count} />
           ))}
+          {counts.length > 4 ? <TypeOverflowPill count={counts.length - 4} /> : null}
         </div>
       ) : null}
 
@@ -256,6 +257,25 @@ function TypePill({ count }: { count: ArchetypeCount }) {
       <div style={{ background: count.color, borderRadius: 999, display: 'flex', height: 10, width: 10 }} />
       <div style={{ color: COLORS.paper, display: 'flex', fontSize: 18, fontWeight: 600 }}>{count.count}</div>
       <div style={{ color: COLORS.muted, display: 'flex', fontSize: 16 }}>{count.name}</div>
+    </div>
+  );
+}
+
+function TypeOverflowPill({ count }: { count: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: COLORS.white08,
+        border: `1px solid ${COLORS.line}`,
+        borderRadius: 999,
+        color: COLORS.muted,
+        display: 'flex',
+        fontSize: 16,
+        padding: '7px 11px',
+      }}
+    >
+      +{count}
     </div>
   );
 }
