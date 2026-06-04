@@ -8,7 +8,7 @@ import type { HourStats } from '@/types/cronotype';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
-const OG_MAX_ENTRIES = 18;
+const OG_PREVIEW_ENTRIES = 10;
 const DOWNLOAD_COLUMNS = 4;
 
 const COLORS = {
@@ -92,26 +92,23 @@ async function getEntry(handle: string): Promise<Entry> {
 async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; name: string; variant: ImageVariant }) {
   const fonts = await loadGeist();
   const counts = typeCounts(entries);
-  const selected =
-    variant === 'download'
-      ? sortEntries(entries)
-      : entries.length <= OG_MAX_ENTRIES
-        ? sortEntries(entries)
-        : selectRepresentatives(entries, OG_MAX_ENTRIES);
+  const selected = variant === 'download' ? sortEntries(entries) : selectRepresentatives(entries, OG_PREVIEW_ENTRIES);
+  const overflowCount = variant === 'og' ? Math.max(0, entries.length - selected.length) : 0;
+  const visualCardCount = selected.length + (overflowCount > 0 ? 1 : 0);
   const columns =
     variant === 'download'
       ? Math.min(DOWNLOAD_COLUMNS, Math.max(1, selected.length))
-      : selected.length <= 4
-        ? Math.max(1, selected.length)
-        : selected.length <= 8
-          ? 4
-          : selected.length <= 15
-            ? 5
-            : 6;
+      : overflowCount > 0
+        ? 6
+        : visualCardCount <= 4
+          ? Math.max(1, visualCardCount)
+          : visualCardCount <= 8
+            ? 4
+            : 5;
   const gap = columns >= 6 ? 12 : 16;
   const cardWidth = Math.floor((WIDTH - 88 - (columns - 1) * gap) / columns);
-  const cardHeight = variant === 'download' ? 172 : columns >= 6 ? 112 : columns === 5 ? 136 : 164;
-  const rows = Math.max(1, Math.ceil(selected.length / columns));
+  const cardHeight = variant === 'download' ? 172 : columns >= 6 ? 142 : columns === 5 ? 146 : 164;
+  const rows = Math.max(1, Math.ceil(visualCardCount / columns));
   const height = variant === 'download' ? Math.max(HEIGHT, 230 + rows * (cardHeight + 16)) : HEIGHT;
 
   return new ImageResponse(
@@ -198,9 +195,47 @@ async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; n
             Add handles to build a gallery.
           </div>
         )}
+        {overflowCount > 0 ? <OverflowCard count={overflowCount} cardHeight={cardHeight} width={cardWidth} /> : null}
       </div>
     </div>,
     { fonts, height, width: WIDTH },
+  );
+}
+
+function OverflowCard({ cardHeight, count, width }: { cardHeight: number; count: number; width: number }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: COLORS.white08,
+        border: `1px solid ${COLORS.line}`,
+        borderRadius: 16,
+        color: COLORS.paper,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        height: cardHeight,
+        justifyContent: 'center',
+        width,
+      }}
+    >
+      <div
+        style={{
+          alignItems: 'center',
+          border: `1px solid ${COLORS.white12}`,
+          borderRadius: '50%',
+          display: 'flex',
+          fontSize: 32,
+          fontWeight: 600,
+          height: 74,
+          justifyContent: 'center',
+          width: 74,
+        }}
+      >
+        +{count}
+      </div>
+      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 15 }}>more in the gallery</div>
+    </div>
   );
 }
 
@@ -364,7 +399,7 @@ function TeamClock({ entry, size }: { entry: Entry; size: number }) {
             alt=""
             width={avatarSize}
             height={avatarSize}
-            style={{ height: avatarSize, objectFit: 'cover', width: avatarSize }}
+            style={{ borderRadius: '50%', height: avatarSize, objectFit: 'cover', width: avatarSize }}
           />
         ) : (
           <div style={{ color: COLORS.muted, display: 'flex', fontSize: 13, fontWeight: 600 }}>

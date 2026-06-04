@@ -23,7 +23,7 @@ export function TeamRecents() {
   if (teams.length === 0) return null;
 
   return (
-    <section className="absolute top-full left-0 z-10 mt-3 max-w-full space-y-2">
+    <section className="space-y-2">
       <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
         Recent teams
       </h2>
@@ -48,15 +48,20 @@ export function TeamRecents() {
 export function TeamRecentSaver({ current }: { current?: { handles: string; name: string; url: string } }) {
   useEffect(() => {
     if (!current?.handles) return;
+    const handles = current.handles
+      .split(',')
+      .map(handle => handle.trim())
+      .filter(Boolean);
+    const nextUrl = teamUrl({ handles, name: current.name });
     const next: RecentTeam = {
       handles: current.handles,
       name: current.name || 'Untitled team',
       savedAt: Date.now(),
-      url: current.url,
+      url: nextUrl,
     };
-    const existing = parseTeamRecents(readSnapshot()).filter(team => team.url !== next.url);
+    const existing = parseTeamRecents(readSnapshot()).filter(team => recentTeamHref(team) !== nextUrl);
     writeTeams([next, ...existing].slice(0, MAX_RECENTS));
-  }, [current]);
+  }, [current?.handles, current?.name]);
 
   return null;
 }
@@ -82,7 +87,13 @@ export function parseTeamRecents(value: string): RecentTeam[] {
   try {
     const parsed = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isRecentTeam).slice(0, MAX_RECENTS);
+    return parsed
+      .filter(isRecentTeam)
+      .map(team => ({
+        ...team,
+        url: recentTeamHref(team),
+      }))
+      .slice(0, MAX_RECENTS);
   } catch {
     return [];
   }

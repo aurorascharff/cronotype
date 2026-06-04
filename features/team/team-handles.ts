@@ -36,10 +36,30 @@ export function parseTeamName(value: string | string[] | undefined): string {
 }
 
 export function teamUrl({ handles, name }: { handles: string[]; name?: string }): string {
-  const params = new URLSearchParams();
   const serialized = serializeTeamHandles(handles);
-  if (serialized) params.set('handles', serialized);
-  if (name) params.set('name', name);
-  const query = params.toString();
-  return query ? `/team?${query}` : '/team';
+  const parts: string[] = [];
+  if (serialized) parts.push(`handles=${serialized}`);
+  if (name) parts.push(`name=${encodeTeamQueryValue(name)}`);
+  return parts.length > 0 ? `/team?${parts.join('&')}` : '/team';
+}
+
+export function teamImageUrl({
+  handles,
+  name,
+  variant,
+}: {
+  handles: string[];
+  name?: string;
+  variant?: 'download';
+}): string {
+  const serialized = serializeTeamHandles(handles);
+  const parts: string[] = [];
+  if (variant) parts.push(`variant=${variant}`);
+  if (serialized) parts.push(`handles=${serialized}`);
+  if (name) parts.push(`name=${encodeTeamQueryValue(name)}`);
+  return parts.length > 0 ? `/team/image?${parts.join('&')}` : '/team/image';
+}
+
+function encodeTeamQueryValue(value: string) {
+  return encodeURIComponent(value).replaceAll('%20', '+');
 }

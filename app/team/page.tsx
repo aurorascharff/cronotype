@@ -1,9 +1,18 @@
 import { Suspense } from 'react';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
+import { TeamForm } from '@/features/team/components/team-form';
 import { TeamRecentSaver, TeamRecents } from '@/features/team/components/team-recents';
-import { parseTeamHandles, parseTeamName, serializeTeamHandles, teamUrl } from '@/features/team/team-handles';
+import {
+  parseTeamHandles,
+  parseTeamName,
+  serializeTeamHandles,
+  teamImageUrl,
+  teamUrl,
+} from '@/features/team/team-handles';
+import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
+import type { Route } from 'next';
 
 export const unstable_prefetch = 'force-runtime';
 
@@ -21,10 +30,7 @@ export async function generateMetadata({ searchParams }: PageProps<'/team'>): Pr
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : 'http://localhost:3000');
-  const imageParams = new URLSearchParams();
-  if (handles.length > 0) imageParams.set('handles', serializeTeamHandles(handles));
-  if (name) imageParams.set('name', name);
-  const imageUrl = `${baseUrl.replace(/\/$/, '')}/team/image?${imageParams.toString()}`;
+  const imageUrl = `${baseUrl.replace(/\/$/, '')}${teamImageUrl({ handles, name })}`;
 
   return {
     description,
@@ -64,36 +70,11 @@ export default function TeamPage({ searchParams }: PageProps<'/team'>) {
         <p className="text-muted dark:text-muted-dark mx-auto max-w-md text-center text-sm">
           Add GitHub handles, share the URL, and keep the gallery cached with the same profile cards.
         </p>
-        <div className="relative mx-auto max-w-2xl">
-          <form action="/team" className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)_auto]">
-            <label className="sr-only" htmlFor="team-name">
-              Team name
-            </label>
-            <input
-              id="team-name"
-              name="name"
-              placeholder="Next.js team"
-              className="dark:bg-ink-2 text-ink dark:text-paper placeholder:text-muted/60 dark:placeholder:text-muted-dark/60 h-11 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-sm transition-colors outline-none focus:border-black/30 dark:border-white/10 dark:focus:border-white/30"
-              spellCheck={false}
-            />
-            <label className="sr-only" htmlFor="team-handles">
-              GitHub handles
-            </label>
-            <input
-              id="team-handles"
-              name="handles"
-              placeholder="leerob, shadcn, rauchg, icyJoseph"
-              className="dark:bg-ink-2 text-ink dark:text-paper placeholder:text-muted/60 dark:placeholder:text-muted-dark/60 h-11 min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 text-sm transition-colors outline-none focus:border-black/30 dark:border-white/10 dark:focus:border-white/30"
-              spellCheck={false}
-            />
-            <button
-              type="submit"
-              className="bg-brand text-on-brand dark:text-ink h-11 rounded-lg border border-cyan-300/60 px-4 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.38),0_1px_2px_rgba(0,0,0,0.20)] ring-1 ring-cyan-400/25 transition-[border-color,box-shadow] hover:border-cyan-200/80 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.46),0_4px_14px_rgba(6,182,212,0.20)] active:translate-y-px dark:border-cyan-200/50 dark:ring-cyan-200/20"
-            >
-              Generate
-            </button>
-          </form>
-          <TeamRecents />
+        <div className="mx-auto max-w-2xl">
+          <TeamForm />
+          <div className="min-h-16 pt-3">
+            <TeamRecents />
+          </div>
         </div>
       </section>
       <Suspense fallback={<TeamGallerySkeleton />}>
@@ -118,6 +99,11 @@ function TeamContent({
   const serialized = serializeTeamHandles(handles);
   const name = parseTeamName(nameParam);
   const url = teamUrl({ handles, name });
+  const rawHandles = Array.isArray(handlesParam) ? handlesParam.join(',') : (handlesParam ?? '');
+  const rawName = Array.isArray(nameParam) ? nameParam[0] : (nameParam ?? '');
+  if ((serialized || name) && (rawHandles !== serialized || parseTeamName(rawName) !== name)) {
+    redirect(url as Route);
+  }
   const current = serialized ? { handles: serialized, name, url } : undefined;
 
   return (
@@ -150,7 +136,7 @@ function TeamGallery({
     );
   }
 
-  const imageHref = `/team/image?variant=download&handles=${encodeURIComponent(serialized)}${name ? `&name=${encodeURIComponent(name)}` : ''}`;
+  const imageHref = teamImageUrl({ handles, name, variant: 'download' });
 
   return (
     <section className="space-y-4">

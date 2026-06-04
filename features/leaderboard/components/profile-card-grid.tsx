@@ -37,7 +37,7 @@ export async function ProfileCardSlot({ handle, href }: { handle: string; href?:
               alt=""
               width={48}
               height={48}
-              className="absolute h-12 w-12 rounded-full border border-black/10 dark:border-white/10"
+              className="absolute h-12 w-12 rounded-full border border-black/10 object-cover dark:border-white/10"
             />
           ) : (
             <div className="bg-muted/10 dark:bg-muted-dark/10 absolute flex h-12 w-12 items-center justify-center rounded-full border border-black/10 text-xs font-semibold uppercase dark:border-white/10">
