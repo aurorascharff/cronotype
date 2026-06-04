@@ -8,7 +8,8 @@ import type { HourStats } from '@/types/cronotype';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
-const MAX_REPRESENTATIVES = 10;
+const OG_MAX_ENTRIES = 18;
+const DOWNLOAD_COLUMNS = 4;
 
 const COLORS = {
   ink: '#0a0a0a',
@@ -39,13 +40,16 @@ type ArchetypeCount = {
   name: string;
 };
 
+type ImageVariant = 'og' | 'download';
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const { handles } = parseTeamHandles(url.searchParams.get('handles') ?? '');
     const name = parseTeamName(url.searchParams.get('name') ?? '') || 'Team gallery';
+    const variant: ImageVariant = url.searchParams.get('variant') === 'download' ? 'download' : 'og';
     const entries = await Promise.all(handles.map(handle => getEntry(handle)));
-    return renderTeamImage({ entries, name });
+    return renderTeamImage({ entries, name, variant });
   } catch (err) {
     return renderFallbackImage(err);
   }
@@ -85,13 +89,30 @@ async function getEntry(handle: string): Promise<Entry> {
   }
 }
 
-async function renderTeamImage({ entries, name }: { entries: Entry[]; name: string }) {
+async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; name: string; variant: ImageVariant }) {
   const fonts = await loadGeist();
   const counts = typeCounts(entries);
-  const selected = selectRepresentatives(entries);
-  const columns = selected.length <= 4 ? Math.max(1, selected.length) : selected.length <= 8 ? 4 : 5;
-  const cardWidth = Math.floor((WIDTH - 104 - (columns - 1) * 16) / columns);
-  const cardHeight = columns === 5 ? 150 : 164;
+  const selected =
+    variant === 'download'
+      ? sortEntries(entries)
+      : entries.length <= OG_MAX_ENTRIES
+        ? sortEntries(entries)
+        : selectRepresentatives(entries, OG_MAX_ENTRIES);
+  const columns =
+    variant === 'download'
+      ? Math.min(DOWNLOAD_COLUMNS, Math.max(1, selected.length))
+      : selected.length <= 4
+        ? Math.max(1, selected.length)
+        : selected.length <= 8
+          ? 4
+          : selected.length <= 15
+            ? 5
+            : 6;
+  const gap = columns >= 6 ? 12 : 16;
+  const cardWidth = Math.floor((WIDTH - 88 - (columns - 1) * gap) / columns);
+  const cardHeight = variant === 'download' ? 172 : columns >= 6 ? 112 : columns === 5 ? 136 : 164;
+  const rows = Math.max(1, Math.ceil(selected.length / columns));
+  const height = variant === 'download' ? Math.max(HEIGHT, 230 + rows * (cardHeight + 16)) : HEIGHT;
 
   return new ImageResponse(
     <div
@@ -144,7 +165,7 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
           alignContent: 'flex-start',
           display: 'flex',
           flexWrap: 'wrap',
-          gap: 16,
+          gap,
           marginTop: counts.length > 0 ? 22 : 30,
           width: '100%',
         }}
@@ -156,7 +177,8 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
               cardHeight={cardHeight}
               entry={entry}
               width={cardWidth}
-              compact={columns === 5}
+              compact={columns >= 5}
+              dense={columns >= 6}
             />
           ))
         ) : (
@@ -178,7 +200,7 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
         )}
       </div>
     </div>,
-    { fonts, height: HEIGHT, width: WIDTH },
+    { fonts, height, width: WIDTH },
   );
 }
 
@@ -205,15 +227,17 @@ function TypePill({ count }: { count: ArchetypeCount }) {
 function TeamImageCard({
   cardHeight,
   compact,
+  dense,
   entry,
   width,
 }: {
   cardHeight: number;
   compact: boolean;
+  dense: boolean;
   entry: Entry;
   width: number;
 }) {
-  const clockSize = compact ? 76 : 86;
+  const clockSize = dense ? 58 : compact ? 72 : 86;
 
   return (
     <div
@@ -223,29 +247,29 @@ function TeamImageCard({
         borderRadius: 16,
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: dense ? 5 : 8,
         height: cardHeight,
         justifyContent: 'space-between',
-        padding: compact ? 12 : 14,
+        padding: dense ? 10 : compact ? 12 : 14,
         width,
       }}
     >
-      <div style={{ alignItems: 'center', display: 'flex', flex: 1, gap: compact ? 10 : 12, minWidth: 0 }}>
+      <div style={{ alignItems: 'center', display: 'flex', flex: 1, gap: dense ? 8 : compact ? 10 : 12, minWidth: 0 }}>
         <TeamClock entry={entry} size={clockSize} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <div
             style={{
               color: COLORS.paper,
               display: 'flex',
-              fontSize: compact ? 16 : 19,
+              fontSize: dense ? 14 : compact ? 16 : 19,
               fontWeight: 600,
               lineHeight: 1.05,
             }}
           >
-            {truncate(entry.name, compact ? 13 : 17)}
+            {truncate(entry.name, dense ? 12 : compact ? 13 : 17)}
           </div>
-          <div style={{ color: COLORS.muted, display: 'flex', fontSize: compact ? 11 : 13 }}>
-            @{truncate(entry.handle, compact ? 12 : 16)}
+          <div style={{ color: COLORS.muted, display: 'flex', fontSize: dense ? 10 : compact ? 11 : 13 }}>
+            @{truncate(entry.handle, dense ? 11 : compact ? 12 : 16)}
           </div>
         </div>
       </div>
@@ -254,11 +278,11 @@ function TeamImageCard({
           style={{
             color: entry.archetype ? entry.color : COLORS.muted,
             display: 'flex',
-            fontSize: compact ? 12 : 15,
+            fontSize: dense ? 10 : compact ? 12 : 15,
             fontWeight: 600,
           }}
         >
-          {entry.archetype ? truncate(entry.archetype, compact ? 19 : 22) : '-'}
+          {entry.archetype ? truncate(entry.archetype, dense ? 16 : compact ? 19 : 22) : '-'}
         </div>
         {entry.followers > 0 ? (
           <div
@@ -266,7 +290,7 @@ function TeamImageCard({
               color: COLORS.muted,
               display: 'flex',
               fontFamily: 'GeistMono, monospace',
-              fontSize: compact ? 10 : 12,
+              fontSize: dense ? 9 : compact ? 10 : 12,
             }}
           >
             {formatFollowers(entry.followers)}
@@ -366,13 +390,13 @@ function typeCounts(entries: Entry[]): ArchetypeCount[] {
   return [...byName.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-function selectRepresentatives(entries: Entry[]): Entry[] {
-  const sorted = [...entries].sort((a, b) => b.followers - a.followers);
+function selectRepresentatives(entries: Entry[], limit: number): Entry[] {
+  const sorted = sortEntries(entries);
   const selected: Entry[] = [];
   const seenTypes = new Set<string>();
 
   for (const entry of sorted) {
-    if (selected.length >= MAX_REPRESENTATIVES) break;
+    if (selected.length >= limit) break;
     const typeKey = entry.archetype ?? `pending-${entry.handle}`;
     if (seenTypes.has(typeKey)) continue;
     seenTypes.add(typeKey);
@@ -380,12 +404,16 @@ function selectRepresentatives(entries: Entry[]): Entry[] {
   }
 
   for (const entry of sorted) {
-    if (selected.length >= MAX_REPRESENTATIVES) break;
+    if (selected.length >= limit) break;
     if (selected.includes(entry)) continue;
     selected.push(entry);
   }
 
   return selected;
+}
+
+function sortEntries(entries: Entry[]): Entry[] {
+  return [...entries].sort((a, b) => b.followers - a.followers || a.handle.localeCompare(b.handle));
 }
 
 function truncate(value: string, max: number) {

@@ -23,7 +23,7 @@ export function TeamRecents() {
   if (teams.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-2xl space-y-2">
+    <section className="absolute top-full left-0 z-10 mt-3 max-w-full space-y-2">
       <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
         Recent teams
       </h2>
