@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { LoaderCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useSyncExternalStore, useTransition } from 'react';
 import { teamUrl } from '@/features/team/team-handles';
 import type { Route } from 'next';
 
@@ -29,19 +30,39 @@ export function TeamRecents() {
       </h2>
       <div className="flex flex-wrap gap-2">
         {teams.map(team => (
-          <Link
-            key={recentTeamHref(team)}
-            href={recentTeamHref(team)}
-            className="dark:bg-ink-2 text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex max-w-full items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-2.5 py-1.5 text-xs transition-colors hover:border-black/25 dark:border-white/10 dark:hover:border-white/25"
-          >
-            <span className="truncate font-medium">{team.name}</span>
-            <span className="text-muted/60 dark:text-muted-dark/60 shrink-0">
-              {team.handles.split(',').filter(Boolean).length}
-            </span>
-          </Link>
+          <RecentTeamButton key={recentTeamHref(team)} team={team} />
         ))}
       </div>
     </section>
+  );
+}
+
+function RecentTeamButton({ team }: { team: RecentTeam }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const href = recentTeamHref(team);
+
+  return (
+    <button
+      type="button"
+      className="dark:bg-ink-2 text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex max-w-full items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-2.5 py-1.5 text-xs transition-colors hover:border-black/25 disabled:pointer-events-none disabled:opacity-70 dark:border-white/10 dark:hover:border-white/25"
+      disabled={isPending}
+      aria-busy={isPending}
+      onClick={() => {
+        startTransition(() => {
+          router.push(href);
+        });
+      }}
+    >
+      <span className="truncate font-medium">{team.name}</span>
+      {isPending ? (
+        <LoaderCircle className="h-3 w-3 shrink-0 animate-spin" aria-hidden />
+      ) : (
+        <span className="text-muted/60 dark:text-muted-dark/60 shrink-0">
+          {team.handles.split(',').filter(Boolean).length}
+        </span>
+      )}
+    </button>
   );
 }
 

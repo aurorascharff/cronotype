@@ -207,8 +207,8 @@ function OverflowCard({ cardHeight, count, width }: { cardHeight: number; count:
     <div
       style={{
         alignItems: 'center',
-        background: COLORS.white08,
-        border: `1px solid ${COLORS.line}`,
+        background: COLORS.ink2,
+        border: `1px solid ${COLORS.white12}`,
         borderRadius: 16,
         color: COLORS.paper,
         display: 'flex',
@@ -222,19 +222,20 @@ function OverflowCard({ cardHeight, count, width }: { cardHeight: number; count:
       <div
         style={{
           alignItems: 'center',
+          background: COLORS.ink,
           border: `1px solid ${COLORS.white12}`,
           borderRadius: '50%',
           display: 'flex',
-          fontSize: 32,
+          fontSize: 30,
           fontWeight: 600,
-          height: 74,
+          height: 70,
           justifyContent: 'center',
-          width: 74,
+          width: 70,
         }}
       >
         +{count}
       </div>
-      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 15 }}>more in the gallery</div>
+      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 14 }}>more in the gallery</div>
     </div>
   );
 }
