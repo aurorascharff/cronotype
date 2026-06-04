@@ -14,10 +14,10 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
   const cx = size / 2;
   const cy = size / 2;
 
-  const avatarR = size * 0.22;
+  const avatarR = size * 0.23;
   const gap = size * 0.04;
   const inner = avatarR + gap;
-  const outer = size * 0.46;
+  const outer = size * 0.45;
   const barWidth = Math.max(3, size * 0.018);
 
   const bars = stats.hourly.map((count, h) => {
@@ -51,8 +51,8 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
         </clipPath>
       </defs>
 
-      <circle cx={cx} cy={cy} r={inner - 1} fill="none" stroke={theme.accent} opacity={0.15} strokeWidth={1} />
-      <circle cx={cx} cy={cy} r={outer + 1} fill="none" stroke={theme.accent} opacity={0.08} strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={inner - 1} fill="none" stroke={theme.accent} opacity={0.24} strokeWidth={1} />
+      <circle cx={cx} cy={cy} r={outer + 1} fill="none" stroke={theme.accent} opacity={0.14} strokeWidth={1} />
 
       {[0, 6, 12, 18].map(q => {
         const a = (q / 24) * 360;
@@ -64,7 +64,7 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
             x2={cx}
             y2={cy - outer + 2}
             stroke={theme.accent}
-            opacity={0.35}
+            opacity={0.5}
             strokeWidth={1}
             transform={`rotate(${a}, ${cx}, ${cy})`}
           />
@@ -79,7 +79,7 @@ export function HaloChart({ stats, theme, avatarUrl, size = 320 }: Props) {
           width={barWidth}
           height={b.len}
           fill={theme.accent}
-          opacity={0.9}
+          opacity={0.95}
           transform={`rotate(${b.angle}, ${cx}, ${cy})`}
         />
       ))}

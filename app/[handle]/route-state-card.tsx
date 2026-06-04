@@ -14,12 +14,12 @@ export function RouteStateCard({ action, badge, body, meta, title, variant = 'de
   const isError = variant === 'error';
 
   return (
-    <article className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10">
+    <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:min-h-0 sm:[aspect-ratio:1200/630] dark:border-white/10">
       <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
         {badge}
       </div>
 
-      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-8 sm:p-8">
+      <div className="grid h-full min-h-[600px] grid-cols-1 items-center gap-4 p-5 pt-11 sm:min-h-0 sm:grid-cols-[auto_1fr] sm:gap-14 sm:p-8 lg:gap-16">
         <div className="relative mx-auto flex h-44 w-44 items-center justify-center opacity-85 min-[420px]:h-52 min-[420px]:w-52 sm:mx-0 sm:h-[220px] sm:w-[220px] sm:justify-start sm:pl-3">
           <div className="relative flex h-[140px] w-[140px] items-center justify-center sm:h-[220px] sm:w-[220px]">
             <ClassifyingRing failed variant="inset" />

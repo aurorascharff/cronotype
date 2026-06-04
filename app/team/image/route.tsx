@@ -294,6 +294,7 @@ function TeamImageCard({
   width: number;
 }) {
   const clockSize = dense ? 58 : compact ? 72 : 86;
+  const nameLines = wrapText(entry.name, dense ? 14 : compact ? 18 : 24);
 
   return (
     <div
@@ -317,12 +318,17 @@ function TeamImageCard({
             style={{
               color: COLORS.paper,
               display: 'flex',
+              flexDirection: 'column',
               fontSize: dense ? 14 : compact ? 16 : 19,
               fontWeight: 600,
               lineHeight: 1.05,
             }}
           >
-            {truncate(entry.name, dense ? 12 : compact ? 13 : 17)}
+            {nameLines.map((line, index) => (
+              <span key={`${entry.handle}-name-${index}`} style={{ display: 'flex' }}>
+                {line}
+              </span>
+            ))}
           </div>
           <div style={{ color: COLORS.muted, display: 'flex', fontSize: dense ? 10 : compact ? 11 : 13 }}>
             @{truncate(entry.handle, dense ? 11 : compact ? 12 : 16)}
@@ -474,6 +480,33 @@ function sortEntries(entries: Entry[]): Entry[] {
 
 function truncate(value: string, max: number) {
   return value.length > max ? `${value.slice(0, Math.max(0, max - 3))}...` : value;
+}
+
+function wrapText(value: string, maxChars: number) {
+  if (value.length <= maxChars) return [value];
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [truncate(value, maxChars)];
+  const lines: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      current = candidate;
+      continue;
+    }
+    if (current) lines.push(current);
+    current = word;
+    if (lines.length === 1) break;
+  }
+
+  if (current && lines.length < 2) lines.push(current);
+  const remainder = words.slice(lines.join(' ').split(/\s+/).filter(Boolean).length).join(' ');
+  if (remainder && lines.length > 0) {
+    lines[lines.length - 1] = truncate(`${lines[lines.length - 1]} ${remainder}`, maxChars);
+  }
+
+  return lines.slice(0, 2).map(line => truncate(line, maxChars));
 }
 
 async function renderFallbackImage(err: unknown) {
