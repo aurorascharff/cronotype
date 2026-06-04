@@ -7,6 +7,8 @@ export type ParsedTeamHandles = {
 
 export function parseTeamHandles(value: string | string[] | undefined): ParsedTeamHandles {
   const raw = Array.isArray(value) ? value.join(',') : (value ?? '');
+  const urlHandles = extractTeamUrlParam(raw, 'handles');
+  if (urlHandles) return parseTeamHandles(urlHandles);
   const seen = new Set<string>();
   const handles: string[] = [];
   const invalid: string[] = [];
@@ -32,7 +34,9 @@ export function serializeTeamHandles(handles: string[]): string {
 
 export function parseTeamName(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;
-  return (raw ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  const urlName = extractTeamUrlParam(raw ?? '', 'name');
+  const name = urlName ?? (raw ?? '').replace(/https?:\/\/\S+.*/i, '');
+  return name.trim().replace(/\s+/g, ' ').slice(0, 80);
 }
 
 export function teamUrl({ handles, name }: { handles: string[]; name?: string }): string {
@@ -62,4 +66,16 @@ export function teamImageUrl({
 
 function encodeTeamQueryValue(value: string) {
   return encodeURIComponent(value).replaceAll('%20', '+');
+}
+
+function extractTeamUrlParam(value: string, key: 'handles' | 'name') {
+  const match = value.match(/(?:https?:\/\/\S+|\/team\?\S+)/i);
+  if (!match) return null;
+  try {
+    const url = new URL(match[0], 'https://cronotype.local');
+    if (url.pathname !== '/team') return null;
+    return url.searchParams.get(key);
+  } catch {
+    return null;
+  }
 }

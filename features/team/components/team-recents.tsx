@@ -3,7 +3,7 @@
 import { LoaderCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useSyncExternalStore, useTransition } from 'react';
-import { teamUrl } from '@/features/team/team-handles';
+import { parseTeamHandles, parseTeamName, serializeTeamHandles, teamUrl } from '@/features/team/team-handles';
 import type { Route } from 'next';
 
 export type RecentTeam = {
@@ -73,10 +73,11 @@ export function TeamRecentSaver({ current }: { current?: { handles: string; name
       .split(',')
       .map(handle => handle.trim())
       .filter(Boolean);
-    const nextUrl = teamUrl({ handles, name: current.name });
+    const name = parseTeamName(current.name) || 'Untitled team';
+    const nextUrl = teamUrl({ handles, name: name === 'Untitled team' ? '' : name });
     const next: RecentTeam = {
-      handles: current.handles,
-      name: current.name || 'Untitled team',
+      handles: serializeTeamHandles(handles),
+      name,
       savedAt: Date.now(),
       url: nextUrl,
     };
@@ -109,11 +110,8 @@ export function parseTeamRecents(value: string): RecentTeam[] {
     const parsed = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
     return parsed
-      .filter(isRecentTeam)
-      .map(team => ({
-        ...team,
-        url: recentTeamHref(team),
-      }))
+      .map(normalizeRecentTeam)
+      .filter((team): team is RecentTeam => team !== null)
       .slice(0, MAX_RECENTS);
   } catch {
     return [];
@@ -139,6 +137,20 @@ function isRecentTeam(value: unknown): value is RecentTeam {
     typeof team.url === 'string' &&
     team.url.startsWith('/team?')
   );
+}
+
+function normalizeRecentTeam(value: unknown): RecentTeam | null {
+  if (!isRecentTeam(value)) return null;
+  const { handles } = parseTeamHandles(value.handles);
+  if (handles.length === 0) return null;
+  const name = parseTeamName(value.name) || 'Untitled team';
+  const serialized = serializeTeamHandles(handles);
+  return {
+    handles: serialized,
+    name,
+    savedAt: value.savedAt,
+    url: teamUrl({ handles, name: name === 'Untitled team' ? '' : name }),
+  };
 }
 
 function writeTeams(teams: RecentTeam[]) {
