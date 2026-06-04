@@ -113,7 +113,13 @@ function isWorkdayRhythm(s: HourStats) {
   const margin = stabilityMargin(s);
   const morning = pctRange(s, 5, 10);
   const late = pctRange(s, 18, 23);
-  return s.pctBusiness > 65 + margin && morning < 30 + margin && late < 18 + margin && s.pctNocturnal < 18 && s.pctWeekend < 35;
+  return (
+    s.pctBusiness > 65 + margin &&
+    morning < 30 + margin &&
+    late < 18 + margin &&
+    s.pctNocturnal < 18 &&
+    s.pctWeekend < 35
+  );
 }
 
 function stabilityMargin(s: HourStats) {

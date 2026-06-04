@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { Crossfade } from '@/components/ui/crossfade';
 import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/components/top-revealed';
 import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
@@ -13,8 +14,8 @@ function parsePage(value: string | string[] | undefined): number {
 
 export default function HomePage({ searchParams }: PageProps<'/'>) {
   return (
-    <div className="space-y-12 sm:space-y-16">
-      <section className="space-y-5 pt-4 sm:pt-10">
+    <div className="space-y-8 sm:space-y-10">
+      <section className="space-y-4 pt-1 sm:pt-4">
         <h1 className="tracking-tightest mx-auto max-w-xl text-center text-2xl leading-tight font-semibold sm:text-4xl">
           What type of developer are you?
         </h1>
@@ -24,6 +25,13 @@ export default function HomePage({ searchParams }: PageProps<'/'>) {
         <div className="mx-auto max-w-md">
           <UsernameForm />
         </div>
+        <p className="text-muted dark:text-muted-dark text-center text-xs">
+          Making a team view?{' '}
+          <Link href="/team" className="text-ink dark:text-paper underline-offset-2 hover:underline">
+            Build a gallery
+          </Link>
+          .
+        </p>
       </section>
       <section className="space-y-4">
         <h2 className="text-lg font-semibold tracking-tight">Top revealed</h2>

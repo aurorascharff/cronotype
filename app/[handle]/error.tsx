@@ -15,7 +15,8 @@ export default function Error({ error }: Props) {
       <RouteStateCard
         badge="GitHub paused"
         title="We couldn't reveal this developer."
-        body="You're most likely rate limited, or something unexpected went wrong. Give it a minute and try again."
+        body="GitHub may be rate limited, the username may be invalid, or something unexpected happened. Wait a minute and refresh the page. If it still doesn't work, use Regenerate."
+        variant="error"
         meta={
           error.digest ? (
             <span className="text-muted/70 dark:text-muted-dark/70 font-mono text-[10px] tracking-wide uppercase">
@@ -25,7 +26,11 @@ export default function Error({ error }: Props) {
         }
       />
       <div className="flex flex-wrap justify-end gap-2">
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <div className="h-10 w-32 rounded-lg border border-black/10 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.04]" />
+          }
+        >
           <RegenerateFromParamsButton />
         </Suspense>
       </div>

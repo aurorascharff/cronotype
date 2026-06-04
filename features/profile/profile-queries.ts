@@ -43,8 +43,7 @@ function gitHubErrorStatus(err: unknown): number | null {
 }
 
 export function isGitHubNotFoundError(err: unknown): boolean {
-  if (gitHubErrorStatus(err) === 404) return true;
-  return err instanceof Error && /not found on GitHub|could not resolve to a User/i.test(err.message);
+  return gitHubErrorStatus(err) === 404;
 }
 
 export function isGitHubRateLimitError(err: unknown): boolean {

@@ -15,7 +15,10 @@ export function RevealGate({ handle }: Props) {
   });
 
   return (
-    <form action={formAction} className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10">
+    <form
+      action={formAction}
+      className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10"
+    >
       <input type="hidden" name="handle" value={handle} />
       <div className="flex flex-col gap-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
         <div className="min-w-0">
@@ -33,11 +36,7 @@ export function RevealGate({ handle }: Props) {
             </p>
           ) : null}
         </div>
-        <SubmitButton
-          className="h-10 shrink-0 px-4 text-sm"
-          iconPosition="start"
-          variant="primary"
-        >
+        <SubmitButton className="h-10 shrink-0 px-4 text-sm" iconPosition="start" variant="primary">
           <span>{isSubmitting ? 'Revealing' : 'Reveal'}</span>
         </SubmitButton>
       </div>

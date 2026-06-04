@@ -7,9 +7,12 @@ type Props = {
   body: string;
   meta?: ReactNode;
   title: string;
+  variant?: 'default' | 'error';
 };
 
-export function RouteStateCard({ action, badge, body, meta, title }: Props) {
+export function RouteStateCard({ action, badge, body, meta, title, variant = 'default' }: Props) {
+  const isError = variant === 'error';
+
   return (
     <article className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10">
       <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
@@ -24,13 +27,23 @@ export function RouteStateCard({ action, badge, body, meta, title }: Props) {
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-3">
           <div className="space-y-3">
             <p className="text-muted dark:text-muted-dark text-xs sm:text-sm">cronotype &middot; GitHub</p>
-            <h1 className="tracking-tightest text-4xl leading-[0.98] font-semibold break-words min-[420px]:text-5xl sm:text-6xl">
+            <h1
+              className={
+                isError
+                  ? 'tracking-tightest text-3xl leading-[1.02] font-semibold break-words min-[420px]:text-4xl sm:text-5xl'
+                  : 'tracking-tightest text-4xl leading-[0.98] font-semibold break-words min-[420px]:text-5xl sm:text-6xl'
+              }
+            >
               {title}
             </h1>
-            <p className="text-muted dark:text-muted-dark max-w-md text-sm sm:text-base">{body}</p>
+            <p
+              className={`text-muted dark:text-muted-dark ${isError ? 'max-w-xl text-base sm:text-xl' : 'max-w-md text-sm sm:text-base'}`}
+            >
+              {body}
+            </p>
           </div>
 
           {(action || meta) && (

@@ -16,13 +16,19 @@ export function SiteHeader() {
           <nav className="flex items-center gap-1">
             <Link
               href="/types"
-              className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex h-9 items-center rounded-lg px-3 text-sm transition-colors"
+              className="text-ink/75 dark:text-paper/75 hover:text-ink dark:hover:text-paper inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors"
             >
               Types
             </Link>
             <Link
+              href="/team"
+              className="text-ink/75 dark:text-paper/75 hover:text-ink dark:hover:text-paper inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors"
+            >
+              Team
+            </Link>
+            <Link
               href="/private"
-              className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper hidden h-9 items-center rounded-lg px-3 text-sm transition-colors sm:inline-flex"
+              className="text-ink/75 dark:text-paper/75 hover:text-ink dark:hover:text-paper hidden h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors sm:inline-flex"
             >
               Private
             </Link>

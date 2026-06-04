@@ -78,7 +78,10 @@ export async function revealUserFromGate(state: RevealGateState, formData: FormD
     if (isGitHubRateLimitError(err)) {
       return { error: 'GitHub is rate limited right now. Give it a minute and try again.', errorId: state.errorId + 1 };
     }
-    return { error: "We couldn't reveal this profile right now. Try again in a moment.", errorId: state.errorId + 1 };
+    return {
+      error: "We couldn't reveal this profile. The username may be invalid, or GitHub may be busy.",
+      errorId: state.errorId + 1,
+    };
   }
 
   redirect(`/${lower}`);
@@ -100,7 +103,10 @@ export async function revealUserFromForm(state: RevealFormState, formData: FormD
     if (isGitHubRateLimitError(err)) {
       return { error: 'GitHub is rate limited right now. Try again in a minute.', errorId: state.errorId + 1 };
     }
-    return { error: "Couldn't start the reveal. Try again in a moment.", errorId: state.errorId + 1 };
+    return {
+      error: "Couldn't start the reveal. The username may be invalid, or GitHub may be busy.",
+      errorId: state.errorId + 1,
+    };
   }
 
   redirect(`/${handle}`);

@@ -125,9 +125,7 @@ Or with Tailwind:
 ```html
 <div className="group">
   <LabelFilter />
-  <div className="group-has-data-pending:opacity-50">
-    {/* content that fades while filter is pending */}
-  </div>
+  <div className="group-has-data-pending:opacity-50">{/* content that fades while filter is pending */}</div>
 </div>
 ```
 
@@ -268,7 +266,7 @@ When rendering a vertical list of interactive rows with hover backgrounds, add a
 ```html
 <ul className="flex flex-col gap-0.5">
   {items.map(item => (
-    <li key={item.id} className="rounded hover:bg-muted px-2 py-1">...</li>
+  <li key="{item.id}" className="rounded hover:bg-muted px-2 py-1">...</li>
   ))}
 </ul>
 ```
