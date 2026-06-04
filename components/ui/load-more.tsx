@@ -21,7 +21,7 @@ export function LoadMore({ href }: { href: Route }) {
       }}
       variant="secondary"
     >
-      {isPending ? 'Loading' : 'Load more'}
+      Load more
     </Button>
   );
 }

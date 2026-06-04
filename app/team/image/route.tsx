@@ -7,7 +7,7 @@ import { formatFollowers } from '@/lib/format';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
-const MAX_REPRESENTATIVES = 12;
+const MAX_REPRESENTATIVES = 10;
 
 const COLORS = {
   ink: '#0a0a0a',
@@ -22,7 +22,7 @@ const COLORS = {
 };
 
 type Entry = {
-  archetype: string;
+  archetype: string | null;
   avatarUrl: string | null;
   color: string;
   followers: number;
@@ -64,7 +64,7 @@ async function getEntry(handle: string): Promise<Entry> {
         ? cronotype.stats.total === 0
           ? 'Quiet lately'
           : cronotype.archetype.name
-        : 'Waiting on GitHub',
+        : null,
       avatarUrl: profile?.avatarUrl ?? null,
       color,
       followers: profile?.followers ?? 0,
@@ -74,7 +74,7 @@ async function getEntry(handle: string): Promise<Entry> {
     };
   } catch {
     return {
-      archetype: 'Waiting on GitHub',
+      archetype: null,
       avatarUrl: null,
       color: COLORS.muted,
       followers: 0,
@@ -89,10 +89,9 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
   const fonts = await loadGeist();
   const counts = typeCounts(entries);
   const selected = selectRepresentatives(entries);
-  const columns = selected.length <= 4 ? Math.max(1, selected.length) : selected.length <= 8 ? 4 : 6;
-  const cardWidth =
-    columns === 6 ? 158 : columns === 4 ? 236 : Math.floor((WIDTH - 108 - (columns - 1) * 16) / columns);
-  const cardHeight = columns === 6 ? 122 : 154;
+  const columns = selected.length <= 4 ? Math.max(1, selected.length) : selected.length <= 8 ? 4 : 5;
+  const cardWidth = Math.floor((WIDTH - 104 - (columns - 1) * 16) / columns);
+  const cardHeight = columns === 5 ? 138 : 154;
 
   return new ImageResponse(
     <div
@@ -141,13 +140,13 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 14, marginTop: 28, width: '100%' }}>
-        {counts.length > 0 ? (
-          counts.slice(0, 5).map(count => <TypePill key={count.name} count={count} />)
-        ) : (
-          <TypePill count={{ color: COLORS.muted, count: 0, name: 'Add handles' }} />
-        )}
-      </div>
+      {counts.length > 0 ? (
+        <div style={{ display: 'flex', gap: 14, marginTop: 28, width: '100%' }}>
+          {counts.slice(0, 5).map(count => (
+            <TypePill key={count.name} count={count} />
+          ))}
+        </div>
+      ) : null}
 
       <div
         style={{
@@ -155,7 +154,7 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
           display: 'flex',
           flexWrap: 'wrap',
           gap: 16,
-          marginTop: 28,
+          marginTop: counts.length > 0 ? 28 : 36,
           width: '100%',
         }}
       >
@@ -166,7 +165,7 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
               cardHeight={cardHeight}
               entry={entry}
               width={cardWidth}
-              compact={columns === 6}
+              compact={columns === 5}
             />
           ))
         ) : (
@@ -283,8 +282,8 @@ function TeamImageCard({
         </div>
       </div>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <div style={{ color: entry.color, display: 'flex', fontSize: compact ? 13 : 18, fontWeight: 600 }}>
-          {truncate(entry.archetype, compact ? 19 : 22)}
+        <div style={{ color: entry.archetype ? entry.color : COLORS.muted, display: 'flex', fontSize: compact ? 13 : 18, fontWeight: 600 }}>
+          {entry.archetype ? truncate(entry.archetype, compact ? 19 : 22) : '-'}
         </div>
         {entry.followers > 0 ? (
           <div
@@ -306,6 +305,7 @@ function TeamImageCard({
 function typeCounts(entries: Entry[]): ArchetypeCount[] {
   const byName = new Map<string, ArchetypeCount>();
   for (const entry of entries) {
+    if (!entry.archetype) continue;
     const existing = byName.get(entry.archetype);
     if (existing) {
       existing.count++;
@@ -323,8 +323,9 @@ function selectRepresentatives(entries: Entry[]): Entry[] {
 
   for (const entry of sorted) {
     if (selected.length >= MAX_REPRESENTATIVES) break;
-    if (seenTypes.has(entry.archetype)) continue;
-    seenTypes.add(entry.archetype);
+    const typeKey = entry.archetype ?? `pending-${entry.handle}`;
+    if (seenTypes.has(typeKey)) continue;
+    seenTypes.add(typeKey);
     selected.push(entry);
   }
 
