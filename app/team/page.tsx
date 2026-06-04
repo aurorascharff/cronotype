@@ -175,13 +175,7 @@ function TeamGallery({
       <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
         {handles.map(handle => (
           <li key={handle}>
-            <ProfileCardSlot
-              handle={handle}
-              href={{
-                pathname: `/${handle}`,
-                query: name ? { team: serialized, teamName: name } : { team: serialized },
-              }}
-            />
+            <ProfileCardSlot handle={handle} href={{ pathname: `/${handle}` }} />
           </li>
         ))}
       </ul>

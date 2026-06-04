@@ -11,13 +11,13 @@ type RecentTeam = {
   url: string;
 };
 
-const STORAGE_KEY = 'cronotype:recent-teams';
-const EVENT_NAME = 'cronotype:recent-teams-updated';
+export const TEAM_RECENTS_STORAGE_KEY = 'cronotype:recent-teams';
+export const TEAM_RECENTS_EVENT = 'cronotype:recent-teams-updated';
 const MAX_RECENTS = 5;
 
 export function TeamRecents({ current }: { current?: { handles: string; name: string; url: string } }) {
   const snapshot = useSyncExternalStore(subscribe, readSnapshot, emptySnapshot);
-  const teams = useMemo(() => parseSnapshot(snapshot), [snapshot]);
+  const teams = useMemo(() => parseTeamRecents(snapshot), [snapshot]);
 
   useEffect(() => {
     if (!current?.handles) return;
@@ -27,7 +27,7 @@ export function TeamRecents({ current }: { current?: { handles: string; name: st
       savedAt: Date.now(),
       url: current.url,
     };
-    const existing = parseSnapshot(readSnapshot()).filter(team => team.url !== next.url);
+    const existing = parseTeamRecents(readSnapshot()).filter(team => team.url !== next.url);
     writeTeams([next, ...existing].slice(0, MAX_RECENTS));
   }, [current]);
 
@@ -58,22 +58,22 @@ export function TeamRecents({ current }: { current?: { handles: string; name: st
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener('storage', onStoreChange);
-  window.addEventListener(EVENT_NAME, onStoreChange);
+  window.addEventListener(TEAM_RECENTS_EVENT, onStoreChange);
   return () => {
     window.removeEventListener('storage', onStoreChange);
-    window.removeEventListener(EVENT_NAME, onStoreChange);
+    window.removeEventListener(TEAM_RECENTS_EVENT, onStoreChange);
   };
 }
 
 function readSnapshot() {
-  return window.localStorage.getItem(STORAGE_KEY) ?? '[]';
+  return window.localStorage.getItem(TEAM_RECENTS_STORAGE_KEY) ?? '[]';
 }
 
 function emptySnapshot() {
   return '[]';
 }
 
-function parseSnapshot(value: string): RecentTeam[] {
+export function parseTeamRecents(value: string): RecentTeam[] {
   try {
     const parsed = JSON.parse(value);
     if (!Array.isArray(parsed)) return [];
@@ -96,6 +96,6 @@ function isRecentTeam(value: unknown): value is RecentTeam {
 }
 
 function writeTeams(teams: RecentTeam[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(teams));
-  window.dispatchEvent(new Event(EVENT_NAME));
+  window.localStorage.setItem(TEAM_RECENTS_STORAGE_KEY, JSON.stringify(teams));
+  window.dispatchEvent(new Event(TEAM_RECENTS_EVENT));
 }

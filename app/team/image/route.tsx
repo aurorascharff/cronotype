@@ -4,6 +4,7 @@ import { getCardCronotype, getCardProfile } from '@/features/leaderboard/leaderb
 import { parseTeamHandles, parseTeamName } from '@/features/team/team-handles';
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
+import type { HourStats } from '@/types/cronotype';
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -28,6 +29,7 @@ type Entry = {
   followers: number;
   handle: string;
   name: string;
+  stats: HourStats | null;
   status: 'ok' | 'pending';
 };
 
@@ -66,6 +68,7 @@ async function getEntry(handle: string): Promise<Entry> {
       followers: profile?.followers ?? 0,
       handle,
       name: profile?.name ?? profile?.login ?? `@${handle}`,
+      stats: cronotype?.stats ?? null,
       status: cronotype ? 'ok' : 'pending',
     };
   } catch {
@@ -76,6 +79,7 @@ async function getEntry(handle: string): Promise<Entry> {
       followers: 0,
       handle,
       name: `@${handle}`,
+      stats: null,
       status: 'pending',
     };
   }
@@ -87,7 +91,7 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
   const selected = selectRepresentatives(entries);
   const columns = selected.length <= 4 ? Math.max(1, selected.length) : selected.length <= 8 ? 4 : 5;
   const cardWidth = Math.floor((WIDTH - 104 - (columns - 1) * 16) / columns);
-  const cardHeight = columns === 5 ? 138 : 154;
+  const cardHeight = columns === 5 ? 150 : 164;
 
   return new ImageResponse(
     <div
@@ -98,46 +102,37 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
         flexDirection: 'column',
         fontFamily: 'GeistSans, sans-serif',
         height: '100%',
-        padding: 52,
+        padding: 44,
         width: '100%',
       }}
     >
       <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', width: '100%' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 760 }}>
           <div style={{ color: COLORS.muted, display: 'flex', fontSize: 24 }}>cronotype team</div>
-          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 58, fontWeight: 600, lineHeight: 1.02 }}>
+          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 56, fontWeight: 600, lineHeight: 1 }}>
             {name}
           </div>
         </div>
         <div
           style={{
-            alignItems: 'flex-end',
-            border: `1px solid ${COLORS.line}`,
-            borderRadius: 18,
+            alignItems: 'baseline',
+            color: COLORS.muted,
             display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            padding: '13px 16px',
+            fontFamily: 'GeistMono, monospace',
+            gap: 10,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
           }}
         >
-          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 32, fontWeight: 600 }}>{entries.length}</div>
-          <div
-            style={{
-              color: COLORS.muted,
-              display: 'flex',
-              fontFamily: 'GeistMono, monospace',
-              fontSize: 15,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-            }}
-          >
-            profiles
-          </div>
+          <span style={{ color: COLORS.paper, fontFamily: 'GeistSans, sans-serif', fontSize: 34, fontWeight: 600 }}>
+            {entries.length}
+          </span>
+          <span style={{ fontSize: 17 }}>{entries.length === 1 ? 'profile' : 'profiles'}</span>
         </div>
       </div>
 
       {counts.length > 0 ? (
-        <div style={{ display: 'flex', gap: 14, marginTop: 28, width: '100%' }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 22, width: '100%' }}>
           {counts.slice(0, 5).map(count => (
             <TypePill key={count.name} count={count} />
           ))}
@@ -150,7 +145,7 @@ async function renderTeamImage({ entries, name }: { entries: Entry[]; name: stri
           display: 'flex',
           flexWrap: 'wrap',
           gap: 16,
-          marginTop: counts.length > 0 ? 28 : 36,
+          marginTop: counts.length > 0 ? 22 : 30,
           width: '100%',
         }}
       >
@@ -197,12 +192,12 @@ function TypePill({ count }: { count: ArchetypeCount }) {
         borderRadius: 999,
         display: 'flex',
         gap: 9,
-        padding: '8px 12px',
+        padding: '7px 11px',
       }}
     >
       <div style={{ background: count.color, borderRadius: 999, display: 'flex', height: 10, width: 10 }} />
-      <div style={{ color: COLORS.paper, display: 'flex', fontSize: 20, fontWeight: 600 }}>{count.count}</div>
-      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 18 }}>{count.name}</div>
+      <div style={{ color: COLORS.paper, display: 'flex', fontSize: 18, fontWeight: 600 }}>{count.count}</div>
+      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 16 }}>{count.name}</div>
     </div>
   );
 }
@@ -218,7 +213,7 @@ function TeamImageCard({
   entry: Entry;
   width: number;
 }) {
-  const avatarSize = compact ? 44 : 56;
+  const clockSize = compact ? 76 : 86;
 
   return (
     <div
@@ -228,52 +223,29 @@ function TeamImageCard({
         borderRadius: 16,
         display: 'flex',
         flexDirection: 'column',
+        gap: 8,
         height: cardHeight,
         justifyContent: 'space-between',
-        padding: compact ? 14 : 17,
+        padding: compact ? 12 : 14,
         width,
       }}
     >
-      <div style={{ alignItems: 'center', display: 'flex', gap: compact ? 10 : 13, minWidth: 0 }}>
-        <div
-          style={{
-            alignItems: 'center',
-            border: `1px solid ${entry.color}`,
-            borderRadius: '50%',
-            display: 'flex',
-            height: avatarSize,
-            justifyContent: 'center',
-            width: avatarSize,
-          }}
-        >
-          {entry.avatarUrl ? (
-            <img
-              src={entry.avatarUrl}
-              alt=""
-              width={avatarSize - 8}
-              height={avatarSize - 8}
-              style={{ borderRadius: '50%', height: avatarSize - 8, objectFit: 'cover', width: avatarSize - 8 }}
-            />
-          ) : (
-            <div style={{ color: COLORS.muted, display: 'flex', fontSize: compact ? 13 : 16, fontWeight: 600 }}>
-              {entry.handle.slice(0, 2).toUpperCase()}
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+      <div style={{ alignItems: 'center', display: 'flex', flex: 1, gap: compact ? 10 : 12, minWidth: 0 }}>
+        <TeamClock entry={entry} size={clockSize} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
           <div
             style={{
               color: COLORS.paper,
               display: 'flex',
-              fontSize: compact ? 17 : 22,
+              fontSize: compact ? 16 : 19,
               fontWeight: 600,
               lineHeight: 1.05,
             }}
           >
-            {truncate(entry.name, compact ? 15 : 19)}
+            {truncate(entry.name, compact ? 13 : 17)}
           </div>
-          <div style={{ color: COLORS.muted, display: 'flex', fontSize: compact ? 12 : 15 }}>
-            @{truncate(entry.handle, compact ? 14 : 18)}
+          <div style={{ color: COLORS.muted, display: 'flex', fontSize: compact ? 11 : 13 }}>
+            @{truncate(entry.handle, compact ? 12 : 16)}
           </div>
         </div>
       </div>
@@ -282,7 +254,7 @@ function TeamImageCard({
           style={{
             color: entry.archetype ? entry.color : COLORS.muted,
             display: 'flex',
-            fontSize: compact ? 13 : 18,
+            fontSize: compact ? 12 : 15,
             fontWeight: 600,
           }}
         >
@@ -294,12 +266,87 @@ function TeamImageCard({
               color: COLORS.muted,
               display: 'flex',
               fontFamily: 'GeistMono, monospace',
-              fontSize: compact ? 11 : 13,
+              fontSize: compact ? 10 : 12,
             }}
           >
             {formatFollowers(entry.followers)}
           </div>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+function TeamClock({ entry, size }: { entry: Entry; size: number }) {
+  const avatarSize = size * 0.46;
+  const max = Math.max(1, ...(entry.stats?.hourly ?? []));
+  const bars =
+    entry.stats?.hourly.map((count, hour) => ({
+      angle: (hour / 24) * 360,
+      height: Math.max(2, (count / max) * size * 0.18),
+      hour,
+    })) ?? [];
+
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        height: size,
+        justifyContent: 'center',
+        position: 'relative',
+        width: size,
+      }}
+    >
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ display: 'flex', height: size, left: 0, position: 'absolute', top: 0, width: size }}
+      >
+        <circle cx={size / 2} cy={size / 2} r={size * 0.28} fill="none" stroke={entry.color} opacity={0.18} />
+        {bars.length > 0
+          ? bars.map(bar => (
+              <rect
+                key={bar.hour}
+                x={size / 2 - 1.4}
+                y={size / 2 - size * 0.29 - bar.height}
+                width={2.8}
+                height={bar.height}
+                fill={entry.color}
+                opacity={0.9}
+                transform={`rotate(${bar.angle}, ${size / 2}, ${size / 2})`}
+              />
+            ))
+          : null}
+      </svg>
+      <div
+        style={{
+          alignItems: 'center',
+          background: COLORS.ink,
+          border: `1px solid ${entry.color}`,
+          borderRadius: '50%',
+          display: 'flex',
+          height: avatarSize,
+          justifyContent: 'center',
+          overflow: 'hidden',
+          position: 'relative',
+          width: avatarSize,
+        }}
+      >
+        {entry.avatarUrl ? (
+          <img
+            src={entry.avatarUrl}
+            alt=""
+            width={avatarSize}
+            height={avatarSize}
+            style={{ height: avatarSize, objectFit: 'cover', width: avatarSize }}
+          />
+        ) : (
+          <div style={{ color: COLORS.muted, display: 'flex', fontSize: 13, fontWeight: 600 }}>
+            {entry.handle.slice(0, 2).toUpperCase()}
+          </div>
+        )}
       </div>
     </div>
   );
