@@ -124,11 +124,11 @@ async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; n
         width: '100%',
       }}
     >
-      <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 760 }}>
+      <div style={{ alignItems: 'flex-start', display: 'flex', gap: 32, width: '100%' }}>
+        <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 10, minWidth: 0 }}>
           <div style={{ color: COLORS.muted, display: 'flex', fontSize: 24 }}>cronotype team</div>
-          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 56, fontWeight: 600, lineHeight: 1 }}>
-            {name}
+          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 54, fontWeight: 600, lineHeight: 1 }}>
+            {truncate(name, 30)}
           </div>
         </div>
         <div
@@ -136,10 +136,12 @@ async function renderTeamImage({ entries, name, variant }: { entries: Entry[]; n
             alignItems: 'baseline',
             color: COLORS.muted,
             display: 'flex',
+            flexShrink: 0,
             fontFamily: 'GeistMono, monospace',
             gap: 10,
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
+            width: 158,
           }}
         >
           <span style={{ color: COLORS.paper, fontFamily: 'GeistSans, sans-serif', fontSize: 34, fontWeight: 600 }}>
@@ -294,7 +296,8 @@ function TeamImageCard({
   width: number;
 }) {
   const clockSize = dense ? 58 : compact ? 72 : 86;
-  const nameLines = wrapText(entry.name, dense ? 14 : compact ? 18 : 24);
+  const textWidth = width - clockSize - (dense ? 38 : compact ? 48 : 54);
+  const nameLines = wrapText(entry.name, textWidth, dense ? 14 : compact ? 16 : 19);
 
   return (
     <div
@@ -313,7 +316,7 @@ function TeamImageCard({
     >
       <div style={{ alignItems: 'center', display: 'flex', flex: 1, gap: dense ? 8 : compact ? 10 : 12, minWidth: 0 }}>
         <TeamClock entry={entry} size={clockSize} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: textWidth }}>
           <div
             style={{
               color: COLORS.paper,
@@ -325,7 +328,7 @@ function TeamImageCard({
             }}
           >
             {nameLines.map((line, index) => (
-              <span key={`${entry.handle}-name-${index}`} style={{ display: 'flex' }}>
+              <span key={`${entry.handle}-name-${index}`} style={{ display: 'flex', maxWidth: textWidth }}>
                 {line}
               </span>
             ))}
@@ -482,7 +485,8 @@ function truncate(value: string, max: number) {
   return value.length > max ? `${value.slice(0, Math.max(0, max - 3))}...` : value;
 }
 
-function wrapText(value: string, maxChars: number) {
+function wrapText(value: string, maxWidth: number, fontSize: number) {
+  const maxChars = Math.max(8, Math.floor(maxWidth / (fontSize * 0.58)));
   if (value.length <= maxChars) return [value];
   const words = value.split(/\s+/).filter(Boolean);
   if (words.length === 0) return [truncate(value, maxChars)];

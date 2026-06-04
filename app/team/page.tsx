@@ -140,14 +140,14 @@ function TeamGallery({
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight">{name || 'Gallery'}</h2>
-          <p className="text-muted dark:text-muted-dark text-xs">
+      <div className="grid min-h-16 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+        <div className="min-w-0 space-y-1">
+          <h2 className="truncate text-lg font-semibold tracking-tight">{name || 'Gallery'}</h2>
+          <p className="text-muted dark:text-muted-dark h-4 text-xs">
             {handles.length} {handles.length === 1 ? 'profile' : 'profiles'}
           </p>
           {invalid.length > 0 && (
-            <p className="text-muted dark:text-muted-dark text-xs">
+            <p className="text-muted dark:text-muted-dark line-clamp-2 text-xs">
               Skipped invalid handles: {invalid.map(handle => `@${handle}`).join(', ')}
             </p>
           )}
@@ -174,7 +174,13 @@ function TeamGallery({
 function TeamGallerySkeleton() {
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">Gallery</h2>
+      <div className="grid min-h-16 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start" aria-hidden>
+        <div className="min-w-0 space-y-1">
+          <div className="skeleton h-7 w-44 rounded" />
+          <div className="skeleton h-4 w-20 rounded" />
+        </div>
+        <div className="skeleton hidden h-9 w-28 rounded-lg sm:block" />
+      </div>
       <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" aria-hidden>
         {Array.from({ length: 8 }).map((_, i) => (
           <li key={i}>
