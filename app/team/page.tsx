@@ -72,7 +72,7 @@ export default function TeamPage({ searchParams }: PageProps<'/team'>) {
         </p>
         <div className="mx-auto max-w-2xl">
           <TeamForm />
-          <div className="min-h-16 pt-3">
+          <div className="h-20 pt-3">
             <TeamRecents />
           </div>
         </div>

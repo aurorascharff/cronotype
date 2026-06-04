@@ -15,7 +15,7 @@ export type RecentTeam = {
 
 export const TEAM_RECENTS_STORAGE_KEY = 'cronotype:recent-teams';
 export const TEAM_RECENTS_EVENT = 'cronotype:recent-teams-updated';
-const MAX_RECENTS = 5;
+const MAX_RECENTS = 4;
 
 export function TeamRecents() {
   const snapshot = useSyncExternalStore(subscribe, readSnapshot, emptySnapshot);
@@ -24,11 +24,11 @@ export function TeamRecents() {
   if (teams.length === 0) return null;
 
   return (
-    <section className="space-y-2">
+    <section className="h-full space-y-2 overflow-hidden">
       <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
         Recent teams
       </h2>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {teams.map(team => (
           <RecentTeamButton key={recentTeamHref(team)} team={team} />
         ))}
@@ -45,7 +45,7 @@ function RecentTeamButton({ team }: { team: RecentTeam }) {
   return (
     <button
       type="button"
-      className="dark:bg-ink-2 text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex max-w-full items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-2.5 py-1.5 text-xs transition-colors hover:border-black/25 disabled:pointer-events-none disabled:opacity-70 dark:border-white/10 dark:hover:border-white/25"
+      className="dark:bg-ink-2 text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex max-w-44 shrink-0 items-center gap-2 rounded-lg border border-black/10 bg-white/70 px-2.5 py-1.5 text-xs transition-colors hover:border-black/25 disabled:pointer-events-none disabled:opacity-70 dark:border-white/10 dark:hover:border-white/25"
       disabled={isPending}
       aria-busy={isPending}
       onClick={() => {
