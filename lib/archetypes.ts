@@ -82,6 +82,13 @@ function midday(s: HourStats) {
   return ((s.hourly[12] ?? 0) / total) * 100;
 }
 
+function pctRange(s: HourStats, from: number, to: number) {
+  const total = s.total || 1;
+  let sum = 0;
+  for (let hour = from; hour <= to; hour++) sum += s.hourly[hour] ?? 0;
+  return (sum / total) * 100;
+}
+
 function hasLunchSpike(s: HourStats) {
   const margin = stabilityMargin(s);
   const lunchSpike = midday(s);
@@ -97,13 +104,16 @@ function isVampireRhythm(s: HourStats) {
 
 function isSunriseRhythm(s: HourStats) {
   const margin = stabilityMargin(s);
-  const sunrisePeak = s.peakHour >= 5 && s.peakHour <= 8;
-  return s.pctSunrise > 20 + margin && (sunrisePeak || s.pctSunrise > 24 + margin) && s.pctNocturnal < 30;
+  const morning = pctRange(s, 5, 10);
+  const morningPeak = s.peakHour >= 5 && s.peakHour <= 10;
+  return morning > 28 + margin && (morningPeak || s.pctSunrise > 22 + margin) && s.pctNocturnal < 30;
 }
 
 function isWorkdayRhythm(s: HourStats) {
   const margin = stabilityMargin(s);
-  return s.pctBusiness > 65 + margin && s.pctNocturnal < 20 && s.pctWeekend < 35;
+  const morning = pctRange(s, 5, 10);
+  const late = pctRange(s, 18, 23);
+  return s.pctBusiness > 65 + margin && morning < 30 + margin && late < 18 + margin && s.pctNocturnal < 18 && s.pctWeekend < 35;
 }
 
 function stabilityMargin(s: HourStats) {
@@ -130,7 +140,7 @@ export function percentileFor(archetype: Archetype, stats: HourStats): number {
     case 'vampire':
       return clampPct(stats.pctNocturnal * 2);
     case 'sunrise-sniper':
-      return clampPct(stats.pctSunrise * 2.5);
+      return clampPct(pctRange(stats, 5, 10) * 2.1);
     case 'lunch-bandit':
       return clampPct(midday(stats) * 6);
     case 'weekend-warrior':

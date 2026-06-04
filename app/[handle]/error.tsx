@@ -1,16 +1,14 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Button } from '@/components/ui/button';
 import { RegenerateFromParamsButton } from '@/features/profile/components/regenerate-button';
 import { RouteStateCard } from './route-state-card';
 
 type Props = {
   error: Error & { digest?: string };
-  reset: () => void;
 };
 
-export default function Error({ error, reset }: Props) {
+export default function Error({ error }: Props) {
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
@@ -27,9 +25,6 @@ export default function Error({ error, reset }: Props) {
         }
       />
       <div className="flex flex-wrap justify-end gap-2">
-        <Button type="button" onClick={reset} variant="secondary" className="h-10 px-4 text-sm">
-          Try again
-        </Button>
         <Suspense fallback={null}>
           <RegenerateFromParamsButton />
         </Suspense>
