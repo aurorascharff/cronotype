@@ -43,12 +43,14 @@ function gitHubErrorStatus(err: unknown): number | null {
 }
 
 export function isGitHubNotFoundError(err: unknown): boolean {
-  return gitHubErrorStatus(err) === 404;
+  if (gitHubErrorStatus(err) === 404) return true;
+  return err instanceof Error && /not found on GitHub|could not resolve to a User/i.test(err.message);
 }
 
 export function isGitHubRateLimitError(err: unknown): boolean {
   const status = gitHubErrorStatus(err);
-  return status === 403 || status === 429;
+  if (status === 403 || status === 429) return true;
+  return err instanceof Error && /rate limit|secondary rate limit|blocked the request/i.test(err.message);
 }
 
 export function isGitHubHistoryUnavailableError(err: unknown): boolean {
