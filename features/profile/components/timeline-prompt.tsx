@@ -4,7 +4,6 @@ import { LoaderCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { showHistory } from '@/features/profile/profile-actions';
 
 type Props = {
   handle: string;
@@ -26,12 +25,7 @@ export function TimelinePrompt({ handle }: Props) {
   function loadHistory() {
     setLoading(true);
     startTransition(async () => {
-      try {
-        await showHistory(handle);
-        router.replace(`/${handle}?history=1`, { scroll: false });
-      } catch {
-        setLoading(false);
-      }
+      router.replace(`/${handle}?history=1`, { scroll: false });
     });
   }
 

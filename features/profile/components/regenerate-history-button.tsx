@@ -37,7 +37,6 @@ export function RegenerateHistoryButton({ failedArchetypeYears, failedMonthlyYea
         toast.message('GitHub did not return more history this time.');
         return;
       }
-      if (result.status === 'skipped') return;
       toast.success('History refreshed with the latest data GitHub returned.');
       router.replace(`/${handle.toLowerCase()}?history=1`, { scroll: false });
       router.refresh();

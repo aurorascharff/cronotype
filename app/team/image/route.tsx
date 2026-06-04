@@ -24,84 +24,89 @@ type Entry = {
 };
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const { handles } = parseTeamHandles(url.searchParams.get('handles') ?? '');
-  const entries = await Promise.all(handles.map(handle => getEntry(handle)));
-  const fonts = await loadGeist();
+  try {
+    const url = new URL(request.url);
+    const { handles } = parseTeamHandles(url.searchParams.get('handles') ?? '');
+    const entries = await Promise.all(handles.map(handle => getEntry(handle)));
+    const fonts = await loadGeist();
 
-  const columns = Math.min(4, Math.max(1, entries.length));
-  const rows = Math.max(1, Math.ceil(entries.length / columns));
-  const width = 1200;
-  const height = Math.max(630, 178 + rows * 230);
+    const columns = Math.min(4, Math.max(1, entries.length));
+    const rows = Math.max(1, Math.ceil(entries.length / columns));
+    const width = 1200;
+    const height = Math.max(630, 178 + rows * 230);
+    const cardWidth = Math.floor((width - 108 - (columns - 1) * 18) / columns);
 
-  return new ImageResponse(
-    <div
-      style={{
-        background: COLORS.ink,
-        color: COLORS.paper,
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'GeistSans, sans-serif',
-        gap: 28,
-        minHeight: '100%',
-        padding: 54,
-        width: '100%',
-      }}
-    >
-      <div style={{ alignItems: 'flex-end', display: 'flex', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ color: COLORS.mutedDark, fontSize: 26 }}>cronotype</div>
-          <div style={{ fontSize: 58, fontWeight: 600, letterSpacing: '-0.02em' }}>Team gallery</div>
-        </div>
-        <div
-          style={{
-            border: `1px solid ${COLORS.white18}`,
-            borderRadius: 18,
-            color: COLORS.mutedDark,
-            display: 'flex',
-            fontFamily: 'GeistMono, monospace',
-            fontSize: 18,
-            letterSpacing: '0.08em',
-            padding: '10px 14px',
-            textTransform: 'uppercase',
-          }}
-        >
-          {entries.length} handles
-        </div>
-      </div>
-
+    return new ImageResponse(
       <div
         style={{
-          display: 'grid',
-          gap: 18,
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          background: COLORS.ink,
+          color: COLORS.paper,
+          display: 'flex',
+          flexDirection: 'column',
+          fontFamily: 'GeistSans, sans-serif',
+          gap: 28,
+          minHeight: '100%',
+          padding: 54,
           width: '100%',
         }}
       >
-        {entries.length > 0 ? (
-          entries.map(entry => <TeamImageCard key={entry.handle} entry={entry} />)
-        ) : (
+        <div style={{ alignItems: 'flex-end', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ color: COLORS.mutedDark, fontSize: 26 }}>cronotype</div>
+            <div style={{ fontSize: 58, fontWeight: 600 }}>Team gallery</div>
+          </div>
           <div
             style={{
-              border: `1px dashed ${COLORS.white18}`,
-              borderRadius: 20,
+              border: `1px solid ${COLORS.white18}`,
+              borderRadius: 18,
               color: COLORS.mutedDark,
               display: 'flex',
-              fontSize: 28,
-              padding: 40,
+              fontFamily: 'GeistMono, monospace',
+              fontSize: 18,
+              letterSpacing: '0.08em',
+              padding: '10px 14px',
+              textTransform: 'uppercase',
             }}
           >
-            Add handles to build a gallery.
+            {entries.length} handles
           </div>
-        )}
-      </div>
-    </div>,
-    {
-      fonts,
-      height,
-      width,
-    },
-  );
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 18,
+            width: '100%',
+          }}
+        >
+          {entries.length > 0 ? (
+            entries.map(entry => <TeamImageCard key={entry.handle} entry={entry} width={cardWidth} />)
+          ) : (
+            <div
+              style={{
+                border: `1px dashed ${COLORS.white18}`,
+                borderRadius: 20,
+                color: COLORS.mutedDark,
+                display: 'flex',
+                fontSize: 28,
+                padding: 40,
+              }}
+            >
+              Add handles to build a gallery.
+            </div>
+          )}
+        </div>
+      </div>,
+      {
+        fonts,
+        height,
+        width,
+      },
+    );
+  } catch {
+    return new Response('Could not render the team image.', { status: 500 });
+  }
 }
 
 async function getEntry(handle: string): Promise<Entry> {
@@ -123,7 +128,7 @@ async function getEntry(handle: string): Promise<Entry> {
   };
 }
 
-function TeamImageCard({ entry }: { entry: Entry }) {
+function TeamImageCard({ entry, width }: { entry: Entry; width: number }) {
   return (
     <div
       style={{
@@ -135,6 +140,7 @@ function TeamImageCard({ entry }: { entry: Entry }) {
         gap: 18,
         minHeight: 210,
         padding: 22,
+        width,
       }}
     >
       <div style={{ alignItems: 'center', display: 'flex', gap: 16 }}>

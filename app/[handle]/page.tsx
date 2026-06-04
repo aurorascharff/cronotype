@@ -7,7 +7,6 @@ import {
 } from '@/features/profile/components/profile-history-section';
 import { computeCronotype } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
-import { hasBeenRevealed } from '@/lib/reveals';
 import type { Metadata } from 'next';
 
 export const unstable_prefetch = 'force-runtime';
@@ -28,24 +27,21 @@ export async function generateMetadata({ params }: PageProps<'/[handle]'>): Prom
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : 'http://localhost:3000');
   const origin = baseUrl.replace(/\/$/, '');
-  const revealed = await hasBeenRevealed(handle);
-  const imageUrl = revealed ? `${origin}/${handle}/opengraph-image` : `${origin}/opengraph-image`;
+  const imageUrl = `${origin}/${handle}/opengraph-image`;
   let title = `@${handle} · Cronotype`;
   let description = `View @${handle}'s commit-time rhythm.`;
 
-  if (revealed) {
-    try {
-      const result = await computeCronotype(handle, '90d');
-      const displayName = result.profile.name ?? `@${result.profile.login}`;
-      const typeName = result.stats.total === 0 ? 'Quiet lately' : result.archetype.name;
-      title = `${displayName} is ${typeName}`;
-      description =
-        result.stats.total === 0
-          ? `${displayName} has no recent public signal commits, but the long-term timeline still has shape.`
-          : `${displayName}'s commit-time rhythm is ${typeName}. ${result.percentile}th percentile.`;
-    } catch {
-      // Metadata should enrich a cached profile, not make the route fail when GitHub is rate-limited.
-    }
+  try {
+    const result = await computeCronotype(handle, '90d');
+    const displayName = result.profile.name ?? `@${result.profile.login}`;
+    const typeName = result.stats.total === 0 ? 'Quiet lately' : result.archetype.name;
+    title = `${displayName} is ${typeName}`;
+    description =
+      result.stats.total === 0
+        ? `${displayName} has no recent public signal commits, but the long-term timeline still has shape.`
+        : `${displayName}'s commit-time rhythm is ${typeName}. ${result.percentile}th percentile.`;
+  } catch {
+    // Metadata should enrich a cached profile, not make the route fail when GitHub is rate-limited.
   }
 
   return {

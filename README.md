@@ -21,7 +21,6 @@ Private profiles are available at `/private` for signed-in GitHub users. The pri
 - GitHub REST and GraphQL APIs
 - Next.js Cache Components and Vercel Runtime Cache
 - `next/og` with local Geist fonts
-- Upstash Redis for reveal and timeline state
 
 ## Architecture
 
@@ -38,7 +37,7 @@ components/ui/        Shared UI primitives and shell helpers
 components/           Cronotype-specific shared components
 features/profile/     Profile queries/actions and profile-owned components
 features/leaderboard/ Leaderboard queries, components, featured handle data
-lib/                  Shared app helpers, archetypes, formatting, reveal state
+lib/                  Shared app helpers, archetypes, and formatting
 ```
 
 ## Running it locally
@@ -52,7 +51,5 @@ pnpm dev
 ```
 
 Set `MOCK_PROFILE=1` to skip GitHub entirely while working on UI.
-
-The reveal registry is optional locally. Without `KV_REST_API_URL` and `KV_REST_API_TOKEN`, handles behave as unrevealed and the recently revealed feed is empty.
 
 For private profiles, set `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET`. Use callback URL `/api/github/private/callback`.

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { isValidGitHubHandle } from '@/lib/github-handle';
-import { hasBeenRevealed, hasTimelineLoaded } from '@/lib/reveals';
 import { EvolutionStrip } from './evolution-strip';
 import { TimelinePrompt } from './timeline-prompt';
 
@@ -14,11 +13,7 @@ export async function ProfileHistorySection({ handle: rawHandle, showTimeline }:
   const handle = rawHandle.toLowerCase();
   if (!isValidGitHubHandle(handle)) notFound();
 
-  const revealed = await hasBeenRevealed(handle);
-  if (!revealed) return null;
-
-  const shouldShowTimeline = showTimeline || (await hasTimelineLoaded(handle));
-  if (!shouldShowTimeline) return <TimelinePrompt handle={handle} />;
+  if (!showTimeline) return <TimelinePrompt handle={handle} />;
 
   const errorTitle = "We couldn't load this history right now.";
   const errorSituation = 'GitHub is rate-limited right now. Give it a minute and try again.';

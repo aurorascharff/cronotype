@@ -35,166 +35,166 @@ const PAD_BOT = 8;
 export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
 
-  let chart;
   try {
-    chart = await getTimelineChart(handle, {
+    const chart = await getTimelineChart(handle, {
       height: H,
       padBottom: PAD_BOT,
       padTop: PAD_TOP,
       width: W,
     });
-  } catch (err) {
-    if (isGitHubNotFoundError(err)) return new Response(null, { status: 404 });
-    if (isGitHubRateLimitError(err)) return timelineUnavailableImage();
-    throw err;
-  }
 
-  const { archetype, areaPath, eras, hasData, linePath, months, profile, totalCommits, yearMarkers } = chart;
+    const { archetype, areaPath, eras, hasData, linePath, profile, totalCommits, yearMarkers } = chart;
 
-  const fonts = await loadGeist();
+    const fonts = await loadGeist();
 
-  if (!hasData) {
+    if (!hasData) {
+      return new ImageResponse(
+        <div
+          style={{
+            alignItems: 'center',
+            background: '#08090b',
+            color: '#8b8d96',
+            display: 'flex',
+            fontFamily: 'GeistSans, sans-serif',
+            fontSize: 36,
+            height: '100%',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+        >
+          Not enough commit history yet.
+        </div>,
+        { ...size, fonts },
+      );
+    }
+
+    const fillId = `evolution-fill-${archetype.id}`;
+
     return new ImageResponse(
       <div
         style={{
-          alignItems: 'center',
           background: '#08090b',
-          color: '#8b8d96',
+          color: 'white',
           display: 'flex',
+          flexDirection: 'column',
           fontFamily: 'GeistSans, sans-serif',
-          fontSize: 36,
           height: '100%',
-          justifyContent: 'center',
+          padding: 64,
+          position: 'relative',
           width: '100%',
         }}
       >
-        Not enough commit history yet.
+        <div style={{ alignItems: 'baseline', color: '#8b8d96', display: 'flex', gap: 10, marginBottom: 8 }}>
+          <span style={{ fontSize: 24 }}>@{profile.login}</span>
+          <span style={{ color: '#8b8d9640', fontSize: 24 }}>·</span>
+          <span style={{ fontSize: 22 }}>How they got here</span>
+        </div>
+
+        <div style={{ alignItems: 'baseline', color: 'white', display: 'flex', gap: 16, marginBottom: 24 }}>
+          <span style={{ fontSize: 56, fontWeight: 600, letterSpacing: '-0.04em' }}>{archetype.name}</span>
+          <span style={{ color: '#8b8d96', fontSize: 22 }}>today</span>
+          <span style={{ color: '#8b8d96', fontSize: 22 }}>{totalCommits.toLocaleString('en')} contributions</span>
+        </div>
+
+        <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 16, gap: 12, marginBottom: 14 }}>
+          {eras.map((e, i) => (
+            <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+              {e.unknown ? (
+                <span
+                  style={{
+                    background: 'linear-gradient(90deg, currentColor 0 45%, transparent 45% 70%, currentColor 70%)',
+                    color: '#94a3b8',
+                    display: 'flex',
+                    height: 2,
+                    width: 16,
+                  }}
+                />
+              ) : (
+                <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 9, width: 9 }} />
+              )}
+              <span style={{ color: e.color, fontWeight: 600 }}>{e.label ?? 'Missing data'}</span>
+              <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ height: '100%', width: '100%' }} preserveAspectRatio="none">
+            <defs>
+              {eras.map((e, i) => (
+                <linearGradient key={`${fillId}-${i}`} id={`${fillId}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={e.color} stopOpacity="0.32" />
+                  <stop offset="100%" stopColor={e.color} stopOpacity="0" />
+                </linearGradient>
+              ))}
+              {eras.map((e, i) => {
+                const x1 = (e.startPct / 100) * W;
+                const x2 = (e.endPct / 100) * W;
+                return (
+                  <clipPath key={`${fillId}-clip-${i}`} id={`${fillId}-clip-${i}`}>
+                    <rect x={x1} y={0} width={Math.max(0.5, x2 - x1)} height={H} />
+                  </clipPath>
+                );
+              })}
+            </defs>
+
+            {eras.map((e, i) =>
+              e.unknown ? null : (
+                <path
+                  key={`era-fill-${i}`}
+                  d={areaPath}
+                  fill={`url(#${fillId}-${i})`}
+                  clipPath={`url(#${fillId}-clip-${i})`}
+                />
+              ),
+            )}
+
+            {eras.map((e, i) => (
+              <path
+                key={`era-line-${i}`}
+                d={linePath}
+                fill="none"
+                stroke={e.color}
+                strokeWidth="3"
+                strokeDasharray={e.unknown ? '6 6' : undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={e.unknown ? 0.55 : 1}
+                clipPath={`url(#${fillId}-clip-${i})`}
+              />
+            ))}
+          </svg>
+        </div>
+
+        <div
+          style={{ color: '#8b8d96', display: 'flex', fontSize: 18, justifyContent: 'space-between', marginTop: 12 }}
+        >
+          {yearMarkers.map(yr => (
+            <span key={yr.label}>{yr.label}</span>
+          ))}
+        </div>
+
+        <div
+          style={{
+            bottom: 36,
+            color: '#8b8d96',
+            display: 'flex',
+            fontFamily: 'GeistMono, monospace',
+            fontSize: 22,
+            left: 64,
+            letterSpacing: '-0.01em',
+            position: 'absolute',
+          }}
+        >
+          cronotype.vercel.app/{profile.login}
+        </div>
       </div>,
       { ...size, fonts },
     );
+  } catch (err) {
+    if (isGitHubNotFoundError(err)) return new Response(null, { status: 404 });
+    return timelineUnavailableImage();
   }
-
-  const fillId = `evolution-fill-${archetype.id}`;
-
-  return new ImageResponse(
-    <div
-      style={{
-        background: '#08090b',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'GeistSans, sans-serif',
-        height: '100%',
-        padding: 64,
-        position: 'relative',
-        width: '100%',
-      }}
-    >
-      <div style={{ alignItems: 'baseline', color: '#8b8d96', display: 'flex', gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: 24 }}>@{profile.login}</span>
-        <span style={{ color: '#8b8d9640', fontSize: 24 }}>·</span>
-        <span style={{ fontSize: 22 }}>How they got here</span>
-      </div>
-
-      <div style={{ alignItems: 'baseline', color: 'white', display: 'flex', gap: 16, marginBottom: 24 }}>
-        <span style={{ fontSize: 56, fontWeight: 600, letterSpacing: '-0.04em' }}>{archetype.name}</span>
-        <span style={{ color: '#8b8d96', fontSize: 22 }}>today</span>
-        <span style={{ color: '#8b8d96', fontSize: 22 }}>{totalCommits.toLocaleString('en')} contributions</span>
-      </div>
-
-      <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 16, gap: 12, marginBottom: 14 }}>
-        {eras.map((e, i) => (
-          <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-            {e.unknown ? (
-              <span
-                style={{
-                  background: 'linear-gradient(90deg, currentColor 0 45%, transparent 45% 70%, currentColor 70%)',
-                  color: '#94a3b8',
-                  display: 'flex',
-                  height: 2,
-                  width: 16,
-                }}
-              />
-            ) : (
-              <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 9, width: 9 }} />
-            )}
-            <span style={{ color: e.color, fontWeight: 600 }}>{e.label ?? 'Missing data'}</span>
-            <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ height: '100%', width: '100%' }} preserveAspectRatio="none">
-          <defs>
-            {eras.map((e, i) => (
-              <linearGradient key={`${fillId}-${i}`} id={`${fillId}-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={e.color} stopOpacity="0.32" />
-                <stop offset="100%" stopColor={e.color} stopOpacity="0" />
-              </linearGradient>
-            ))}
-            {eras.map((e, i) => {
-              const x1 = (e.startPct / 100) * W;
-              const x2 = (e.endPct / 100) * W;
-              return (
-                <clipPath key={`${fillId}-clip-${i}`} id={`${fillId}-clip-${i}`}>
-                  <rect x={x1} y={0} width={Math.max(0.5, x2 - x1)} height={H} />
-                </clipPath>
-              );
-            })}
-          </defs>
-
-          {eras.map((e, i) =>
-            e.unknown ? null : (
-              <path
-                key={`era-fill-${i}`}
-                d={areaPath}
-                fill={`url(#${fillId}-${i})`}
-                clipPath={`url(#${fillId}-clip-${i})`}
-              />
-            ),
-          )}
-
-          {eras.map((e, i) => (
-            <path
-              key={`era-line-${i}`}
-              d={linePath}
-              fill="none"
-              stroke={e.color}
-              strokeWidth="3"
-              strokeDasharray={e.unknown ? '6 6' : undefined}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity={e.unknown ? 0.55 : 1}
-              clipPath={`url(#${fillId}-clip-${i})`}
-            />
-          ))}
-        </svg>
-      </div>
-
-      <div style={{ color: '#8b8d96', display: 'flex', fontSize: 18, justifyContent: 'space-between', marginTop: 12 }}>
-        {yearMarkers.map(yr => (
-          <span key={yr.label}>{yr.label}</span>
-        ))}
-      </div>
-
-      <div
-        style={{
-          bottom: 36,
-          color: '#8b8d96',
-          display: 'flex',
-          fontFamily: 'GeistMono, monospace',
-          fontSize: 22,
-          left: 64,
-          letterSpacing: '-0.01em',
-          position: 'absolute',
-        }}
-      >
-        cronotype.vercel.app/{profile.login}
-      </div>
-    </div>,
-    { ...size, fonts },
-  );
 }
 
 function timelineUnavailableImage() {

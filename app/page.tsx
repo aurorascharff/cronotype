@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Crossfade } from '@/components/ui/crossfade';
 import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/components/top-revealed';
-import { SuggestedUsers, SuggestedUsersSkeleton } from '@/features/leaderboard/components/suggested-users';
 import { UsernameForm } from '@/components/username-form';
 
 export const unstable_prefetch = 'force-runtime';
@@ -34,27 +33,17 @@ export default function HomePage({ searchParams }: PageProps<'/'>) {
         </p>
       </section>
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Top revealed</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Featured</h2>
         <Suspense
           fallback={
             <>
               <TopRevealedSkeleton />
-              <section className="space-y-4 pt-8 sm:pt-12">
-                <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-                <SuggestedUsersSkeleton />
-              </section>
             </>
           }
         >
           <Crossfade>
             {searchParams.then(query => (
-              <>
-                <TopRevealed page={parsePage(query.revealed)} />
-                <section className="space-y-4 pt-8 sm:pt-12">
-                  <h2 className="text-lg font-semibold tracking-tight">Suggested</h2>
-                  <SuggestedUsers />
-                </section>
-              </>
+              <TopRevealed page={parsePage(query.featured)} />
             ))}
           </Crossfade>
         </Suspense>

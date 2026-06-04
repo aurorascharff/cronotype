@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import { computeCronotype, isGitHubNotFoundError, isGitHubRateLimitError } from '@/features/profile/profile-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount, formatFollowers, formatHour } from '@/lib/format';
-import { hasBeenRevealed } from '@/lib/reveals';
 import type { ProfileSummary } from '@/types/cronotype';
 
 export const alt = 'Cronotype profile';
@@ -64,8 +63,6 @@ function meaningSizeFor(text: string) {
 
 export default async function OpenGraphImage({ params }: { params: Promise<Params> }) {
   const { handle } = await params;
-  const revealed = await hasBeenRevealed(handle);
-  if (!revealed) return defaultImage();
 
   let result;
   try {
