@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useMemo, useSyncExternalStore } from 'react';
 import {
   parseTeamRecents,
+  recentTeamHref,
   TEAM_RECENTS_EVENT,
   TEAM_RECENTS_STORAGE_KEY,
 } from '@/features/team/components/team-recents';
-import type { Route } from 'next';
 
 export function TeamBackLink() {
   const snapshot = useSyncExternalStore(subscribe, readSnapshot, emptySnapshot);
@@ -17,7 +17,7 @@ export function TeamBackLink() {
 
   return (
     <Link
-      href={team.url as Route}
+      href={recentTeamHref(team)}
       className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper text-sm transition-colors"
     >
       &larr; Back to {team.name}

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
-import { TeamRecents } from '@/features/team/components/team-recents';
+import { TeamRecentSaver, TeamRecents } from '@/features/team/components/team-recents';
 import { parseTeamHandles, parseTeamName, serializeTeamHandles, teamUrl } from '@/features/team/team-handles';
 import type { Metadata } from 'next';
 
@@ -95,6 +95,7 @@ export default function TeamPage({ searchParams }: PageProps<'/team'>) {
             Generate
           </button>
         </form>
+        <TeamRecents />
       </section>
       <Suspense fallback={<TeamGallerySkeleton />}>
         <Crossfade>
@@ -121,10 +122,10 @@ function TeamContent({
   const current = serialized ? { handles: serialized, name, url } : undefined;
 
   return (
-    <div className="space-y-6">
-      <TeamRecents current={current} />
+    <>
+      <TeamRecentSaver current={current} />
       <TeamGallery handles={handles} invalid={invalid} name={name} serialized={serialized} />
-    </div>
+    </>
   );
 }
 
@@ -142,13 +143,15 @@ function TeamGallery({
   if (handles.length === 0) {
     return (
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold tracking-tight">Gallery</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{name || 'Gallery'}</h2>
         <p className="text-muted dark:text-muted-dark rounded-xl border border-dashed border-black/10 p-8 text-center text-sm dark:border-white/10">
           Add a few handles to make a team gallery.
         </p>
       </section>
     );
   }
+
+  const imageHref = `/team/image?handles=${encodeURIComponent(serialized)}${name ? `&name=${encodeURIComponent(name)}` : ''}`;
 
   return (
     <section className="space-y-4">
@@ -165,7 +168,7 @@ function TeamGallery({
           )}
         </div>
         <a
-          href={`/team/image?handles=${encodeURIComponent(serialized)}${name ? `&name=${encodeURIComponent(name)}` : ''}`}
+          href={imageHref}
           download="cronotype-team.png"
           className="text-muted dark:text-muted-dark dark:bg-ink-2 hover:text-ink dark:hover:text-paper inline-flex h-9 items-center justify-center rounded-lg border border-black/10 bg-white/60 px-3 text-xs font-semibold shadow-sm transition-colors hover:border-black/25 dark:border-white/10 dark:hover:border-white/25"
         >
