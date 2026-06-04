@@ -60,11 +60,7 @@ async function getEntry(handle: string): Promise<Entry> {
       : COLORS.muted;
 
     return {
-      archetype: cronotype
-        ? cronotype.stats.total === 0
-          ? 'Quiet lately'
-          : cronotype.archetype.name
-        : null,
+      archetype: cronotype ? (cronotype.stats.total === 0 ? 'Quiet lately' : cronotype.archetype.name) : null,
       avatarUrl: profile?.avatarUrl ?? null,
       color,
       followers: profile?.followers ?? 0,
@@ -282,7 +278,14 @@ function TeamImageCard({
         </div>
       </div>
       <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <div style={{ color: entry.archetype ? entry.color : COLORS.muted, display: 'flex', fontSize: compact ? 13 : 18, fontWeight: 600 }}>
+        <div
+          style={{
+            color: entry.archetype ? entry.color : COLORS.muted,
+            display: 'flex',
+            fontSize: compact ? 13 : 18,
+            fontWeight: 600,
+          }}
+        >
           {entry.archetype ? truncate(entry.archetype, compact ? 19 : 22) : '-'}
         </div>
         {entry.followers > 0 ? (

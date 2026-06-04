@@ -17,9 +17,7 @@ export function SiteHeader() {
           </Link>
           <nav className="flex items-center gap-1">
             <HeaderLink href="/types">Types</HeaderLink>
-            <HeaderLink href="/team" emphasis>
-              Team
-            </HeaderLink>
+            <HeaderLink href="/team">Team</HeaderLink>
             <HeaderLink href="/private" className="hidden sm:inline-flex">
               Private
             </HeaderLink>
@@ -40,21 +38,10 @@ export function SiteHeader() {
   );
 }
 
-function HeaderLink({
-  children,
-  className = '',
-  emphasis = false,
-  href,
-}: {
-  children: ReactNode;
-  className?: string;
-  emphasis?: boolean;
-  href: Route;
-}) {
+function HeaderLink({ children, className = '', href }: { children: ReactNode; className?: string; href: Route }) {
   const base = 'inline-flex h-9 items-center rounded-lg border px-3 text-sm transition-colors';
-  const variant = emphasis
-    ? 'text-ink dark:text-paper border-black/10 bg-white/70 font-semibold shadow-sm hover:border-black/25 dark:border-white/10 dark:bg-white/[0.07] dark:hover:border-white/25'
-    : 'text-ink/80 dark:text-paper/80 hover:text-ink dark:hover:text-paper border-transparent font-medium hover:border-black/10 hover:bg-white/55 dark:hover:border-white/10 dark:hover:bg-white/[0.06]';
+  const variant =
+    'text-ink/80 dark:text-paper/80 hover:text-ink dark:hover:text-paper border-transparent font-medium hover:border-black/10 hover:bg-white/55 dark:hover:border-white/10 dark:hover:bg-white/[0.06]';
 
   return (
     <Link href={href} className={`${base} ${variant} ${className}`}>

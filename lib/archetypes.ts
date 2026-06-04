@@ -120,14 +120,13 @@ function isSunriseRhythm(s: HourStats) {
 
 function isWorkdayRhythm(s: HourStats) {
   const margin = stabilityMargin(s);
-  const morning = pctRange(s, 5, 10);
-  const workdayStart = pctRange(s, 8, 12);
+  const workdayCore = pctRange(s, 9, 17);
   const late = pctRange(s, 18, 23);
   return (
     s.pctBusiness > 65 + margin &&
-    workdayStart > 18 + margin / 2 &&
-    morning > 8 + margin / 2 &&
-    morning < 36 + margin &&
+    workdayCore > 52 + margin &&
+    s.peakHour >= 9 &&
+    s.peakHour <= 17 &&
     late < 18 + margin &&
     s.pctNocturnal < 18 &&
     s.pctWeekend < 35
@@ -136,20 +135,21 @@ function isWorkdayRhythm(s: HourStats) {
 
 function isLateDayRhythm(s: HourStats) {
   const margin = stabilityMargin(s);
+  const earlyDay = pctRange(s, 0, 12);
   const morning = pctRange(s, 5, 11);
   const workdayStart = pctRange(s, 8, 12);
   const afternoon = pctRange(s, 13, 18);
   const evening = pctRange(s, 18, 23);
   const afternoonPeak = s.peakHour >= 13 && s.peakHour <= 18;
   const eveningPeak = s.peakHour >= 18 && s.peakHour <= 23;
-  const quietStart = morning < 14 + margin;
+  const quietStart = morning < 10 + margin / 2 && earlyDay < 20 + margin;
   const afternoonSkew =
-    afternoon > 45 + margin && afternoonPeak && quietStart && afternoon > workdayStart * (1.8 + margin / 20);
+    afternoon > 48 + margin && afternoonPeak && quietStart && afternoon > workdayStart * (2.3 + margin / 20);
   const eveningSkew =
-    evening > 30 + margin &&
+    evening > 34 + margin &&
     (eveningPeak || evening > 38 + margin) &&
     quietStart &&
-    evening > workdayStart * (1.45 + margin / 25);
+    evening > workdayStart * (2 + margin / 25);
   return (afternoonSkew || eveningSkew) && s.pctNocturnal < 35 + margin;
 }
 

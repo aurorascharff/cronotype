@@ -21,8 +21,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
     meaning:
       'You come alive as the respectable workday is packing up, which is either elite focus or procrastination with excellent branding.',
     percentile: 'Higher with a larger late-day share. Strong afternoon or evening peaks score highest.',
-    signal:
-      'A clear 1pm-to-midnight lean, especially when the morning is quiet. This catches profiles that are too late-day loaded to be honest Nine-to-Fiver material.',
+    signal: 'A clear late-day lean with very little early-day signal.',
   },
   drifter: {
     meaning: 'You move through odd windows, bursts, and gaps, yet the work keeps appearing.',

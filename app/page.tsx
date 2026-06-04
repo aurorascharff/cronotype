@@ -26,10 +26,7 @@ export default function HomePage({ searchParams }: PageProps<'/'>) {
         </div>
         <p className="text-muted dark:text-muted-dark text-center text-xs sm:text-sm">
           Making a team view?{' '}
-          <Link
-            href="/team"
-            className="text-ink dark:text-paper font-medium underline underline-offset-3 hover:no-underline"
-          >
+          <Link href="/team" className="text-ink dark:text-paper font-medium underline-offset-2 hover:underline">
             Build a gallery
           </Link>
           .
