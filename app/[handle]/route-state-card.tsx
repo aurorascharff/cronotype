@@ -42,7 +42,7 @@ export function RouteStateCard({ action, badge, body, meta, title, variant = 'de
             <p
               className={
                 isError
-                  ? 'text-ink dark:text-paper max-w-xl text-2xl leading-tight font-semibold tracking-tight sm:text-4xl'
+                  ? 'text-ink dark:text-paper max-w-lg text-lg leading-snug font-semibold tracking-tight whitespace-pre-line sm:text-2xl'
                   : 'text-muted dark:text-muted-dark max-w-md text-sm sm:text-base'
               }
             >

@@ -15,7 +15,7 @@ export default function Error({ error }: Props) {
       <RouteStateCard
         badge="GitHub paused"
         title="We couldn't reveal this developer."
-        body="GitHub may be rate limited. Wait a minute and refresh the page. If it still doesn't work, click Regenerate."
+        body="GitHub may be rate limited. Wait a minute and refresh the page."
         variant="error"
         meta={
           error.digest ? (
@@ -25,7 +25,8 @@ export default function Error({ error }: Props) {
           ) : null
         }
       />
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <p className="text-muted dark:text-muted-dark text-sm">If it still doesn&apos;t work, click Regenerate.</p>
         <Suspense
           fallback={
             <div className="h-10 w-32 rounded-lg border border-black/10 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.04]" />
