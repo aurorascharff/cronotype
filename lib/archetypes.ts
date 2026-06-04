@@ -3,6 +3,7 @@ import type { Archetype, ArchetypeId, ArchetypeTheme, HourStats } from '@/types/
 const THEMES: Record<ArchetypeId, ArchetypeTheme> = {
   drifter: { accent: '#60a5fa', accent2: '#93c5fd', bgDark: '#08090b', bgLight: '#fafafa' },
   'insomniac-maintainer': { accent: '#ec4899', accent2: '#f472b6', bgDark: '#08090b', bgLight: '#fafafa' },
+  'last-call-shipper': { accent: '#14b8a6', accent2: '#5eead4', bgDark: '#08090b', bgLight: '#fafafa' },
   'lunch-bandit': { accent: '#ef4444', accent2: '#f87171', bgDark: '#08090b', bgLight: '#fafafa' },
   'nine-to-fiver': { accent: '#06b6d4', accent2: '#22d3ee', bgDark: '#08090b', bgLight: '#fafafa' },
   'sunrise-sniper': { accent: '#f59e0b', accent2: '#fbbf24', bgDark: '#08090b', bgLight: '#fafafa' },
@@ -32,6 +33,14 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     tagline: 'Daylight duties, midnight merge energy.',
     meaning: 'You split your output between the official day and the second shift after everyone logs off.',
     theme: THEMES['insomniac-maintainer'],
+  },
+  'last-call-shipper': {
+    id: 'last-call-shipper',
+    name: 'Last Call Shipper',
+    tagline: 'You said one more commit. The graph did not believe you.',
+    meaning:
+      'You come alive as the respectable workday is packing up, which is either elite focus or procrastination with excellent branding.',
+    theme: THEMES['last-call-shipper'],
   },
   'lunch-bandit': {
     id: 'lunch-bandit',
@@ -112,14 +121,29 @@ function isSunriseRhythm(s: HourStats) {
 function isWorkdayRhythm(s: HourStats) {
   const margin = stabilityMargin(s);
   const morning = pctRange(s, 5, 10);
+  const workdayStart = pctRange(s, 8, 12);
   const late = pctRange(s, 18, 23);
   return (
     s.pctBusiness > 65 + margin &&
-    morning < 30 + margin &&
+    workdayStart > 18 + margin / 2 &&
+    morning > 8 + margin / 2 &&
+    morning < 36 + margin &&
     late < 18 + margin &&
     s.pctNocturnal < 18 &&
     s.pctWeekend < 35
   );
+}
+
+function isLateDayRhythm(s: HourStats) {
+  const margin = stabilityMargin(s);
+  const morning = pctRange(s, 5, 11);
+  const afternoon = pctRange(s, 13, 18);
+  const evening = pctRange(s, 18, 23);
+  const afternoonPeak = s.peakHour >= 13 && s.peakHour <= 18;
+  const eveningPeak = s.peakHour >= 18 && s.peakHour <= 23;
+  const afternoonSkew = afternoon > 42 + margin && afternoonPeak && morning < 18 + margin;
+  const eveningSkew = evening > 25 + margin && (eveningPeak || evening > 34 + margin);
+  return (afternoonSkew || eveningSkew) && s.pctNocturnal < 35 + margin;
 }
 
 function stabilityMargin(s: HourStats) {
@@ -136,6 +160,7 @@ export function classify(stats: HourStats): Archetype {
   if (isSunriseRhythm(stats)) return ARCHETYPES['sunrise-sniper'];
   if (hasLunchSpike(stats)) return ARCHETYPES['lunch-bandit'];
   if (stats.pctWeekend > 40 + stabilityMargin(stats)) return ARCHETYPES['weekend-warrior'];
+  if (isLateDayRhythm(stats)) return ARCHETYPES['last-call-shipper'];
   if (isWorkdayRhythm(stats)) return ARCHETYPES['nine-to-fiver'];
 
   return ARCHETYPES.drifter;
@@ -145,6 +170,8 @@ export function percentileFor(archetype: Archetype, stats: HourStats): number {
   switch (archetype.id) {
     case 'vampire':
       return clampPct(stats.pctNocturnal * 2);
+    case 'last-call-shipper':
+      return clampPct(Math.max(pctRange(stats, 13, 18) * 1.7, pctRange(stats, 18, 23) * 2.3));
     case 'sunrise-sniper':
       return clampPct(pctRange(stats, 5, 10) * 2.1);
     case 'lunch-bandit':

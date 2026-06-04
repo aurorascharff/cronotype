@@ -1,13 +1,14 @@
 import { LoadMore } from '@/components/ui/load-more';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { FEATURED_HANDLES } from '@/features/leaderboard/data/featured-handles';
+import { getFeaturedHandlesByFollowers } from '@/features/leaderboard/leaderboard-queries';
 import type { Route } from 'next';
 
 const FEATURED_PAGE_SIZE = 12;
 
-export async function TopRevealed({ page = 1 }: { page?: number }) {
+export async function FeaturedProfiles({ page = 1 }: { page?: number }) {
   const limit = page * FEATURED_PAGE_SIZE;
-  const handles = FEATURED_HANDLES;
+  const handles = await getFeaturedHandlesByFollowers();
   const visible = handles.slice(0, limit);
   const hasMore = visible.length < handles.length;
 
@@ -29,7 +30,7 @@ export async function TopRevealed({ page = 1 }: { page?: number }) {
   );
 }
 
-export function TopRevealedSkeleton() {
+export function FeaturedProfilesSkeleton() {
   const count = Math.min(FEATURED_PAGE_SIZE, FEATURED_HANDLES.length);
 
   return (

@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { ViewTransition } from 'react';
+import type { ReactNode } from 'react';
 import { CronotypeMark } from '@/components/cronotype-mark';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { GitHubIcon } from '@/components/ui/icons';
+import type { Route } from 'next';
 
 export function SiteHeader() {
   return (
@@ -14,24 +16,13 @@ export function SiteHeader() {
             <span className="text-sm font-semibold tracking-tight">cronotype</span>
           </Link>
           <nav className="flex items-center gap-1">
-            <Link
-              href="/types"
-              className="text-ink/75 dark:text-paper/75 hover:text-ink dark:hover:text-paper inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors"
-            >
-              Types
-            </Link>
-            <Link
-              href="/team"
-              className="text-ink/75 dark:text-paper/75 hover:text-ink dark:hover:text-paper inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors"
-            >
+            <HeaderLink href="/types">Types</HeaderLink>
+            <HeaderLink href="/team" emphasis>
               Team
-            </Link>
-            <Link
-              href="/private"
-              className="text-ink/75 dark:text-paper/75 hover:text-ink dark:hover:text-paper hidden h-9 items-center rounded-lg px-3 text-sm font-medium transition-colors sm:inline-flex"
-            >
+            </HeaderLink>
+            <HeaderLink href="/private" className="hidden sm:inline-flex">
               Private
-            </Link>
+            </HeaderLink>
             <a
               href="https://github.com/aurorascharff/cronotype"
               target="_blank"
@@ -46,5 +37,28 @@ export function SiteHeader() {
         </div>
       </header>
     </ViewTransition>
+  );
+}
+
+function HeaderLink({
+  children,
+  className = '',
+  emphasis = false,
+  href,
+}: {
+  children: ReactNode;
+  className?: string;
+  emphasis?: boolean;
+  href: Route;
+}) {
+  const base = 'inline-flex h-9 items-center rounded-lg border px-3 text-sm transition-colors';
+  const variant = emphasis
+    ? 'text-ink dark:text-paper border-black/10 bg-white/70 font-semibold shadow-sm hover:border-black/25 dark:border-white/10 dark:bg-white/[0.07] dark:hover:border-white/25'
+    : 'text-ink/80 dark:text-paper/80 hover:text-ink dark:hover:text-paper border-transparent font-medium hover:border-black/10 hover:bg-white/55 dark:hover:border-white/10 dark:hover:bg-white/[0.06]';
+
+  return (
+    <Link href={href} className={`${base} ${variant} ${className}`}>
+      {children}
+    </Link>
   );
 }

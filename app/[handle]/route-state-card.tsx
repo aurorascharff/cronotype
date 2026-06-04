@@ -19,7 +19,7 @@ export function RouteStateCard({ action, badge, body, meta, title, variant = 'de
         {badge}
       </div>
 
-      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
+      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-8 sm:p-8">
         <div className="relative mx-auto flex h-44 w-44 items-center justify-center opacity-85 min-[420px]:h-52 min-[420px]:w-52 sm:mx-0 sm:h-[220px] sm:w-[220px] sm:justify-start sm:pl-3">
           <div className="relative flex h-[140px] w-[140px] items-center justify-center sm:h-[220px] sm:w-[220px]">
             <ClassifyingRing failed variant="inset" />
@@ -33,14 +33,18 @@ export function RouteStateCard({ action, badge, body, meta, title, variant = 'de
             <h1
               className={
                 isError
-                  ? 'tracking-tightest text-3xl leading-[1.02] font-semibold break-words min-[420px]:text-4xl sm:text-5xl'
+                  ? 'text-muted dark:text-muted-dark text-sm font-medium break-words sm:text-base'
                   : 'tracking-tightest text-4xl leading-[0.98] font-semibold break-words min-[420px]:text-5xl sm:text-6xl'
               }
             >
               {title}
             </h1>
             <p
-              className={`text-muted dark:text-muted-dark ${isError ? 'max-w-xl text-base sm:text-xl' : 'max-w-md text-sm sm:text-base'}`}
+              className={
+                isError
+                  ? 'text-ink dark:text-paper max-w-xl text-2xl leading-tight font-semibold tracking-tight sm:text-4xl'
+                  : 'text-muted dark:text-muted-dark max-w-md text-sm sm:text-base'
+              }
             >
               {body}
             </p>

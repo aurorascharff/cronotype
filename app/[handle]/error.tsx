@@ -15,7 +15,7 @@ export default function Error({ error }: Props) {
       <RouteStateCard
         badge="GitHub paused"
         title="We couldn't reveal this developer."
-        body="GitHub may be rate limited, the username may be invalid, or something unexpected happened. Wait a minute and refresh the page. If it still doesn't work, use Regenerate."
+        body="GitHub may be rate limited. Wait a minute and refresh the page. If it still doesn't work, click Regenerate."
         variant="error"
         meta={
           error.digest ? (

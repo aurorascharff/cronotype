@@ -1,25 +1,39 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from 'next/og';
 import { getCardCronotype, getCardProfile } from '@/features/leaderboard/leaderboard-queries';
-import { parseTeamHandles } from '@/features/team/team-handles';
+import { parseTeamHandles, parseTeamName } from '@/features/team/team-handles';
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 
+const WIDTH = 1200;
+const HEIGHT = 630;
+const MAX_REPRESENTATIVES = 12;
+
 const COLORS = {
   ink: '#0a0a0a',
-  ink2: '#0f1013',
-  mutedDark: '#8b8d96',
+  ink2: '#111217',
+  line: 'rgba(255, 255, 255, 0.14)',
+  muted: '#9ca3af',
   paper: '#fafafa',
-  white10: 'rgba(255, 255, 255, 0.1)',
-  white18: 'rgba(255, 255, 255, 0.18)',
+  red: '#fb7185',
+  white: '#ffffff',
+  white08: 'rgba(255, 255, 255, 0.08)',
+  white12: 'rgba(255, 255, 255, 0.12)',
 };
 
 type Entry = {
-  archetype: string | null;
+  archetype: string;
   avatarUrl: string | null;
   color: string;
-  followers: number | null;
+  followers: number;
   handle: string;
+  name: string;
+  status: 'ok' | 'pending';
+};
+
+type ArchetypeCount = {
+  color: string;
+  count: number;
   name: string;
 };
 
@@ -27,161 +41,337 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const { handles } = parseTeamHandles(url.searchParams.get('handles') ?? '');
+    const name = parseTeamName(url.searchParams.get('name') ?? '') || 'Team gallery';
     const entries = await Promise.all(handles.map(handle => getEntry(handle)));
-    const fonts = await loadGeist();
-
-    const columns = Math.min(4, Math.max(1, entries.length));
-    const rows = Math.max(1, Math.ceil(entries.length / columns));
-    const width = 1200;
-    const height = Math.max(630, 178 + rows * 230);
-    const cardWidth = Math.floor((width - 108 - (columns - 1) * 18) / columns);
-
-    return new ImageResponse(
-      <div
-        style={{
-          background: COLORS.ink,
-          color: COLORS.paper,
-          display: 'flex',
-          flexDirection: 'column',
-          fontFamily: 'GeistSans, sans-serif',
-          gap: 28,
-          minHeight: '100%',
-          padding: 54,
-          width: '100%',
-        }}
-      >
-        <div style={{ alignItems: 'flex-end', display: 'flex', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ color: COLORS.mutedDark, fontSize: 26 }}>cronotype</div>
-            <div style={{ fontSize: 58, fontWeight: 600 }}>Team gallery</div>
-          </div>
-          <div
-            style={{
-              border: `1px solid ${COLORS.white18}`,
-              borderRadius: 18,
-              color: COLORS.mutedDark,
-              display: 'flex',
-              fontFamily: 'GeistMono, monospace',
-              fontSize: 18,
-              letterSpacing: '0.08em',
-              padding: '10px 14px',
-              textTransform: 'uppercase',
-            }}
-          >
-            {entries.length} handles
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 18,
-            width: '100%',
-          }}
-        >
-          {entries.length > 0 ? (
-            entries.map(entry => <TeamImageCard key={entry.handle} entry={entry} width={cardWidth} />)
-          ) : (
-            <div
-              style={{
-                border: `1px dashed ${COLORS.white18}`,
-                borderRadius: 20,
-                color: COLORS.mutedDark,
-                display: 'flex',
-                fontSize: 28,
-                padding: 40,
-              }}
-            >
-              Add handles to build a gallery.
-            </div>
-          )}
-        </div>
-      </div>,
-      {
-        fonts,
-        height,
-        width,
-      },
-    );
-  } catch {
-    return new Response('Could not render the team image.', { status: 500 });
+    return renderTeamImage({ entries, name });
+  } catch (err) {
+    return renderFallbackImage(err);
   }
 }
 
 async function getEntry(handle: string): Promise<Entry> {
-  const cronotype = await getCardCronotype(handle);
-  const profile = cronotype?.profile ?? (await getCardProfile(handle));
-  const color = cronotype
-    ? cronotype.stats.total === 0
-      ? QUIET_THEME.accent
-      : cronotype.archetype.theme.accent
-    : COLORS.mutedDark;
+  try {
+    const cronotype = await getCardCronotype(handle);
+    const profile = cronotype?.profile ?? (await getCardProfile(handle));
+    const color = cronotype
+      ? cronotype.stats.total === 0
+        ? QUIET_THEME.accent
+        : cronotype.archetype.theme.accent
+      : COLORS.muted;
 
-  return {
-    archetype: cronotype ? (cronotype.stats.total === 0 ? 'Quiet lately' : cronotype.archetype.name) : null,
-    avatarUrl: profile?.avatarUrl ?? null,
-    color,
-    followers: profile?.followers ?? null,
-    handle,
-    name: profile?.name ?? profile?.login ?? `@${handle}`,
-  };
+    return {
+      archetype: cronotype
+        ? cronotype.stats.total === 0
+          ? 'Quiet lately'
+          : cronotype.archetype.name
+        : 'Waiting on GitHub',
+      avatarUrl: profile?.avatarUrl ?? null,
+      color,
+      followers: profile?.followers ?? 0,
+      handle,
+      name: profile?.name ?? profile?.login ?? `@${handle}`,
+      status: cronotype ? 'ok' : 'pending',
+    };
+  } catch {
+    return {
+      archetype: 'Waiting on GitHub',
+      avatarUrl: null,
+      color: COLORS.muted,
+      followers: 0,
+      handle,
+      name: `@${handle}`,
+      status: 'pending',
+    };
+  }
 }
 
-function TeamImageCard({ entry, width }: { entry: Entry; width: number }) {
+async function renderTeamImage({ entries, name }: { entries: Entry[]; name: string }) {
+  const fonts = await loadGeist();
+  const counts = typeCounts(entries);
+  const selected = selectRepresentatives(entries);
+  const columns = selected.length <= 4 ? Math.max(1, selected.length) : selected.length <= 8 ? 4 : 6;
+  const cardWidth =
+    columns === 6 ? 158 : columns === 4 ? 236 : Math.floor((WIDTH - 108 - (columns - 1) * 16) / columns);
+  const cardHeight = columns === 6 ? 122 : 154;
+
+  return new ImageResponse(
+    <div
+      style={{
+        background: COLORS.ink,
+        color: COLORS.paper,
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'GeistSans, sans-serif',
+        height: '100%',
+        padding: 52,
+        width: '100%',
+      }}
+    >
+      <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 760 }}>
+          <div style={{ color: COLORS.muted, display: 'flex', fontSize: 24 }}>cronotype team</div>
+          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 58, fontWeight: 600, lineHeight: 1.02 }}>
+            {name}
+          </div>
+        </div>
+        <div
+          style={{
+            alignItems: 'flex-end',
+            border: `1px solid ${COLORS.line}`,
+            borderRadius: 18,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            padding: '13px 16px',
+          }}
+        >
+          <div style={{ color: COLORS.paper, display: 'flex', fontSize: 32, fontWeight: 600 }}>{entries.length}</div>
+          <div
+            style={{
+              color: COLORS.muted,
+              display: 'flex',
+              fontFamily: 'GeistMono, monospace',
+              fontSize: 15,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+            }}
+          >
+            profiles
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 14, marginTop: 28, width: '100%' }}>
+        {counts.length > 0 ? (
+          counts.slice(0, 5).map(count => <TypePill key={count.name} count={count} />)
+        ) : (
+          <TypePill count={{ color: COLORS.muted, count: 0, name: 'Add handles' }} />
+        )}
+      </div>
+
+      <div
+        style={{
+          alignContent: 'flex-start',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 16,
+          marginTop: 28,
+          width: '100%',
+        }}
+      >
+        {selected.length > 0 ? (
+          selected.map(entry => (
+            <TeamImageCard
+              key={entry.handle}
+              cardHeight={cardHeight}
+              entry={entry}
+              width={cardWidth}
+              compact={columns === 6}
+            />
+          ))
+        ) : (
+          <div
+            style={{
+              alignItems: 'center',
+              border: `1px dashed ${COLORS.line}`,
+              borderRadius: 18,
+              color: COLORS.muted,
+              display: 'flex',
+              fontSize: 28,
+              height: 220,
+              justifyContent: 'center',
+              width: '100%',
+            }}
+          >
+            Add handles to build a gallery.
+          </div>
+        )}
+      </div>
+    </div>,
+    { fonts, height: HEIGHT, width: WIDTH },
+  );
+}
+
+function TypePill({ count }: { count: ArchetypeCount }) {
+  return (
+    <div
+      style={{
+        alignItems: 'center',
+        background: COLORS.white08,
+        border: `1px solid ${COLORS.line}`,
+        borderRadius: 999,
+        display: 'flex',
+        gap: 9,
+        padding: '8px 12px',
+      }}
+    >
+      <div style={{ background: count.color, borderRadius: 999, display: 'flex', height: 10, width: 10 }} />
+      <div style={{ color: COLORS.paper, display: 'flex', fontSize: 20, fontWeight: 600 }}>{count.count}</div>
+      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 18 }}>{count.name}</div>
+    </div>
+  );
+}
+
+function TeamImageCard({
+  cardHeight,
+  compact,
+  entry,
+  width,
+}: {
+  cardHeight: number;
+  compact: boolean;
+  entry: Entry;
+  width: number;
+}) {
+  const avatarSize = compact ? 44 : 56;
+
   return (
     <div
       style={{
         background: COLORS.ink2,
-        border: `1px solid ${COLORS.white10}`,
-        borderRadius: 18,
+        border: `1px solid ${entry.status === 'ok' ? COLORS.white12 : COLORS.line}`,
+        borderRadius: 16,
         display: 'flex',
         flexDirection: 'column',
-        gap: 18,
-        minHeight: 210,
-        padding: 22,
+        height: cardHeight,
+        justifyContent: 'space-between',
+        padding: compact ? 14 : 17,
         width,
       }}
     >
-      <div style={{ alignItems: 'center', display: 'flex', gap: 16 }}>
+      <div style={{ alignItems: 'center', display: 'flex', gap: compact ? 10 : 13, minWidth: 0 }}>
         <div
           style={{
             alignItems: 'center',
             border: `1px solid ${entry.color}`,
             borderRadius: '50%',
             display: 'flex',
-            height: 78,
+            height: avatarSize,
             justifyContent: 'center',
-            opacity: entry.avatarUrl ? 1 : 0.72,
-            width: 78,
+            width: avatarSize,
           }}
         >
           {entry.avatarUrl ? (
             <img
               src={entry.avatarUrl}
               alt=""
-              width={66}
-              height={66}
-              style={{ borderRadius: '50%', height: 66, objectFit: 'cover', width: 66 }}
+              width={avatarSize - 8}
+              height={avatarSize - 8}
+              style={{ borderRadius: '50%', height: avatarSize - 8, objectFit: 'cover', width: avatarSize - 8 }}
             />
           ) : (
-            <div style={{ color: COLORS.mutedDark, display: 'flex', fontSize: 18, fontWeight: 600 }}>
+            <div style={{ color: COLORS.muted, display: 'flex', fontSize: compact ? 13 : 16, fontWeight: 600 }}>
               {entry.handle.slice(0, 2).toUpperCase()}
             </div>
           )}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-          <div style={{ color: COLORS.paper, fontSize: 26, fontWeight: 600, lineHeight: 1.05 }}>{entry.name}</div>
-          <div style={{ color: COLORS.mutedDark, fontSize: 18 }}>
-            @{entry.handle}
-            {entry.followers === null ? '' : ` · ${formatFollowers(entry.followers)}`}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+          <div
+            style={{
+              color: COLORS.paper,
+              display: 'flex',
+              fontSize: compact ? 17 : 22,
+              fontWeight: 600,
+              lineHeight: 1.05,
+            }}
+          >
+            {truncate(entry.name, compact ? 15 : 19)}
+          </div>
+          <div style={{ color: COLORS.muted, display: 'flex', fontSize: compact ? 12 : 15 }}>
+            @{truncate(entry.handle, compact ? 14 : 18)}
           </div>
         </div>
       </div>
-      <div style={{ color: entry.color, display: 'flex', fontSize: 24, fontWeight: 600, marginTop: 'auto' }}>
-        {entry.archetype ?? 'Not revealed yet'}
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ color: entry.color, display: 'flex', fontSize: compact ? 13 : 18, fontWeight: 600 }}>
+          {truncate(entry.archetype, compact ? 19 : 22)}
+        </div>
+        {entry.followers > 0 ? (
+          <div
+            style={{
+              color: COLORS.muted,
+              display: 'flex',
+              fontFamily: 'GeistMono, monospace',
+              fontSize: compact ? 11 : 13,
+            }}
+          >
+            {formatFollowers(entry.followers)}
+          </div>
+        ) : null}
       </div>
     </div>
+  );
+}
+
+function typeCounts(entries: Entry[]): ArchetypeCount[] {
+  const byName = new Map<string, ArchetypeCount>();
+  for (const entry of entries) {
+    const existing = byName.get(entry.archetype);
+    if (existing) {
+      existing.count++;
+    } else {
+      byName.set(entry.archetype, { color: entry.color, count: 1, name: entry.archetype });
+    }
+  }
+  return [...byName.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+function selectRepresentatives(entries: Entry[]): Entry[] {
+  const sorted = [...entries].sort((a, b) => b.followers - a.followers);
+  const selected: Entry[] = [];
+  const seenTypes = new Set<string>();
+
+  for (const entry of sorted) {
+    if (selected.length >= MAX_REPRESENTATIVES) break;
+    if (seenTypes.has(entry.archetype)) continue;
+    seenTypes.add(entry.archetype);
+    selected.push(entry);
+  }
+
+  for (const entry of sorted) {
+    if (selected.length >= MAX_REPRESENTATIVES) break;
+    if (selected.includes(entry)) continue;
+    selected.push(entry);
+  }
+
+  return selected;
+}
+
+function truncate(value: string, max: number) {
+  return value.length > max ? `${value.slice(0, Math.max(0, max - 3))}...` : value;
+}
+
+async function renderFallbackImage(err: unknown) {
+  const fonts = await loadGeist();
+  const message = err instanceof Error ? err.message : 'Unknown image error';
+
+  return new ImageResponse(
+    <div
+      style={{
+        alignItems: 'center',
+        background: COLORS.ink,
+        color: COLORS.paper,
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'GeistSans, sans-serif',
+        gap: 18,
+        height: '100%',
+        justifyContent: 'center',
+        padding: 64,
+        textAlign: 'center',
+        width: '100%',
+      }}
+    >
+      <div style={{ color: COLORS.red, display: 'flex', fontSize: 24 }}>cronotype team image</div>
+      <div style={{ display: 'flex', fontSize: 48, fontWeight: 600 }}>Couldn&apos;t render this gallery image.</div>
+      <div style={{ color: COLORS.muted, display: 'flex', fontSize: 24, maxWidth: 760 }}>
+        Wait a minute and try the download again.
+      </div>
+      <div style={{ color: COLORS.muted, display: 'flex', fontFamily: 'GeistMono, monospace', fontSize: 14 }}>
+        {truncate(message, 96)}
+      </div>
+    </div>,
+    { fonts, height: HEIGHT, width: WIDTH },
   );
 }
 

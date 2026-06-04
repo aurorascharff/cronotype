@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { ComponentProps } from 'react';
 import { ClassifyingRing } from '@/components/ui/classifying-ring';
 import { GitHubIcon } from '@/components/ui/icons';
 import { RadialChip } from '@/components/ui/radial-chip';
@@ -7,7 +8,9 @@ import { getCardCronotype, getCardProfile } from '@/features/leaderboard/leaderb
 import { QUIET_THEME } from '@/lib/archetypes';
 import { formatFollowers } from '@/lib/format';
 
-export async function ProfileCardSlot({ handle }: { handle: string }) {
+type CardHref = ComponentProps<typeof Link>['href'];
+
+export async function ProfileCardSlot({ handle, href }: { handle: string; href?: CardHref }) {
   const cronotype = await getCardCronotype(handle);
   const profile = cronotype?.profile ?? (await getCardProfile(handle));
   const avatarUrl = profile?.avatarUrl;
@@ -19,7 +22,7 @@ export async function ProfileCardSlot({ handle }: { handle: string }) {
 
   return (
     <div className="dark:bg-ink-2 group relative h-full rounded-xl border border-black/10 bg-white transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30">
-      <Link href={{ pathname: `/${handle}` }} className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
+      <Link href={href ?? { pathname: `/${handle}` }} className="flex h-full flex-col gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative flex h-28 items-center justify-center">
           <div className="relative h-28 w-28">
             {cronotype ? (

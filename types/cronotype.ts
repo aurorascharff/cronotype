@@ -1,5 +1,6 @@
 export type ArchetypeId =
   | 'vampire'
+  | 'last-call-shipper'
   | 'sunrise-sniper'
   | 'lunch-bandit'
   | 'weekend-warrior'

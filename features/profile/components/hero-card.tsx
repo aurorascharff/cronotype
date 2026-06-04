@@ -18,14 +18,18 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
 
   return (
     <article className="dark:bg-ink-2 relative [aspect-ratio:auto] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] dark:border-white/10">
-      <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 flex flex-col items-end rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
-        <span>Last 90 days</span>
+      <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1 sm:top-6 sm:right-6">
+        <span className="text-ink/70 dark:text-paper/80 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm dark:border-white/20 dark:bg-white/[0.10]">
+          Last 90 days
+        </span>
         {generatedAt ? (
-          <span className="text-muted dark:text-muted-dark text-[9px]">Generated {generatedAt}</span>
+          <span className="text-muted dark:text-muted-dark font-mono text-[9px] tracking-wider uppercase">
+            Generated {generatedAt}
+          </span>
         ) : null}
       </div>
 
-      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-10 sm:p-10">
+      <div className="grid h-full grid-cols-1 items-center gap-4 p-5 pt-11 sm:grid-cols-[auto_1fr] sm:gap-8 sm:p-8">
         <div className="mx-auto flex h-44 w-44 items-center justify-center min-[420px]:h-52 min-[420px]:w-52 sm:mx-0 sm:h-[220px] sm:w-[220px] sm:justify-start sm:pl-3">
           <HaloChart stats={stats} theme={theme} avatarUrl={profile.avatarUrl} size={220} />
         </div>

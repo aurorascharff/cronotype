@@ -1,27 +1,83 @@
 import { Suspense } from 'react';
 import { Crossfade } from '@/components/ui/crossfade';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
-import { parseTeamHandles, serializeTeamHandles } from '@/features/team/team-handles';
+import { TeamRecents } from '@/features/team/components/team-recents';
+import { parseTeamHandles, parseTeamName, serializeTeamHandles, teamUrl } from '@/features/team/team-handles';
 import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  description: 'Build a shareable Cronotype gallery from a list of GitHub handles.',
-  title: 'Team gallery',
-};
 
 export const unstable_prefetch = 'force-runtime';
 
+export async function generateMetadata({ searchParams }: PageProps<'/team'>): Promise<Metadata> {
+  const query = await searchParams;
+  const { handles } = parseTeamHandles(query.handles);
+  const name = parseTeamName(query.name);
+  const title = name ? `${name} · Cronotype team` : 'Team gallery';
+  const description =
+    handles.length > 0
+      ? `View ${handles.length} GitHub commit-time profiles in one Cronotype team gallery.`
+      : 'Build a shareable Cronotype gallery from a list of GitHub handles.';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : 'http://localhost:3000');
+  const imageParams = new URLSearchParams();
+  if (handles.length > 0) imageParams.set('handles', serializeTeamHandles(handles));
+  if (name) imageParams.set('name', name);
+  const imageUrl = `${baseUrl.replace(/\/$/, '')}/team/image?${imageParams.toString()}`;
+
+  return {
+    description,
+    openGraph: {
+      description,
+      images:
+        handles.length > 0
+          ? [
+              {
+                alt: `${name || 'Team'} Cronotype gallery`,
+                height: 630,
+                url: imageUrl,
+                width: 1200,
+              },
+            ]
+          : [],
+      title,
+      type: 'website',
+    },
+    title,
+    twitter: {
+      card: 'summary_large_image',
+      description,
+      images: handles.length > 0 ? [imageUrl] : [],
+      title,
+    },
+  };
+}
+
 export default function TeamPage({ searchParams }: PageProps<'/team'>) {
   return (
-    <div className="space-y-10">
-      <section className="space-y-5 pt-4 sm:pt-10">
+    <div className="space-y-8 sm:space-y-10">
+      <section className="space-y-5 pt-2 sm:pt-6">
         <h1 className="tracking-tightest mx-auto max-w-xl text-center text-2xl leading-tight font-semibold sm:text-4xl">
           Team gallery
         </h1>
         <p className="text-muted dark:text-muted-dark mx-auto max-w-md text-center text-sm">
           Add GitHub handles, share the URL, and keep the gallery cached with the same profile cards.
         </p>
-        <form action="/team" className="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row">
+        <form
+          action="/team"
+          className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)_auto]"
+        >
+          <label className="sr-only" htmlFor="team-name">
+            Team name
+          </label>
+          <input
+            id="team-name"
+            name="name"
+            placeholder="Next.js team"
+            className="dark:bg-ink-2 text-ink dark:text-paper placeholder:text-muted/60 dark:placeholder:text-muted-dark/60 h-11 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-sm transition-colors outline-none focus:border-black/30 dark:border-white/10 dark:focus:border-white/30"
+            spellCheck={false}
+          />
           <label className="sr-only" htmlFor="team-handles">
             GitHub handles
           </label>
@@ -43,7 +99,7 @@ export default function TeamPage({ searchParams }: PageProps<'/team'>) {
       <Suspense fallback={<TeamGallerySkeleton />}>
         <Crossfade>
           {searchParams.then(query => (
-            <TeamGallery handlesParam={query.handles} />
+            <TeamContent handlesParam={query.handles} nameParam={query.name} />
           ))}
         </Crossfade>
       </Suspense>
@@ -51,10 +107,38 @@ export default function TeamPage({ searchParams }: PageProps<'/team'>) {
   );
 }
 
-function TeamGallery({ handlesParam }: { handlesParam: string | string[] | undefined }) {
+function TeamContent({
+  handlesParam,
+  nameParam,
+}: {
+  handlesParam: string | string[] | undefined;
+  nameParam: string | string[] | undefined;
+}) {
   const { handles, invalid } = parseTeamHandles(handlesParam);
   const serialized = serializeTeamHandles(handles);
+  const name = parseTeamName(nameParam);
+  const url = teamUrl({ handles, name });
+  const current = serialized ? { handles: serialized, name, url } : undefined;
 
+  return (
+    <div className="space-y-6">
+      <TeamRecents current={current} />
+      <TeamGallery handles={handles} invalid={invalid} name={name} serialized={serialized} />
+    </div>
+  );
+}
+
+function TeamGallery({
+  handles,
+  invalid,
+  name,
+  serialized,
+}: {
+  handles: string[];
+  invalid: string[];
+  name: string;
+  serialized: string;
+}) {
   if (handles.length === 0) {
     return (
       <section className="space-y-4">
@@ -70,7 +154,10 @@ function TeamGallery({ handlesParam }: { handlesParam: string | string[] | undef
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight">Gallery</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{name || 'Gallery'}</h2>
+          <p className="text-muted dark:text-muted-dark text-xs">
+            {handles.length} {handles.length === 1 ? 'profile' : 'profiles'}
+          </p>
           {invalid.length > 0 && (
             <p className="text-muted dark:text-muted-dark text-xs">
               Skipped invalid handles: {invalid.map(handle => `@${handle}`).join(', ')}
@@ -78,7 +165,7 @@ function TeamGallery({ handlesParam }: { handlesParam: string | string[] | undef
           )}
         </div>
         <a
-          href={`/team/image?handles=${encodeURIComponent(serialized)}`}
+          href={`/team/image?handles=${encodeURIComponent(serialized)}${name ? `&name=${encodeURIComponent(name)}` : ''}`}
           download="cronotype-team.png"
           className="text-muted dark:text-muted-dark dark:bg-ink-2 hover:text-ink dark:hover:text-paper inline-flex h-9 items-center justify-center rounded-lg border border-black/10 bg-white/60 px-3 text-xs font-semibold shadow-sm transition-colors hover:border-black/25 dark:border-white/10 dark:hover:border-white/25"
         >
@@ -88,7 +175,13 @@ function TeamGallery({ handlesParam }: { handlesParam: string | string[] | undef
       <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
         {handles.map(handle => (
           <li key={handle}>
-            <ProfileCardSlot handle={handle} />
+            <ProfileCardSlot
+              handle={handle}
+              href={{
+                pathname: `/${handle}`,
+                query: name ? { team: serialized, teamName: name } : { team: serialized },
+              }}
+            />
           </li>
         ))}
       </ul>

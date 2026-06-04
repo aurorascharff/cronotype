@@ -6,6 +6,7 @@ import {
   ProfileHistorySectionSkeleton,
 } from '@/features/profile/components/profile-history-section';
 import { computeCronotype } from '@/features/profile/profile-queries';
+import { parseTeamHandles, parseTeamName, teamUrl } from '@/features/team/team-handles';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 
@@ -71,7 +72,12 @@ export async function generateMetadata({ params }: PageProps<'/[handle]'>): Prom
 
 export default function ProfilePage({ params, searchParams }: PageProps<'/[handle]'>) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
+      <Suspense fallback={null}>
+        {searchParams.then(query => (
+          <TeamBackLink handlesParam={query.team} nameParam={query.teamName} />
+        ))}
+      </Suspense>
       <Suspense fallback={<ProfileCardSectionSkeleton />}>
         <Crossfade>
           {params.then(async ({ handle }) => {
@@ -86,6 +92,29 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
           })}
         </Crossfade>
       </Suspense>
+    </div>
+  );
+}
+
+function TeamBackLink({
+  handlesParam,
+  nameParam,
+}: {
+  handlesParam: string | string[] | undefined;
+  nameParam: string | string[] | undefined;
+}) {
+  const { handles } = parseTeamHandles(handlesParam);
+  if (handles.length === 0) return null;
+  const name = parseTeamName(nameParam);
+
+  return (
+    <div className="-mb-4">
+      <a
+        href={teamUrl({ handles, name })}
+        className="text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper inline-flex h-7 items-center rounded-md border border-black/10 bg-white/60 px-2 text-[11px] font-semibold shadow-sm transition-colors hover:border-black/25 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/25"
+      >
+        ← Back to {name || 'team'}
+      </a>
     </div>
   );
 }

@@ -11,7 +11,7 @@ export async function ProfileCardSection({ handle: rawHandle }: Props) {
   if (!isValidGitHubHandle(handle)) notFound();
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <header>
         <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
       </header>
@@ -22,7 +22,7 @@ export async function ProfileCardSection({ handle: rawHandle }: Props) {
 
 export function ProfileCardSectionSkeleton() {
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <header>
         <h2 className="text-lg font-semibold tracking-tight">The reveal</h2>
       </header>

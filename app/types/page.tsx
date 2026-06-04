@@ -17,6 +17,13 @@ type Detail = {
 };
 
 const DETAILS: Record<ArchetypeId, Detail> = {
+  'last-call-shipper': {
+    meaning:
+      'You come alive as the respectable workday is packing up, which is either elite focus or procrastination with excellent branding.',
+    percentile: 'Higher with a larger late-day share. Strong afternoon or evening peaks score highest.',
+    signal:
+      'A clear 1pm-to-midnight lean, especially when the morning is quiet. This catches profiles that are too late-day loaded to be honest Nine-to-Fiver material.',
+  },
   drifter: {
     meaning: 'You move through odd windows, bursts, and gaps, yet the work keeps appearing.',
     percentile: 'Fixed midpoint. Drifters are the beautiful chaos bucket, so there is no single signal to score.',
@@ -38,7 +45,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
     meaning: 'You keep a steady workday pulse and still make it look clean.',
     percentile: 'Higher with a larger business-hours share. The more daytime your rhythm is, the stronger the type.',
     signal:
-      'Most signal commits land from 9am to 7pm, without a strong night or weekend signature. Near-boundary samples stay Drifter.',
+      'Most signal commits land from 9am to 7pm, with a real workday-start signal and no strong afternoon-only, night, or weekend signature.',
   },
   'sunrise-sniper': {
     meaning: 'You find leverage in the early quiet and leave fresh commits for everyone else to wake up to.',
@@ -68,6 +75,7 @@ const DETAILS: Record<ArchetypeId, Detail> = {
 const ORDER: ArchetypeId[] = [
   'touch-grass',
   'vampire',
+  'last-call-shipper',
   'sunrise-sniper',
   'lunch-bandit',
   'weekend-warrior',
@@ -83,8 +91,8 @@ export default function TypesPage() {
         <h1 className="tracking-tightest text-2xl font-semibold sm:text-3xl">The types</h1>
         <p className="text-muted dark:text-muted-dark max-w-2xl text-sm sm:text-base">
           Cronotype samples recent authored commits, filters out obvious merge and dependency noise, and sorts active
-          profiles into one of eight rhythms. Empty signal samples become Quiet lately instead: still a profile, just
-          not enough recent public signal for a current type.
+          profiles into one of nine rhythms. Empty signal samples become Quiet lately instead: still a profile, just not
+          enough recent public signal for a current type.
         </p>
       </header>
 
@@ -156,7 +164,7 @@ export default function TypesPage() {
             <span className="text-muted dark:text-muted-dark">
               A short cascade of rules in priority order. Empty signal samples become Quiet lately. Otherwise the first
               matching rhythm wins: Grass Toucher, Insomniac Maintainer, Vampire, Sunrise Sniper, Lunch Bandit, Weekend
-              Warrior, Nine-to-Fiver, then Drifter.
+              Warrior, Last Call Shipper, Nine-to-Fiver, then Drifter.
             </span>
           </li>
           <li>

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Crossfade } from '@/components/ui/crossfade';
-import { TopRevealed, TopRevealedSkeleton } from '@/features/leaderboard/components/top-revealed';
+import { FeaturedProfiles, FeaturedProfilesSkeleton } from '@/features/leaderboard/components/featured-profiles';
 import { UsernameForm } from '@/components/username-form';
 
 export const unstable_prefetch = 'force-runtime';
@@ -14,7 +14,7 @@ function parsePage(value: string | string[] | undefined): number {
 export default function HomePage({ searchParams }: PageProps<'/'>) {
   return (
     <div className="space-y-8 sm:space-y-10">
-      <section className="space-y-4 pt-1 sm:pt-4">
+      <section className="space-y-4 pt-1 sm:pt-2">
         <h1 className="tracking-tightest mx-auto max-w-xl text-center text-2xl leading-tight font-semibold sm:text-4xl">
           What type of developer are you?
         </h1>
@@ -24,9 +24,12 @@ export default function HomePage({ searchParams }: PageProps<'/'>) {
         <div className="mx-auto max-w-md">
           <UsernameForm />
         </div>
-        <p className="text-muted dark:text-muted-dark text-center text-xs">
+        <p className="text-muted dark:text-muted-dark text-center text-xs sm:text-sm">
           Making a team view?{' '}
-          <Link href="/team" className="text-ink dark:text-paper underline-offset-2 hover:underline">
+          <Link
+            href="/team"
+            className="text-ink dark:text-paper font-medium underline underline-offset-3 hover:no-underline"
+          >
             Build a gallery
           </Link>
           .
@@ -37,13 +40,13 @@ export default function HomePage({ searchParams }: PageProps<'/'>) {
         <Suspense
           fallback={
             <>
-              <TopRevealedSkeleton />
+              <FeaturedProfilesSkeleton />
             </>
           }
         >
           <Crossfade>
             {searchParams.then(query => (
-              <TopRevealed page={parsePage(query.featured)} />
+              <FeaturedProfiles page={parsePage(query.featured)} />
             ))}
           </Crossfade>
         </Suspense>
