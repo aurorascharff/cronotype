@@ -7,6 +7,7 @@ import {
   computeCronotype,
   ensureGitHubRateLimitHeadroom,
   isGitHubHistoryUnavailableError,
+  isGitHubNotFoundError,
   isGitHubRateLimitError,
   warmMissingHistoryYears,
 } from '@/features/profile/profile-queries';
@@ -14,6 +15,11 @@ import { isValidGitHubHandle, normalizeHandle } from '@/lib/github-handle';
 import { hasBeenRevealedFresh, recordFeaturedReveal, recordReveal, recordTimelineLoaded } from '@/lib/reveals';
 
 export type RevealFormState = {
+  error: string | null;
+  errorId: number;
+};
+
+export type RevealGateState = {
   error: string | null;
   errorId: number;
 };
@@ -57,6 +63,27 @@ export async function revealUser(handle: string) {
   await recordFeaturedRevealIfNeeded(lower);
 }
 
+export async function revealUserFromGate(state: RevealGateState, formData: FormData): Promise<RevealGateState> {
+  const lower = normalizeHandle(String(formData.get('handle') ?? ''));
+  if (!lower || !isValidGitHubHandle(lower)) {
+    return { error: "That doesn't look like a GitHub username.", errorId: state.errorId + 1 };
+  }
+
+  try {
+    await revealUser(lower);
+  } catch (err) {
+    if (isGitHubNotFoundError(err)) {
+      return { error: `GitHub didn't find @${lower}. Check the spelling and try again.`, errorId: state.errorId + 1 };
+    }
+    if (isGitHubRateLimitError(err)) {
+      return { error: 'GitHub is rate limited right now. Give it a minute and try again.', errorId: state.errorId + 1 };
+    }
+    return { error: "We couldn't reveal this profile right now. Try again in a moment.", errorId: state.errorId + 1 };
+  }
+
+  redirect(`/${lower}`);
+}
+
 export async function revealUserFromForm(state: RevealFormState, formData: FormData): Promise<RevealFormState> {
   const handle = normalizeHandle(String(formData.get('handle') ?? ''));
   if (!handle) return { error: 'Type a GitHub username.', errorId: state.errorId + 1 };
@@ -66,7 +93,13 @@ export async function revealUserFromForm(state: RevealFormState, formData: FormD
 
   try {
     await revealUser(handle);
-  } catch {
+  } catch (err) {
+    if (isGitHubNotFoundError(err)) {
+      return { error: `GitHub didn't find @${handle}.`, errorId: state.errorId + 1 };
+    }
+    if (isGitHubRateLimitError(err)) {
+      return { error: 'GitHub is rate limited right now. Try again in a minute.', errorId: state.errorId + 1 };
+    }
     return { error: "Couldn't start the reveal. Try again in a moment.", errorId: state.errorId + 1 };
   }
 

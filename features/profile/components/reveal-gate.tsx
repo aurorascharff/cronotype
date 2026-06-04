@@ -1,60 +1,46 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { Button } from '@/components/ui/button';
-import { revealUser } from '@/features/profile/profile-actions';
+import { useActionState } from 'react';
+import { SubmitButton } from '@/components/ui/button';
+import { revealUserFromGate } from '@/features/profile/profile-actions';
 
 type Props = {
   handle: string;
 };
 
 export function RevealGate({ handle }: Props) {
-  const [isWorking, setIsWorking] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const busy = isWorking || isPending;
-
-  function reveal() {
-    if (busy) return;
-    setIsWorking(true);
-    startTransition(async () => {
-      try {
-        await revealUser(handle);
-        router.replace(`/${handle.toLowerCase()}`);
-        router.refresh();
-      } catch {
-        setIsWorking(false);
-      }
-    });
-  }
+  const [state, formAction, isSubmitting] = useActionState(revealUserFromGate, {
+    error: null,
+    errorId: 0,
+  });
 
   return (
-    <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10">
+    <form action={formAction} className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 dark:border-white/10">
+      <input type="hidden" name="handle" value={handle} />
       <div className="flex flex-col gap-3 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between">
         <div className="min-w-0">
           <p className="text-ink dark:text-paper text-sm font-semibold break-words">
-            {busy ? `Revealing @${handle}` : `Reveal @${handle}`}
+            {isSubmitting ? `Revealing @${handle}` : `Reveal @${handle}`}
           </p>
           <p className="text-muted dark:text-muted-dark mt-1 text-sm">
-            {busy
+            {isSubmitting
               ? 'Fetching GitHub activity, caching the profile, and preparing the card.'
               : 'This profile has not been generated here yet.'}
           </p>
+          {state.error ? (
+            <p key={state.errorId} className="mt-2 text-sm font-medium text-red-600 dark:text-red-300" role="status">
+              {state.error}
+            </p>
+          ) : null}
         </div>
-        <Button
-          type="button"
-          onClick={reveal}
-          disabled={busy}
-          aria-busy={busy}
+        <SubmitButton
           className="h-10 shrink-0 px-4 text-sm"
           iconPosition="start"
-          isPending={busy}
           variant="primary"
         >
-          <span>{busy ? 'Revealing' : 'Reveal'}</span>
-        </Button>
+          <span>{isSubmitting ? 'Revealing' : 'Reveal'}</span>
+        </SubmitButton>
       </div>
-    </div>
+    </form>
   );
 }
