@@ -62,7 +62,7 @@ export async function GET() {
   if (!result) notFound();
 
   const archetype = ARCHETYPES[result.archetypeId];
-  const { profile, stats, percentile } = result;
+  const { profile, stats } = result;
   const { theme } = archetype;
   const fonts = await loadGeist();
   const max = Math.max(1, ...stats.hourly);
@@ -77,6 +77,7 @@ export async function GET() {
   const titleFontSize = titleSizeFor(archetype.name);
   const meaningFontSize = meaningSizeFor(archetype.meaning);
   const signalSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
+  const aiScore = stats.aiScore > 0 ? `${stats.aiScore}%` : '-';
 
   const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
     <div
@@ -285,7 +286,20 @@ export async function GET() {
           <Stat label="PEAK" value={formatHour(stats.peakHour)} />
           <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
           <Stat label="SIGNAL" value={signalSize} />
-          <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
+          <Stat label="PERCENTILE" value={String(result.percentile)} accent={theme.accent} />
+        </div>
+        <div
+          style={{
+            color: stats.aiScore > 0 ? theme.accent : COLORS.mutedDark,
+            display: 'flex',
+            fontFamily: 'GeistMono, monospace',
+            fontSize: 18,
+            letterSpacing: '0.08em',
+            marginTop: 12,
+            textTransform: 'uppercase',
+          }}
+        >
+          AI STAMP {aiScore}
         </div>
       </div>
 

@@ -278,11 +278,13 @@ async function getProfileCached(login: string): Promise<ProfileCacheResult> {
 }
 
 type SearchCommitItem = {
+  author?: { login?: string; type?: string } | null;
   commit: {
     author: { date: string };
     committer: { date: string };
     message?: string;
   };
+  committer?: { login?: string; type?: string } | null;
   parents?: unknown[];
   repository: { full_name: string };
 };
@@ -315,6 +317,10 @@ async function fetchCommitsInRange(
       const tz = parseTzOffsetMinutes(iso);
       commits.push({
         authoredAt: iso,
+        authorLogin: item.author?.login ?? null,
+        authorType: item.author?.type ?? null,
+        committerLogin: item.committer?.login ?? null,
+        committerType: item.committer?.type ?? null,
         message: item.commit.message ?? '',
         parentCount: item.parents?.length ?? 1,
         repo: item.repository?.full_name ?? 'unknown',

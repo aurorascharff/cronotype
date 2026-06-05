@@ -72,7 +72,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
     if (isGitHubRateLimitError(err)) return defaultImage();
     throw err;
   }
-  const { profile, stats, archetype, percentile } = result;
+  const { profile, stats, archetype } = result;
 
   const fonts = await loadGeist();
 
@@ -91,6 +91,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
   const titleFontSize = titleSizeFor(archetype.name);
   const meaningFontSize = meaningSizeFor(archetype.meaning);
   const signalSize = stats.total >= 100 ? '100+' : formatCount(stats.total);
+  const aiScore = `${stats.aiScore}%`;
 
   const tickLabel = (text: string, dx: number, dy: number, anchor: 'left' | 'center' | 'right') => (
     <div
@@ -296,7 +297,37 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
           <Stat label="PEAK" value={formatHour(stats.peakHour)} />
           <Stat label="NOCTURNAL" value={`${Math.round(stats.pctNocturnal)}%`} />
           <Stat label="SIGNAL" value={signalSize} />
-          <Stat label="PERCENTILE" value={String(percentile)} accent={theme.accent} />
+          <Stat label="PERCENTILE" value={String(result.percentile)} accent={theme.accent} />
+        </div>
+        <div
+          style={{
+            alignItems: 'center',
+            border: `1px solid ${stats.aiScore > 0 ? theme.accent : COLORS.white20}`,
+            borderRadius: 8,
+            color: stats.aiScore > 0 ? theme.accent : COLORS.mutedDark,
+            display: 'flex',
+            fontFamily: 'GeistMono, monospace',
+            fontSize: 16,
+            gap: 10,
+            letterSpacing: '0.08em',
+            marginTop: 14,
+            padding: '7px 12px',
+            textTransform: 'uppercase',
+            width: 'fit-content',
+          }}
+        >
+          <span
+            style={{
+              background: 'currentColor',
+              borderRadius: '50%',
+              display: 'flex',
+              height: 8,
+              opacity: 0.75,
+              width: 8,
+            }}
+          />
+          <span>Agent trace</span>
+          <span style={{ color: COLORS.paper }}>{aiScore}</span>
         </div>
       </div>
 

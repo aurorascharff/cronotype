@@ -134,6 +134,17 @@ export default function TypesPage() {
 
       <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 sm:p-6 dark:border-white/10">
         <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
+          AI stamp
+        </h2>
+        <p className="text-muted dark:text-muted-dark text-sm">
+          The AI stamp is separate from your cronotype. It counts signal commits that carry visible AI attribution, such
+          as agent accounts or commit trailers mentioning Copilot, Claude, Codex, Cursor, Devin, or similar tools. It is
+          a public attribution signal, not proof that every changed line was written by AI.
+        </p>
+      </section>
+
+      <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 sm:p-6 dark:border-white/10">
+        <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
           How the reveal works
         </h2>
         <ul className="text-ink dark:text-paper space-y-2 text-sm break-words">

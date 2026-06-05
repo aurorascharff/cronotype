@@ -71,6 +71,8 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
               What&apos;s a {archetype.name}? →
             </Link>
 
+            <AgentCommitsBadge percent={stats.aiScore} />
+
             <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:mt-2 sm:flex sm:flex-wrap sm:items-end sm:gap-x-6">
               <Stat label="Peak" value={formatHour(stats.peakHour)} />
               <Stat label="Nocturnal" value={`${Math.round(stats.pctNocturnal)}%`} />
@@ -81,6 +83,21 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         </ViewTransition>
       </div>
     </article>
+  );
+}
+
+function AgentCommitsBadge({ percent }: { percent: number }) {
+  const active = percent > 0;
+
+  return (
+    <div
+      className="border-muted/25 dark:border-muted-dark/25 text-muted dark:text-muted-dark flex w-fit items-center gap-2 rounded-lg border px-2.5 py-1 font-mono text-[10px] tracking-wide uppercase"
+      style={active ? { color: '#a3e635' } : undefined}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" aria-hidden />
+      <span>Agent commits</span>
+      <span className="text-ink dark:text-paper tabular-nums">{percent}%</span>
+    </div>
   );
 }
 

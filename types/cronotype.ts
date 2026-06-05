@@ -31,6 +31,8 @@ export type Archetype = {
 };
 
 export type HourStats = {
+  aiScore: number;
+  aiStampedCount: number;
   hourly: number[];
   weekday: number[];
   total: number;
