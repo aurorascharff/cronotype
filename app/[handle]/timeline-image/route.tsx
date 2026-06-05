@@ -1,9 +1,5 @@
 import { ImageResponse } from 'next/og';
-import {
-  DEFAULT_HISTORY_ARCHETYPE_PAGE,
-  getTimelineChart,
-  isGitHubNotFoundError,
-} from '@/features/profile/profile-queries';
+import { getTimelineChart, isGitHubNotFoundError } from '@/features/profile/profile-queries';
 
 const size = { width: 1200, height: 630 };
 
@@ -36,9 +32,8 @@ const H = 360;
 const PAD_TOP = 24;
 const PAD_BOT = 8;
 
-export async function GET(req: Request, { params }: RouteContext) {
+export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
-  const historyYearPage = parseHistoryPage(new URL(req.url).searchParams.get('historyPage'));
 
   try {
     const chart = await getTimelineChart(
@@ -49,7 +44,8 @@ export async function GET(req: Request, { params }: RouteContext) {
         padTop: PAD_TOP,
         width: W,
       },
-      historyYearPage,
+      Number.NaN,
+      { scope: 'full' },
     );
 
     const { archetype, areaPath, eras, hasData, linePath, profile, totalCommits, yearMarkers } = chart;
@@ -106,7 +102,7 @@ export async function GET(req: Request, { params }: RouteContext) {
         </div>
 
         <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 16, gap: 12, marginBottom: 14 }}>
-          {eras.map((e, i) => (
+          {eras.filter(e => e.label || e.unknown).map((e, i) => (
             <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
               {e.unknown ? (
                 <span
@@ -225,10 +221,4 @@ function timelineUnavailableImage() {
     </div>,
     size,
   );
-}
-
-function parseHistoryPage(value: string | null): number {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return DEFAULT_HISTORY_ARCHETYPE_PAGE;
-  return Math.max(DEFAULT_HISTORY_ARCHETYPE_PAGE, Math.min(80, Math.round(parsed)));
 }

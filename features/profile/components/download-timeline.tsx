@@ -7,18 +7,16 @@ import { Button } from '@/components/ui/button';
 
 type Props = {
   handle: string;
-  historyYearPage: number;
 };
 
-export function DownloadTimeline({ handle, historyYearPage }: Props) {
+export function DownloadTimeline({ handle }: Props) {
   const [downloading, setDownloading] = useState(false);
 
   async function download() {
     if (downloading) return;
     setDownloading(true);
     try {
-      const pageParam = historyYearPage > 0 ? `?historyPage=${historyYearPage}` : '';
-      const res = await fetch(`/${handle}/timeline-image${pageParam}`);
+      const res = await fetch(`/${handle}/timeline-image`);
       if (!res.ok) throw new Error(`status ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
