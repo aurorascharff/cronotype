@@ -21,7 +21,6 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
-const AGENT_MARK_COLOR = '#a3e635';
 
 export function PrivateHistoryStrip({ history }: Props) {
   if (!history) return null;
@@ -49,7 +48,6 @@ export function PrivateHistoryStrip({ history }: Props) {
   const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const fillId = `private-evolution-fill-${history.generatedAt.replace(/\W/g, '')}`;
   const hasUnknown = eras.some(era => era.unknown);
-  const agentBars = buildPrivateAgentCommitBars(months, history);
 
   return (
     <section className="space-y-4">
@@ -83,18 +81,6 @@ export function PrivateHistoryStrip({ history }: Props) {
                 }}
               />
               <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
-            </li>
-          ) : null}
-          {agentBars.length > 0 ? (
-            <li className="text-muted dark:text-muted-dark flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-              <span
-                className="inline-block h-3 w-1 rounded-full align-middle"
-                style={{ background: AGENT_MARK_COLOR }}
-                aria-hidden
-              />
-              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_MARK_COLOR }}>
-                Agent-attributed %
-              </span>
             </li>
           ) : null}
         </ul>
@@ -180,34 +166,6 @@ export function PrivateHistoryStrip({ history }: Props) {
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          {agentBars.length > 0 ? (
-            <g opacity="0.82">
-              {agentBars.map(bar => (
-                <g key={`private-agent-bar-${bar.year}`}>
-                  <rect
-                    x={bar.x}
-                    y={bar.y}
-                    width={bar.width}
-                    height={bar.height}
-                    rx={bar.width / 2}
-                    fill={AGENT_MARK_COLOR}
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  <text
-                    x={bar.x + bar.width / 2}
-                    y={Math.max(PAD_TOP + 10, bar.y - 5)}
-                    fill={AGENT_MARK_COLOR}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontFamily="var(--font-mono)"
-                    opacity="0.95"
-                  >
-                    {bar.percent}%
-                  </text>
-                </g>
-              ))}
-            </g>
-          ) : null}
         </svg>
 
         <div className="text-muted dark:text-muted-dark mt-2 flex justify-between text-[10px] tabular-nums sm:hidden">
@@ -292,57 +250,6 @@ function buildPrivateEras(months: MonthBucket[], history: PrivateHistoryResult, 
   return eras.length > 0
     ? eras
     : [{ color: QUIET_THEME.accent, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
-}
-
-function buildPrivateAgentCommitBars(
-  months: MonthBucket[],
-  history: PrivateHistoryResult,
-): Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> {
-  if (months.length < 2) return [];
-
-  const percentByYear = new Map(
-    history.archetypes.map(([year, , commits, percent]) => [year, commits > 0 ? clampPercent(percent) : 0]),
-  );
-  if (percentByYear.size === 0) return [];
-
-  const spans = new Map<number, { first: number; last: number }>();
-  months.forEach((month, index) => {
-    const year = Number(month.month.slice(0, 4));
-    const existing = spans.get(year);
-    if (existing) {
-      existing.last = index;
-    } else {
-      spans.set(year, { first: index, last: index });
-    }
-  });
-
-  const maxBarHeight = H - PAD_TOP - PAD_BOT;
-  const barWidth = 4;
-  const baseline = H - PAD_BOT;
-  const bars: Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> = [];
-
-  for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
-    const percent = percentByYear.get(year);
-    if (percent == null || percent <= 0) continue;
-    const midpoint = Math.round((span.first + span.last) / 2);
-    const height = Math.max(3, (percent / 100) * maxBarHeight);
-    const x = (midpoint / (months.length - 1)) * W;
-    bars.push({
-      height,
-      percent,
-      width: barWidth,
-      x: x - barWidth / 2,
-      y: baseline - height,
-      year,
-    });
-  }
-
-  return bars;
-}
-
-function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function computeYearMarkers(months: MonthBucket[]) {

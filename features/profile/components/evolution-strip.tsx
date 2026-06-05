@@ -20,7 +20,6 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
-const AGENT_MARK_COLOR = '#a3e635';
 
 export async function EvolutionStrip({ handle, historyYearPage }: Props) {
   return CachedEvolutionStrip({ handle, historyYearPage });
@@ -77,7 +76,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     hasNewerArchetypeYears,
     hasOlderArchetypeYears,
     hasData,
-    agentBars,
     linePath,
     months,
     partial,
@@ -159,18 +157,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                   <span className="text-[10.5px] tabular-nums">{e.yearLabel}</span>
                 </li>
               ))}
-          {agentBars.length > 0 ? (
-            <li className="text-muted dark:text-muted-dark flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-              <span
-                className="inline-block h-3 w-1 rounded-full align-middle"
-                style={{ background: AGENT_MARK_COLOR }}
-                aria-hidden
-              />
-              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_MARK_COLOR }}>
-                Agent-attributed %
-              </span>
-            </li>
-          ) : null}
         </ul>
 
         <div className="relative">
@@ -255,37 +241,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 vectorEffect="non-scaling-stroke"
               />
             ))}
-            {agentBars.length > 0 ? (
-              <g opacity="0.82">
-                {agentBars.map(bar => (
-                  <g key={`agent-bar-${bar.period}`}>
-                    <rect
-                      x={bar.x}
-                      y={bar.y}
-                      width={bar.width}
-                      height={bar.height}
-                      rx={bar.width / 2}
-                      fill={AGENT_MARK_COLOR}
-                      opacity={bar.percent > 0 ? 1 : 0.28}
-                      vectorEffect="non-scaling-stroke"
-                    />
-                    {bar.percent > 0 ? (
-                      <text
-                        x={bar.x + bar.width / 2}
-                        y={Math.max(PAD_TOP + 10, bar.y - 5)}
-                        fill={AGENT_MARK_COLOR}
-                        textAnchor="middle"
-                        fontSize="10"
-                        fontFamily="var(--font-mono)"
-                        opacity="0.95"
-                      >
-                        {bar.percent}%
-                      </text>
-                    ) : null}
-                  </g>
-                ))}
-              </g>
-            ) : null}
           </svg>
         </div>
 

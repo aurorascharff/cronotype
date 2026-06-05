@@ -2,10 +2,6 @@ import type { HourStats } from '@/types/cronotype';
 
 export type Commit = {
   authoredAt: string;
-  authorLogin?: string | null;
-  authorType?: string | null;
-  committerLogin?: string | null;
-  committerType?: string | null;
   message: string;
   parentCount: number;
   tzOffsetMinutes: number | null;
@@ -32,7 +28,6 @@ export function isSignalCommit(commit: Commit): boolean {
 }
 
 export function buildStats(commits: Commit[]): HourStats {
-  const aiStampedCount = commits.filter(isAiStampedCommit).length;
   const hourly = new Array<number>(24).fill(0);
   const weekday = new Array<number>(7).fill(0);
   let weekendCount = 0;
@@ -82,8 +77,6 @@ export function buildStats(commits: Commit[]): HourStats {
   }
 
   return {
-    aiScore: Math.round((aiStampedCount / total) * 100),
-    aiStampedCount,
     hourly,
     hourlyVariance,
     isBimodal,
@@ -96,29 +89,6 @@ export function buildStats(commits: Commit[]): HourStats {
     tzOffsetHours,
     weekday,
   };
-}
-
-function isAiStampedCommit(commit: Commit): boolean {
-  const identity = [commit.authorLogin, commit.committerLogin, commit.authorType, commit.committerType, commit.message]
-    .filter(Boolean)
-    .join('\n')
-    .toLowerCase();
-
-  if (!identity) return false;
-  if (
-    /\bco-authored-by:\s*[^<\n]*(copilot|claude|cursor|codex|openai|devin|windsurf|anthropic|aider)\b/i.test(identity)
-  ) {
-    return true;
-  }
-  if (
-    /\b(github-copilot|copilot-swe-agent|openai-codex|codex|claude-code|devin-ai|cursor-agent|aider)\b/i.test(identity)
-  ) {
-    return true;
-  }
-  if (/\b(generated|implemented|authored)\s+(by|with)\s+(copilot|claude|codex|cursor|devin|aider)\b/i.test(identity)) {
-    return true;
-  }
-  return false;
 }
 
 type IsoMinute = {

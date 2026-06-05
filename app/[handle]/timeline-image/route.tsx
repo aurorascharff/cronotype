@@ -217,7 +217,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
                       height={bar.height}
                       rx={bar.width / 2}
                       fill={AGENT_LINE_COLOR}
-                      opacity={bar.percent > 0 ? 1 : 0.28}
+                      opacity={bar.percent > 0 ? 0.95 : 0.14}
                     />
                   </g>
                 ))}

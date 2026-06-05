@@ -33,8 +33,6 @@ export function syntheticStatsFor(id: ArchetypeId, total = 200) {
   const hourlyVariance = Math.sqrt(variance);
 
   return {
-    aiScore: 0,
-    aiStampedCount: 0,
     hourly,
     hourlyVariance,
     isBimodal: id === 'insomniac-maintainer',

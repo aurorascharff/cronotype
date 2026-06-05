@@ -53,7 +53,7 @@ export type PrivateCronotypeResult = {
 };
 
 export type PrivateHistoryResult = {
-  archetypes: Array<[year: number, archetypeId: ArchetypeId | null, commits: number, agentCommitPercent: number]>;
+  archetypes: Array<[year: number, archetypeId: ArchetypeId | null, commits: number]>;
   failedYears: number[];
   generatedAt: string;
   includes: 'public-and-private-visible';
@@ -259,7 +259,7 @@ async function computePrivateHistory(
   for (const yearData of yearly.filter(y => y.commits > 0).sort((a, b) => b.year - a.year)) {
     try {
       const archetype = await getPrivateYearArchetype(token, login, yearData.year, yearData.commits);
-      yearlyArchetypes.push([yearData.year, archetype.archetypeId, yearData.commits, archetype.agentCommitPercent]);
+      yearlyArchetypes.push([yearData.year, archetype.archetypeId, yearData.commits]);
     } catch (err) {
       if (isGitHubRateLimitError(err)) {
         failedYears.push(yearData.year);
@@ -358,7 +358,7 @@ async function getPrivateYearArchetype(
   login: string,
   year: number,
   commitCount: number,
-): Promise<{ agentCommitPercent: number; archetypeId: ArchetypeId | null }> {
+): Promise<{ archetypeId: ArchetypeId | null }> {
   const sampleCommits = signalCommits(
     await fetchPrivateCommits(
       token,
@@ -369,10 +369,9 @@ async function getPrivateYearArchetype(
       yearArchetypeSampleSizeForCommitCount(commitCount),
     ),
   );
-  if (sampleCommits.length === 0) return { agentCommitPercent: 0, archetypeId: null };
+  if (sampleCommits.length === 0) return { archetypeId: null };
   const stats = buildStats(sampleCommits);
   return {
-    agentCommitPercent: stats.aiScore,
     archetypeId: classify({ ...stats, total: commitCount }).id,
   };
 }
