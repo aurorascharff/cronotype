@@ -6,12 +6,7 @@ import { ARCHETYPES, classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import { syntheticStatsFor } from '@/lib/synthetic';
 import type { ArchetypeId, CronotypeResult, HourStats, ProfileSummary, Window } from '@/types/cronotype';
-import {
-  collectRecentStatsSamples,
-  dateKeyToDayNumber,
-  dayNumberToDateKey,
-  rangeFromDayCount,
-} from './data/date-ranges';
+import { dateKeyToDayNumber, dayNumberToDateKey, rangeFromDayCount } from './data/date-ranges';
 
 const UA = 'cronotype.dev';
 const API = 'https://api.github.com';
@@ -347,18 +342,6 @@ async function fetchCommitsInRange(
   return commits;
 }
 
-async function fetchBalancedRecentCommitsInRange(
-  login: string,
-  fromISO: string,
-  toISO: string,
-  token = process.env.GITHUB_TOKEN,
-): Promise<Commit[]> {
-  const commits = await collectRecentStatsSamples(fromISO, toISO, (range, sampleSize) =>
-    fetchCommitsInRange(login, range.fromISO, range.toISO, 0, 1, sampleSize, token),
-  );
-  return dedupe(commits);
-}
-
 function parseTzOffsetMinutes(iso: string): number | null {
   const m = iso.match(/([+-])(\d{2}):?(\d{2})$|Z$/);
   if (!m) return null;
@@ -485,10 +468,7 @@ async function getSignalCommitsForCached(
   }
 
   try {
-    const commits =
-      window === '90d'
-        ? await fetchBalancedRecentCommitsInRange(login, fromISO, toISO)
-        : await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
+    const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
     return signalCommits(commits);
   } catch (err) {
     if (isGitHubRateLimitError(err)) {

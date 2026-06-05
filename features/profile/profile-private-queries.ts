@@ -4,7 +4,6 @@ import { cookies } from 'next/headers';
 import { classify, percentileFor } from '@/lib/archetypes';
 import { buildStats, signalCommits, type Commit } from '@/lib/stats';
 import type { ArchetypeId, ProfileSummary } from '@/types/cronotype';
-import { collectRecentStatsSamples } from './data/date-ranges';
 import {
   getSignalCommitsFor,
   GitHubError,
@@ -108,7 +107,7 @@ export async function computePrivateCronotype(token: string): Promise<PrivateCro
   const fromISO = new Date(Date.parse(`${toISO}T00:00:00Z`) - 90 * 24 * 3600_000).toISOString().slice(0, 10);
   const [publicCommits, visibleCommits, history] = await Promise.all([
     getSignalCommitsFor(profile.login, '90d', toISO),
-    fetchBalancedPrivateRecentCommits(token, profile.login, fromISO, toISO).then(signalCommits),
+    fetchPrivateCommits(token, profile.login, fromISO, toISO).then(signalCommits),
     computePrivateHistory(token, profile.login, profile.createdAt, toISO).catch(err => {
       if (isGitHubRateLimitError(err)) return null;
       throw err;
@@ -166,18 +165,6 @@ async function fetchViewerProfile(token: string): Promise<ProfileSummary> {
     name: user.name ?? null,
     publicRepos: user.public_repos ?? 0,
   };
-}
-
-async function fetchBalancedPrivateRecentCommits(
-  token: string,
-  login: string,
-  fromISO: string,
-  toISO: string,
-): Promise<Commit[]> {
-  const commits = await collectRecentStatsSamples(fromISO, toISO, (range, sampleSize) =>
-    fetchPrivateCommits(token, login, range.fromISO, range.toISO, 1, sampleSize),
-  );
-  return dedupe(commits);
 }
 
 async function fetchPrivateCommits(

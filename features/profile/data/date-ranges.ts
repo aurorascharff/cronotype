@@ -1,48 +1,10 @@
-export const RECENT_STATS_SAMPLE_SIZE = 34;
-
-const RECENT_STATS_SAMPLE_SLICES = 3;
-
 export type DateRange = {
   fromISO: string;
   toISO: string;
 };
 
-export async function collectRecentStatsSamples<T>(
-  fromISO: string,
-  toISO: string,
-  fetchRange: (range: DateRange, sampleSize: number) => Promise<T[]>,
-): Promise<T[]> {
-  const items: T[] = [];
-
-  for (const range of dateRangeSlices(fromISO, toISO, RECENT_STATS_SAMPLE_SLICES)) {
-    items.push(...(await fetchRange(range, RECENT_STATS_SAMPLE_SIZE)));
-  }
-
-  return items;
-}
-
 export function rangeFromDayCount(toISO: string, days: number): DateRange {
   return { fromISO: dayNumberToDateKey(dateKeyToDayNumber(toISO) - days), toISO };
-}
-
-export function dateRangeSlices(fromISO: string, toISO: string, slices: number): DateRange[] {
-  const from = dateKeyToDayNumber(fromISO);
-  const to = dateKeyToDayNumber(toISO);
-  const totalDays = Math.max(1, to - from + 1);
-  const sliceDays = Math.ceil(totalDays / slices);
-  const ranges: DateRange[] = [];
-
-  for (let index = 0; index < slices; index++) {
-    const sliceFrom = from + index * sliceDays;
-    if (sliceFrom > to) break;
-    const sliceTo = Math.min(to, sliceFrom + sliceDays - 1);
-    ranges.push({
-      fromISO: dayNumberToDateKey(sliceFrom),
-      toISO: dayNumberToDateKey(sliceTo),
-    });
-  }
-
-  return ranges;
 }
 
 export function dateKeyToDayNumber(value: string): number {

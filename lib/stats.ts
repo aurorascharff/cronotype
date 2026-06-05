@@ -33,6 +33,7 @@ export function buildStats(commits: Commit[]): HourStats {
   let weekendCount = 0;
 
   const tzVotes = new Map<number, number>();
+  const dayHourCounts = new Map<string, number>();
 
   for (const c of commits) {
     const parsed = parseIsoMinute(c.authoredAt);
@@ -40,12 +41,14 @@ export function buildStats(commits: Commit[]): HourStats {
     const local =
       c.tzOffsetMinutes == null
         ? offsetDateTime(parsed, 0)
-        : { hour: parsed.hour, weekday: weekdayFromDayNumber(parsed.dayNumber) };
+        : { dayNumber: parsed.dayNumber, hour: parsed.hour, weekday: weekdayFromDayNumber(parsed.dayNumber) };
     const hour = local.hour;
     const wday = local.weekday;
     hourly[hour]++;
     weekday[wday]++;
     if (wday === 0 || wday === 6) weekendCount++;
+    const dayHourKey = `${local.dayNumber}:${hour}`;
+    dayHourCounts.set(dayHourKey, (dayHourCounts.get(dayHourKey) ?? 0) + 1);
 
     if (c.tzOffsetMinutes != null) {
       const hours = c.tzOffsetMinutes / 60;
@@ -55,7 +58,7 @@ export function buildStats(commits: Commit[]): HourStats {
 
   const total = commits.length || 1;
 
-  const peakHour = hourly.indexOf(Math.max(...hourly));
+  const peakHour = representativePeakHour(hourly, dayHourCounts);
   const pctNocturnal = (sumRange(hourly, 0, 4) / total) * 100;
   const pctSunrise = (sumRange(hourly, 5, 8) / total) * 100;
   const pctBusiness = (sumRange(hourly, 9, 18) / total) * 100;
@@ -118,9 +121,38 @@ function offsetDateTime(value: IsoMinute, offsetMinutes: number) {
   const minuteOfDay = ((total % 1440) + 1440) % 1440;
   const dayNumber = value.dayNumber + dayOffset;
   return {
+    dayNumber,
     hour: Math.floor(minuteOfDay / 60),
     weekday: weekdayFromDayNumber(dayNumber),
   };
+}
+
+function representativePeakHour(hourly: number[], dayHourCounts: Map<string, number>): number {
+  const activeDayScores = new Array<number>(24).fill(0);
+
+  for (const [key] of dayHourCounts) {
+    const hour = Number(key.split(':')[1]);
+    if (Number.isFinite(hour) && hour >= 0 && hour < 24) {
+      activeDayScores[hour]++;
+    }
+  }
+
+  if (activeDayScores.every(score => score === 0)) return hourly.indexOf(Math.max(...hourly));
+
+  let bestHour = 0;
+  let bestScore = -1;
+  for (let hour = 0; hour < 24; hour++) {
+    const left = activeDayScores[(hour + 23) % 24] ?? 0;
+    const center = activeDayScores[hour] ?? 0;
+    const right = activeDayScores[(hour + 1) % 24] ?? 0;
+    const score = center + (left + right) * 0.35;
+    if (score > bestScore || (score === bestScore && (hourly[hour] ?? 0) > (hourly[bestHour] ?? 0))) {
+      bestHour = hour;
+      bestScore = score;
+    }
+  }
+
+  return bestHour;
 }
 
 function daysFromCivil(year: number, month: number, day: number): number {
