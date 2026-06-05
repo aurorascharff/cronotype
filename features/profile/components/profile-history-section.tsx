@@ -6,11 +6,11 @@ import { TimelinePrompt } from './timeline-prompt';
 
 type Props = {
   handle: string;
-  historyYearLimit: number;
+  historyYearPage: number;
   showTimeline: boolean;
 };
 
-export async function ProfileHistorySection({ handle: rawHandle, historyYearLimit, showTimeline }: Props) {
+export async function ProfileHistorySection({ handle: rawHandle, historyYearPage, showTimeline }: Props) {
   const handle = rawHandle.toLowerCase();
   if (!isValidGitHubHandle(handle)) notFound();
 
@@ -26,7 +26,7 @@ export async function ProfileHistorySection({ handle: rawHandle, historyYearLimi
         situation={errorSituation}
         fallback={<TimelineErrorCard title={errorTitle} situation={errorSituation} />}
       >
-        <EvolutionStrip handle={handle} historyYearLimit={historyYearLimit} />
+        <EvolutionStrip handle={handle} historyYearPage={historyYearPage} />
       </ErrorBoundary>
     </section>
   );

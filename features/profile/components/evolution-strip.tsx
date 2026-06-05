@@ -13,7 +13,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
   handle: string;
-  historyYearLimit: number;
+  historyYearPage: number;
 };
 
 const W = 1000;
@@ -21,11 +21,11 @@ const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
 
-export async function EvolutionStrip({ handle, historyYearLimit }: Props) {
-  return CachedEvolutionStrip({ handle, historyYearLimit });
+export async function EvolutionStrip({ handle, historyYearPage }: Props) {
+  return CachedEvolutionStrip({ handle, historyYearPage });
 }
 
-async function CachedEvolutionStrip({ handle, historyYearLimit }: Props) {
+async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
   'use cache: remote';
   cacheTag(`history-${handle}`);
   cacheTag(`cronotype-${handle}-90d`);
@@ -41,7 +41,7 @@ async function CachedEvolutionStrip({ handle, historyYearLimit }: Props) {
         padTop: PAD_TOP,
         width: W,
       },
-      historyYearLimit,
+      historyYearPage,
     );
   } catch (err) {
     if (isGitHubNotFoundError(err)) notFound();
@@ -68,11 +68,13 @@ async function CachedEvolutionStrip({ handle, historyYearLimit }: Props) {
   const {
     archetype,
     areaPath,
-    archetypeYearLimit,
+    archetypeYearPage,
+    archetypeYearRangeLabel,
     eras,
     failedArchetypeYears,
     failedMonthlyYears,
-    hasMoreArchetypeYears,
+    hasNewerArchetypeYears,
+    hasOlderArchetypeYears,
     hasData,
     linePath,
     months,
@@ -110,17 +112,23 @@ async function CachedEvolutionStrip({ handle, historyYearLimit }: Props) {
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
         <div className="flex items-center gap-2">
+          {archetypeYearRangeLabel ? (
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+              {archetypeYearRangeLabel}
+            </span>
+          ) : null}
           {partial && (
             <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
               Partial · GitHub rate limit
             </span>
           )}
           <RegenerateHistoryButton
-            archetypeYearLimit={archetypeYearLimit}
+            archetypeYearPage={archetypeYearPage}
             failedArchetypeYears={failedArchetypeYears}
             failedMonthlyYears={failedMonthlyYears}
             handle={handle}
-            hasMoreArchetypeYears={hasMoreArchetypeYears}
+            hasNewerArchetypeYears={hasNewerArchetypeYears}
+            hasOlderArchetypeYears={hasOlderArchetypeYears}
             partial={partial}
           />
           <DownloadTimeline handle={handle} />
@@ -318,7 +326,7 @@ export function EvolutionStripSkeleton() {
         <div className="relative h-32 sm:h-40">
           <div className="text-muted/60 dark:text-muted-dark/60 absolute inset-0 flex flex-col items-center justify-center gap-2">
             <LoaderCircle className="text-muted/40 dark:text-muted-dark/40 h-5 w-5 animate-spin" aria-hidden />
-            <span className="text-[11px] font-medium tracking-wide uppercase">Loading, crunching your history</span>
+            <span className="text-[11px] font-medium tracking-wide uppercase">Crunching your history</span>
           </div>
         </div>
 

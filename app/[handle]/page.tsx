@@ -5,7 +5,7 @@ import {
   ProfileHistorySection,
   ProfileHistorySectionSkeleton,
 } from '@/features/profile/components/profile-history-section';
-import { computeCronotype, DEFAULT_HISTORY_ARCHETYPE_YEAR_LIMIT } from '@/features/profile/profile-queries';
+import { computeCronotype, DEFAULT_HISTORY_ARCHETYPE_PAGE } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
 
@@ -85,7 +85,7 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
             return (
               <ProfileHistorySection
                 handle={handle}
-                historyYearLimit={parseHistoryYearLimit(query.historyYears)}
+                historyYearPage={parseHistoryPage(query.historyPage)}
                 showTimeline={query.history === '1'}
               />
             );
@@ -96,9 +96,9 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
   );
 }
 
-function parseHistoryYearLimit(value: string | string[] | undefined): number {
+function parseHistoryPage(value: string | string[] | undefined): number {
   const raw = Array.isArray(value) ? value[0] : value;
   const parsed = Number(raw);
-  if (!Number.isFinite(parsed)) return DEFAULT_HISTORY_ARCHETYPE_YEAR_LIMIT;
-  return Math.max(DEFAULT_HISTORY_ARCHETYPE_YEAR_LIMIT, Math.min(80, Math.round(parsed)));
+  if (!Number.isFinite(parsed)) return DEFAULT_HISTORY_ARCHETYPE_PAGE;
+  return Math.max(DEFAULT_HISTORY_ARCHETYPE_PAGE, Math.min(80, Math.round(parsed)));
 }

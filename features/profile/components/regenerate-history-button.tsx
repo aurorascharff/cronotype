@@ -1,6 +1,6 @@
 'use client';
 
-import { RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { toast } from 'sonner';
@@ -9,38 +9,36 @@ import { regenerateHistory } from '@/features/profile/profile-actions';
 import type { Route } from 'next';
 
 type Props = {
-  archetypeYearLimit: number;
+  archetypeYearPage: number;
   failedArchetypeYears: number[];
   failedMonthlyYears: number[];
   handle: string;
-  hasMoreArchetypeYears: boolean;
+  hasNewerArchetypeYears: boolean;
+  hasOlderArchetypeYears: boolean;
   partial: boolean;
 };
 
 export function RegenerateHistoryButton({
-  archetypeYearLimit,
+  archetypeYearPage,
   failedArchetypeYears,
   failedMonthlyYears,
   handle,
-  hasMoreArchetypeYears,
+  hasNewerArchetypeYears,
+  hasOlderArchetypeYears,
   partial,
 }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const label = hasMoreArchetypeYears ? 'Load older years' : partial ? 'Retry missing data' : 'Refresh history';
-  const shortLabel = hasMoreArchetypeYears ? 'Older years' : partial ? 'Retry data' : 'Refresh';
+
+  function pageTo(page: number) {
+    startTransition(() => {
+      const pageParam = page > 0 ? `&historyPage=${page}` : '';
+      router.replace(`/${handle.toLowerCase()}?history=1${pageParam}` as Route, { scroll: false });
+      router.refresh();
+    });
+  }
 
   function refreshHistory() {
-    if (hasMoreArchetypeYears) {
-      startTransition(() => {
-        router.replace(`/${handle.toLowerCase()}?history=1&historyYears=${archetypeYearLimit + 10}` as Route, {
-          scroll: false,
-        });
-        router.refresh();
-      });
-      return;
-    }
-
     startTransition(async () => {
       let result;
       try {
@@ -58,27 +56,70 @@ export function RegenerateHistoryButton({
         return;
       }
       toast.success('History refreshed with the latest data GitHub returned.');
-      router.replace(`/${handle.toLowerCase()}?history=1` as Route, { scroll: false });
+      const pageParam = archetypeYearPage > 0 ? `&historyPage=${archetypeYearPage}` : '';
+      router.replace(`/${handle.toLowerCase()}?history=1${pageParam}` as Route, { scroll: false });
       router.refresh();
     });
   }
 
   return (
-    <Button
-      type="button"
-      disabled={pending}
-      isPending={pending}
-      className="min-w-0 justify-start sm:min-w-32"
-      icon={<RefreshCw className="h-2.5 w-2.5" />}
-      iconPosition="start"
-      onClick={refreshHistory}
-      size="xs"
-      variant="secondary"
-    >
-      <span className="inline-block text-left sm:min-w-24">
-        <span className="sm:hidden">{shortLabel}</span>
-        <span className="hidden sm:inline">{label}</span>
-      </span>
-    </Button>
+    <div className="flex items-center gap-1.5">
+      {hasNewerArchetypeYears ? (
+        <Button
+          type="button"
+          disabled={pending}
+          isPending={pending}
+          icon={<ChevronLeft className="h-2.5 w-2.5" />}
+          iconPosition="start"
+          onClick={() => pageTo(archetypeYearPage - 1)}
+          size="xs"
+          variant="secondary"
+        >
+          Newer
+        </Button>
+      ) : null}
+      {partial ? (
+        <Button
+          type="button"
+          disabled={pending}
+          isPending={pending}
+          icon={<RefreshCw className="h-2.5 w-2.5" />}
+          iconPosition="start"
+          onClick={refreshHistory}
+          size="xs"
+          variant="secondary"
+        >
+          Retry
+        </Button>
+      ) : null}
+      {hasOlderArchetypeYears ? (
+        <Button
+          type="button"
+          disabled={pending}
+          isPending={pending}
+          icon={<ChevronRight className="h-2.5 w-2.5" />}
+          iconPosition="end"
+          onClick={() => pageTo(archetypeYearPage + 1)}
+          size="xs"
+          variant="secondary"
+        >
+          Older
+        </Button>
+      ) : null}
+      {!partial && !hasOlderArchetypeYears && !hasNewerArchetypeYears ? (
+        <Button
+          type="button"
+          disabled={pending}
+          isPending={pending}
+          icon={<RefreshCw className="h-2.5 w-2.5" />}
+          iconPosition="start"
+          onClick={refreshHistory}
+          size="xs"
+          variant="secondary"
+        >
+          Refresh
+        </Button>
+      ) : null}
+    </div>
   );
 }
