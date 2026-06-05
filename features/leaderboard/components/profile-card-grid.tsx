@@ -92,7 +92,8 @@ function CardMeta({
           </span>
           {cronotype.stats.aiScore > 0 ? (
             <span
-              className="text-ink dark:text-paper shrink-0 rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[9px] leading-none tabular-nums"
+              className="text-ink dark:text-paper shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[9px] leading-none tabular-nums"
+              style={{ borderColor: '#a3e63599' }}
               title="Agent-attributed commits"
               aria-label={`${cronotype.stats.aiScore}% agent-attributed commits`}
             >

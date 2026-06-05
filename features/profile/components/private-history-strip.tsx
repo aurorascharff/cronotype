@@ -49,7 +49,7 @@ export function PrivateHistoryStrip({ history }: Props) {
   const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const fillId = `private-evolution-fill-${history.generatedAt.replace(/\W/g, '')}`;
   const hasUnknown = eras.some(era => era.unknown);
-  const agentBars = buildPrivateAgentCommitBars(months, history, points);
+  const agentBars = buildPrivateAgentCommitBars(months, history);
 
   return (
     <section className="space-y-4">
@@ -297,7 +297,6 @@ function buildPrivateEras(months: MonthBucket[], history: PrivateHistoryResult, 
 function buildPrivateAgentCommitBars(
   months: MonthBucket[],
   history: PrivateHistoryResult,
-  points: Array<{ x: number; y: number }>,
 ): Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> {
   if (months.length < 2) return [];
 
@@ -317,24 +316,23 @@ function buildPrivateAgentCommitBars(
     }
   });
 
-  const maxBarHeight = 28;
+  const maxBarHeight = H - PAD_TOP - PAD_BOT;
   const barWidth = 2.5;
+  const baseline = H - PAD_BOT;
   const bars: Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> = [];
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
     if (percent == null || percent <= 0) continue;
     const midpoint = Math.round((span.first + span.last) / 2);
-    const baseline = points[midpoint]?.y ?? PAD_TOP;
-    const requestedHeight = Math.max(2, (percent / 100) * maxBarHeight);
-    const y = Math.max(PAD_TOP, baseline - requestedHeight);
+    const height = Math.max(3, (percent / 100) * maxBarHeight);
     const x = (midpoint / (months.length - 1)) * W;
     bars.push({
-      height: baseline - y,
+      height,
       percent,
       width: barWidth,
       x: x - barWidth / 2,
-      y,
+      y: baseline - height,
       year,
     });
   }
@@ -361,6 +359,22 @@ function computeYearMarkers(months: MonthBucket[]) {
       label: String(year),
       x: (index / Math.max(1, months.length - 1)) * 100,
     }));
+}
+
+function computeYearDividers(months: MonthBucket[]) {
+  const out: Array<{ year: number; x: number }> = [];
+  let previousYear: number | null = null;
+  months.forEach((month, index) => {
+    const year = Number(month.month.slice(0, 4));
+    if (previousYear !== null && year !== previousYear) {
+      out.push({
+        year,
+        x: (index / Math.max(1, months.length - 1)) * W,
+      });
+    }
+    previousYear = year;
+  });
+  return out;
 }
 
 function smooth(values: number[], radius: number): number[] {
