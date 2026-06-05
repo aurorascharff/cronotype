@@ -14,6 +14,9 @@ const HIGH_YEAR_COMMIT_THRESHOLD = 1000;
 const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
 const YEAR_ARCHETYPE_SAMPLE_SIZE = 25;
 const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 10;
+const VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 5;
+export const DEFAULT_HISTORY_ARCHETYPE_YEAR_LIMIT = 10;
+const MAX_HISTORY_ARCHETYPE_WARM_YEARS = 10;
 const GITHUB_RATE_LIMIT_MESSAGE = 'GitHub rate limit hit. Try again in a minute.';
 // TODO(nextjs): remove once failed `use cache: remote` fills/revalidations no longer escape
 // as unhandled rejections and terminate the Vercel function.
@@ -510,10 +513,12 @@ export type MonthlyHistory = {
   months: MonthBucket[];
   yearlyArchetypes: YearArchetypeBucket[];
   partial: boolean;
+  archetypeYearLimit: number;
   /** Years whose monthly fetch failed - only these get monthly tags invalidated on refresh. */
   failedMonthlyYears: number[];
   /** Years whose archetype fetch failed - only these get archetype tags invalidated on refresh. */
   failedArchetypeYears: number[];
+  hasMoreArchetypeYears: boolean;
 };
 
 export type TimelineGeometry = {
@@ -634,7 +639,7 @@ async function getYearArchetypeCached(
   try {
     const perPage =
       commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD
-        ? HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
+        ? VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
         : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
           ? YEAR_ARCHETYPE_SAMPLE_SIZE
           : 100;
@@ -687,7 +692,7 @@ export async function warmMissingHistoryYears(
     }
   }
 
-  for (const year of [...new Set(failedArchetypeYears)]) {
+  for (const year of [...new Set(failedArchetypeYears)].slice(0, MAX_HISTORY_ARCHETYPE_WARM_YEARS)) {
     try {
       const yearData = monthlyByYear.get(year) ?? (await getYearMonthly(lower, year));
       if (yearData.commits <= 0) continue;
@@ -702,25 +707,44 @@ export async function warmMissingHistoryYears(
   return warmed;
 }
 
-export async function getMonthlyHistory(login: string): Promise<MonthlyHistory> {
+export async function getMonthlyHistory(
+  login: string,
+  archetypeYearLimit = Number.MAX_SAFE_INTEGER,
+): Promise<MonthlyHistory> {
   const lower = login.toLowerCase();
   const profile = await getProfile(lower);
   const today = profile.fetchedAtDate ?? (await getGitHubDateKey());
-  return getMonthlyHistoryCached(lower, today, profile.createdAt);
+  return getMonthlyHistoryCached(lower, today, profile.createdAt, archetypeYearLimit);
 }
 
-export async function getTimelineChart(login: string, geometry: TimelineGeometry) {
+export async function getTimelineChart(
+  login: string,
+  geometry: TimelineGeometry,
+  archetypeYearLimit = Number.MAX_SAFE_INTEGER,
+) {
   const lower = login.toLowerCase();
 
-  const [{ failedArchetypeYears, failedMonthlyYears, months, yearlyArchetypes, partial }, { archetype, profile }] =
-    await Promise.all([getMonthlyHistory(lower), computeCronotype(lower, '90d')]);
+  const [
+    {
+      archetypeYearLimit: resolvedArchetypeYearLimit,
+      failedArchetypeYears,
+      failedMonthlyYears,
+      hasMoreArchetypeYears,
+      months,
+      yearlyArchetypes,
+      partial,
+    },
+    { archetype, profile },
+  ] = await Promise.all([getMonthlyHistory(lower, archetypeYearLimit), computeCronotype(lower, '90d')]);
 
   if (months.length < 2) {
     return {
       archetype,
+      archetypeYearLimit: resolvedArchetypeYearLimit,
       eras: [],
       failedArchetypeYears,
       failedMonthlyYears,
+      hasMoreArchetypeYears,
       hasData: false,
       months,
       partial,
@@ -757,11 +781,13 @@ export async function getTimelineChart(login: string, geometry: TimelineGeometry
 
   return {
     archetype,
+    archetypeYearLimit: resolvedArchetypeYearLimit,
     areaPath,
     eras,
     failedArchetypeYears,
     failedMonthlyYears,
     hasData: true,
+    hasMoreArchetypeYears,
     linePath,
     months,
     partial,
@@ -906,6 +932,7 @@ async function getMonthlyHistoryCached(
   login: string,
   today: string,
   profileCreatedAt: string,
+  archetypeYearLimit: number,
 ): Promise<MonthlyHistory> {
   'use cache: remote';
   cacheTag(`history-${login}`);
@@ -917,8 +944,10 @@ async function getMonthlyHistoryCached(
     const rawResults = await Promise.all(years.map(y => getYearMonthly(login, y)));
     const results = rawResults.filter((r): r is YearMonthly => r !== null);
     const history = {
+      archetypeYearLimit,
       failedArchetypeYears: [],
       failedMonthlyYears: [],
+      hasMoreArchetypeYears: false,
       months: results.flatMap(r => r.months).sort((a, b) => a.month.localeCompare(b.month)),
       partial: false,
       yearlyArchetypes: results.map(r => ({
@@ -956,6 +985,8 @@ async function getMonthlyHistoryCached(
     return {
       failedArchetypeYears: [],
       failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
+      archetypeYearLimit,
+      hasMoreArchetypeYears: false,
       months: [],
       partial: true,
       yearlyArchetypes: [],
@@ -980,6 +1011,8 @@ async function getMonthlyHistoryCached(
     return {
       failedArchetypeYears: [],
       failedMonthlyYears: [...failedMonthlySet],
+      archetypeYearLimit,
+      hasMoreArchetypeYears: false,
       months: [],
       partial,
       yearlyArchetypes: [],
@@ -994,9 +1027,10 @@ async function getMonthlyHistoryCached(
     .filter(y => y.year !== thisYear)
     .map(y => y.year)
     .sort((a, b) => b - a);
+  const sampledYears = yearsWithCommits.slice(0, Math.max(0, archetypeYearLimit));
 
   const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
-  for (const year of yearsWithCommits) {
+  for (const year of sampledYears) {
     try {
       const yearData = byYear.find(y => y.year === year);
       const value = await getYearArchetype(login, year, yearData?.commits ?? 0);
@@ -1010,7 +1044,7 @@ async function getMonthlyHistoryCached(
   const yearlyArchetypes: YearArchetypeBucket[] = [];
   const attemptedYears = new Set<number>();
   archetypeResults.forEach((r, i) => {
-    const year = yearsWithCommits[i];
+    const year = sampledYears[i];
     const yearData = byYear.find(y => y.year === year);
     if (!yearData) return;
     attemptedYears.add(year);
@@ -1021,19 +1055,21 @@ async function getMonthlyHistoryCached(
     }
   });
 
-  if (archetypeResults.length < yearsWithCommits.length) {
+  if (archetypeResults.length < sampledYears.length) {
     partial = true;
   }
 
-  for (const year of yearsWithCommits) {
+  for (const year of sampledYears) {
     if (!attemptedYears.has(year)) failedArchetypeSet.add(year);
   }
 
   if (failedArchetypeSet.size > 0) partial = true;
 
   return {
+    archetypeYearLimit,
     failedArchetypeYears: [...failedArchetypeSet].sort((a, b) => b - a),
     failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
+    hasMoreArchetypeYears: sampledYears.length < yearsWithCommits.length,
     months,
     partial,
     yearlyArchetypes,

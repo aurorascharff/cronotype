@@ -13,6 +13,7 @@ import { cacheLife, cacheTag } from 'next/cache';
 
 type Props = {
   handle: string;
+  historyYearLimit: number;
 };
 
 const W = 1000;
@@ -20,11 +21,11 @@ const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
 
-export async function EvolutionStrip({ handle }: Props) {
-  return CachedEvolutionStrip({ handle });
+export async function EvolutionStrip({ handle, historyYearLimit }: Props) {
+  return CachedEvolutionStrip({ handle, historyYearLimit });
 }
 
-async function CachedEvolutionStrip({ handle }: Props) {
+async function CachedEvolutionStrip({ handle, historyYearLimit }: Props) {
   'use cache: remote';
   cacheTag(`history-${handle}`);
   cacheTag(`cronotype-${handle}-90d`);
@@ -32,12 +33,16 @@ async function CachedEvolutionStrip({ handle }: Props) {
 
   let chart;
   try {
-    chart = await getTimelineChart(handle, {
-      height: H,
-      padBottom: PAD_BOT,
-      padTop: PAD_TOP,
-      width: W,
-    });
+    chart = await getTimelineChart(
+      handle,
+      {
+        height: H,
+        padBottom: PAD_BOT,
+        padTop: PAD_TOP,
+        width: W,
+      },
+      historyYearLimit,
+    );
   } catch (err) {
     if (isGitHubNotFoundError(err)) notFound();
     if (isGitHubRateLimitError(err) || isGitHubHistoryUnavailableError(err)) {
@@ -63,9 +68,11 @@ async function CachedEvolutionStrip({ handle }: Props) {
   const {
     archetype,
     areaPath,
+    archetypeYearLimit,
     eras,
     failedArchetypeYears,
     failedMonthlyYears,
+    hasMoreArchetypeYears,
     hasData,
     linePath,
     months,
@@ -109,9 +116,11 @@ async function CachedEvolutionStrip({ handle }: Props) {
             </span>
           )}
           <RegenerateHistoryButton
+            archetypeYearLimit={archetypeYearLimit}
             failedArchetypeYears={failedArchetypeYears}
             failedMonthlyYears={failedMonthlyYears}
             handle={handle}
+            hasMoreArchetypeYears={hasMoreArchetypeYears}
             partial={partial}
           />
           <DownloadTimeline handle={handle} />

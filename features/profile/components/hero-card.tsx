@@ -17,7 +17,7 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
   const generatedAt = formatDateKey(profile.fetchedAtDate);
 
   return (
-    <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:min-h-0 sm:[aspect-ratio:1200/630] dark:border-white/10">
+    <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] sm:min-h-0 dark:border-white/10">
       {generatedAt ? (
         <span className="text-muted dark:text-muted-dark absolute top-3 left-3 z-10 font-mono text-[9px] tracking-wider uppercase sm:top-6 sm:left-6">
           Generated {generatedAt}

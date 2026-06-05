@@ -6,21 +6,41 @@ import { useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { regenerateHistory } from '@/features/profile/profile-actions';
+import type { Route } from 'next';
 
 type Props = {
+  archetypeYearLimit: number;
   failedArchetypeYears: number[];
   failedMonthlyYears: number[];
   handle: string;
+  hasMoreArchetypeYears: boolean;
   partial: boolean;
 };
 
-export function RegenerateHistoryButton({ failedArchetypeYears, failedMonthlyYears, handle, partial }: Props) {
+export function RegenerateHistoryButton({
+  archetypeYearLimit,
+  failedArchetypeYears,
+  failedMonthlyYears,
+  handle,
+  hasMoreArchetypeYears,
+  partial,
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const label = partial ? 'Retry missing data' : 'Refresh history';
-  const shortLabel = partial ? 'Retry data' : 'Refresh';
+  const label = hasMoreArchetypeYears ? 'Load older years' : partial ? 'Retry missing data' : 'Refresh history';
+  const shortLabel = hasMoreArchetypeYears ? 'Older years' : partial ? 'Retry data' : 'Refresh';
 
   function refreshHistory() {
+    if (hasMoreArchetypeYears) {
+      startTransition(() => {
+        router.replace(`/${handle.toLowerCase()}?history=1&historyYears=${archetypeYearLimit + 10}` as Route, {
+          scroll: false,
+        });
+        router.refresh();
+      });
+      return;
+    }
+
     startTransition(async () => {
       let result;
       try {
@@ -38,7 +58,7 @@ export function RegenerateHistoryButton({ failedArchetypeYears, failedMonthlyYea
         return;
       }
       toast.success('History refreshed with the latest data GitHub returned.');
-      router.replace(`/${handle.toLowerCase()}?history=1`, { scroll: false });
+      router.replace(`/${handle.toLowerCase()}?history=1` as Route, { scroll: false });
       router.refresh();
     });
   }

@@ -14,7 +14,7 @@ export function RouteStateCard({ action, badge, body, meta, title, variant = 'de
   const isError = variant === 'error';
 
   return (
-    <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:min-h-0 sm:[aspect-ratio:1200/630] dark:border-white/10">
+    <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] sm:min-h-0 dark:border-white/10">
       <div className="text-ink/70 dark:text-paper/80 absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
         {badge}
       </div>
