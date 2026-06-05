@@ -137,18 +137,6 @@ export function PrivateHistoryStrip({ history }: Props) {
                   opacity="0.06"
                   vectorEffect="non-scaling-stroke"
                 />
-                <text
-                  x={W - 2}
-                  y={y - 4}
-                  fill="currentColor"
-                  textAnchor="end"
-                  className="text-muted dark:text-muted-dark"
-                  fontSize="10"
-                  fontFamily="var(--font-mono)"
-                  opacity="0.62"
-                >
-                  {formatCount(Math.round(value))}
-                </text>
               </g>
             );
           })}
@@ -195,16 +183,28 @@ export function PrivateHistoryStrip({ history }: Props) {
           {agentBars.length > 0 ? (
             <g opacity="0.72">
               {agentBars.map(bar => (
-                <rect
-                  key={`private-agent-bar-${bar.year}`}
-                  x={bar.x}
-                  y={bar.y}
-                  width={bar.width}
-                  height={bar.height}
-                  rx={bar.width / 2}
-                  fill={AGENT_MARK_COLOR}
-                  vectorEffect="non-scaling-stroke"
-                />
+                <g key={`private-agent-bar-${bar.year}`}>
+                  <rect
+                    x={bar.x}
+                    y={bar.y}
+                    width={bar.width}
+                    height={bar.height}
+                    rx={bar.width / 2}
+                    fill={AGENT_MARK_COLOR}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <text
+                    x={bar.x + bar.width / 2}
+                    y={Math.max(PAD_TOP + 10, bar.y - 5)}
+                    fill={AGENT_MARK_COLOR}
+                    textAnchor="middle"
+                    fontSize="9"
+                    fontFamily="var(--font-mono)"
+                    opacity="0.95"
+                  >
+                    {bar.percent}%
+                  </text>
+                </g>
               ))}
             </g>
           ) : null}
