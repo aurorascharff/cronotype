@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { HeroCard } from '@/features/profile/components/hero-card';
 import { CronotypeProfileSkeleton } from '@/features/profile/components/cronotype-profile';
 import { DownloadPrivateCard } from '@/features/profile/components/download-private-card';
+import { PrivateHistoryStrip } from '@/features/profile/components/private-history-strip';
 import { getPrivateResultCookie } from '@/features/profile/profile-private-queries';
 import { ARCHETYPES } from '@/lib/archetypes';
 import { formatCount } from '@/lib/format';
@@ -18,12 +19,13 @@ export async function PrivateProfileCardSection() {
         <h1 className="text-lg font-semibold tracking-tight">Private cronotype</h1>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
-            {formatCount(result.stats.total)} private-visible signal commits
+            {formatCount(result.stats.total)} public + private-visible signal commits
           </span>
           <DownloadPrivateCard handle={result.profile.login} />
         </div>
       </header>
       <HeroCard profile={result.profile} archetype={archetype} stats={result.stats} percentile={result.percentile} />
+      <PrivateHistoryStrip history={result.history} />
       <PrivateProfileSecurityNotice />
     </section>
   );
@@ -45,8 +47,8 @@ function PrivateProfileSecurityNotice() {
   return (
     <div className="text-muted dark:text-muted-dark space-y-2 text-sm">
       <p>
-        This is a local, short-lived result from commits visible to your GitHub token. The token is not stored, and this
-        page is not shareable.
+        This is a local, short-lived result from public commits plus private commits visible to your GitHub token. The
+        token is not stored, and this page is not shareable.
       </p>
       <p>
         After downloading the card, revoke the authorization in{' '}

@@ -28,10 +28,22 @@ function invalidateProfileForHandle(handle: string) {
   updateTag(`commits-${handle}-90d`);
 }
 
-function invalidateMissingHistoryForHandle(handle: string, years: number[]) {
-  for (const year of [...new Set(years)]) {
+function invalidateMissingHistoryForHandle(
+  handle: string,
+  {
+    archetypeYears,
+    monthlyYears,
+  }: {
+    archetypeYears: number[];
+    monthlyYears: number[];
+  },
+) {
+  for (const year of [...new Set(monthlyYears)]) {
     if (year < FIRST_HISTORY_YEAR || year > LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS) continue;
     updateTag(`monthly-${handle}-${year}`);
+  }
+  for (const year of [...new Set(archetypeYears)]) {
+    if (year < FIRST_HISTORY_YEAR || year > LAST_HISTORY_YEAR_WITHOUT_TIME_ACCESS) continue;
     updateTag(`year-archetype-${handle}-${year}`);
   }
 }
@@ -95,7 +107,10 @@ export async function regenerateHistory(
 ): Promise<RegenerateHistoryResult> {
   const lower = handle.toLowerCase();
   if (!isValidGitHubHandle(lower)) throw new Error('Invalid GitHub handle');
-  invalidateMissingHistoryForHandle(lower, [...failedMonthlyYears, ...failedArchetypeYears]);
+  invalidateMissingHistoryForHandle(lower, {
+    archetypeYears: failedArchetypeYears,
+    monthlyYears: failedMonthlyYears,
+  });
   try {
     const warmed = await warmMissingHistoryYears(lower, failedMonthlyYears, failedArchetypeYears);
     if (warmed.monthlyYears.length === 0 && warmed.archetypeYears.length === 0) return { status: 'unchanged' };

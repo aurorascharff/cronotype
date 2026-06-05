@@ -12,7 +12,7 @@ const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
 const HIGH_YEAR_COMMIT_THRESHOLD = 1000;
 const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
-const YEAR_ARCHETYPE_SAMPLE_SIZE = 50;
+const YEAR_ARCHETYPE_SAMPLE_SIZE = 100;
 const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 25;
 const VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 5;
 export const DEFAULT_HISTORY_ARCHETYPE_PAGE = 0;
@@ -30,6 +30,12 @@ type ProfileCacheResult =
   | { status: 'rate-limited' };
 
 type YearArchetypeCacheResult = { status: 'ok'; archetypeId: ArchetypeId | null } | { status: 'rate-limited' };
+
+export function yearArchetypeSampleSizeForCommitCount(commitCount: number) {
+  if (commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD) return VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE;
+  if (commitCount > HIGH_YEAR_COMMIT_THRESHOLD) return HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE;
+  return YEAR_ARCHETYPE_SAMPLE_SIZE;
+}
 
 export class GitHubError extends Error {
   status: number;
@@ -648,12 +654,7 @@ async function getYearArchetypeCached(
   if (MOCK) return { archetypeId: mockArchetypeFor(`${login}-${year}`), status: 'ok' };
 
   try {
-    const perPage =
-      commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD
-        ? VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
-        : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
-          ? HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE
-          : 100;
+    const perPage = yearArchetypeSampleSizeForCommitCount(commitCount);
     const sampleCommits = await fetchCommitsInRange(
       login,
       `${year}-01-01`,
