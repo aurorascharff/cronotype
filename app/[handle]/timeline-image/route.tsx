@@ -146,7 +146,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
           ) : null}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative' }}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{ height: '100%', width: '100%' }} preserveAspectRatio="none">
             <defs>
               {eras.map((e, i) => (
@@ -209,7 +209,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
             {agentBars.length > 0 ? (
               <g opacity="0.86">
                 {agentBars.map(bar => (
-                  <g key={`agent-bar-${bar.year}`}>
+                  <g key={`agent-bar-${bar.period}`}>
                     <rect
                       x={bar.x}
                       y={bar.y}
@@ -218,22 +218,31 @@ export async function GET(_req: Request, { params }: RouteContext) {
                       rx={bar.width / 2}
                       fill={AGENT_LINE_COLOR}
                     />
-                    <text
-                      x={bar.x + bar.width / 2}
-                      y={Math.max(PAD_TOP + 16, bar.y - 8)}
-                      fill={AGENT_LINE_COLOR}
-                      textAnchor="middle"
-                      fontSize="13"
-                      fontFamily="GeistMono, monospace"
-                      opacity="0.95"
-                    >
-                      {bar.percent}%
-                    </text>
                   </g>
                 ))}
               </g>
             ) : null}
           </svg>
+          {agentBars.length > 0
+            ? agentBars.map(bar => (
+                <div
+                  key={`agent-label-${bar.period}`}
+                  style={{
+                    color: AGENT_LINE_COLOR,
+                    display: 'flex',
+                    fontFamily: 'GeistMono, monospace',
+                    fontSize: 13,
+                    left: `${((bar.x + bar.width / 2) / W) * 100}%`,
+                    opacity: 0.95,
+                    position: 'absolute',
+                    top: `${(Math.max(PAD_TOP + 16, bar.y - 8) / H) * 100}%`,
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  {bar.percent}%
+                </div>
+              ))
+            : null}
         </div>
 
         <div

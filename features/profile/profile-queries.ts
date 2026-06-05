@@ -29,7 +29,12 @@ type ProfileCacheResult =
   | { status: 'missing' }
   | { status: 'rate-limited' };
 
-type YearArchetypeResult = { agentCommitPercent: number; archetypeId: ArchetypeId | null };
+export type AgentCommitSample = { month: string; percent: number };
+type YearArchetypeResult = {
+  agentCommitMonths: AgentCommitSample[];
+  agentCommitPercent: number;
+  archetypeId: ArchetypeId | null;
+};
 type YearArchetypeCacheResult = ({ status: 'ok' } & YearArchetypeResult) | { status: 'rate-limited' };
 
 export function yearArchetypeSampleSizeForCommitCount(commitCount: number) {
@@ -524,6 +529,7 @@ async function getSignalCommitsForCached(
 
 export type MonthBucket = { month: string; count: number };
 export type YearArchetypeBucket = {
+  agentCommitMonths: AgentCommitSample[];
   agentCommitPercent: number;
   archetypeId: ArchetypeId | null;
   commits: number;
@@ -552,7 +558,15 @@ export type TimelineGeometry = {
   padBottom: number;
 };
 
-export type AgentCommitBar = { height: number; percent: number; width: number; x: number; y: number; year: number };
+export type AgentCommitBar = {
+  height: number;
+  percent: number;
+  period: string;
+  width: number;
+  x: number;
+  y: number;
+  year: number;
+};
 
 type TimelineChartOptions = {
   scope?: 'window' | 'full';
@@ -653,7 +667,11 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
 async function getYearArchetype(login: string, year: number, commitCount: number): Promise<YearArchetypeResult> {
   const result = await getYearArchetypeCached(login, year, commitCount);
   if (result.status === 'rate-limited') throw gitHubRateLimitError();
-  return { agentCommitPercent: result.agentCommitPercent, archetypeId: result.archetypeId };
+  return {
+    agentCommitMonths: result.agentCommitMonths,
+    agentCommitPercent: result.agentCommitPercent,
+    archetypeId: result.archetypeId,
+  };
 }
 
 async function getYearArchetypeCached(
@@ -665,7 +683,14 @@ async function getYearArchetypeCached(
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
 
-  if (MOCK) return { agentCommitPercent: 0, archetypeId: mockArchetypeFor(`${login}-${year}`), status: 'ok' };
+  if (MOCK) {
+    return {
+      agentCommitMonths: [],
+      agentCommitPercent: 0,
+      archetypeId: mockArchetypeFor(`${login}-${year}`),
+      status: 'ok',
+    };
+  }
 
   try {
     const perPage = yearArchetypeSampleSizeForCommitCount(commitCount);
@@ -681,6 +706,7 @@ async function getYearArchetypeCached(
     const signal = signalCommits(sampleCommits);
     if (signal.length === 0) {
       return {
+        agentCommitMonths: [],
         agentCommitPercent: 0,
         archetypeId: sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null,
         status: 'ok',
@@ -688,6 +714,7 @@ async function getYearArchetypeCached(
     }
     const stats = buildStats(signal);
     return {
+      agentCommitMonths: agentCommitMonthsFromSample(signal),
       agentCommitPercent: stats.aiScore,
       archetypeId: classify({ ...stats, total: commitCount }).id,
       status: 'ok',
@@ -950,14 +977,22 @@ function buildAgentCommitBars(
 ): AgentCommitBar[] {
   if (months.length < 2) return [];
 
+  const percentByMonth = new Map<string, number>();
   const percentByYear = new Map<number, number>();
   for (const bucket of yearly) {
-    if (bucket.commits > 0) percentByYear.set(bucket.year, clampPercent(bucket.agentCommitPercent));
+    if (bucket.commits <= 0) continue;
+    for (const sample of bucket.agentCommitMonths) {
+      const percent = clampPercent(sample.percent);
+      if (percent > 0) percentByMonth.set(sample.month, percent);
+    }
+    if (bucket.agentCommitMonths.length === 0) {
+      percentByYear.set(bucket.year, clampPercent(bucket.agentCommitPercent));
+    }
   }
   if (includeCurrentYear && Number.isFinite(currentYear)) {
     percentByYear.set(currentYear, clampPercent(currentAgentCommitPercent));
   }
-  if (percentByYear.size === 0) return [];
+  if (percentByMonth.size === 0 && percentByYear.size === 0) return [];
 
   const spans = new Map<number, { first: number; last: number }>();
   months.forEach((month, index) => {
@@ -975,6 +1010,22 @@ function buildAgentCommitBars(
   const baseline = geometry.height - geometry.padBottom;
   const bars: AgentCommitBar[] = [];
 
+  for (const [index, month] of months.entries()) {
+    const percent = percentByMonth.get(month.month);
+    if (percent == null || percent <= 0) continue;
+    const height = Math.max(3, (percent / 100) * maxBarHeight);
+    const x = (index / (months.length - 1)) * geometry.width;
+    bars.push({
+      height,
+      percent,
+      period: month.month,
+      width: barWidth,
+      x: x - barWidth / 2,
+      y: baseline - height,
+      year: Number(month.month.slice(0, 4)),
+    });
+  }
+
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
     if (percent == null || percent <= 0) continue;
@@ -984,6 +1035,7 @@ function buildAgentCommitBars(
     bars.push({
       height,
       percent,
+      period: String(year),
       width: barWidth,
       x: x - barWidth / 2,
       y: baseline - height,
@@ -992,6 +1044,28 @@ function buildAgentCommitBars(
   }
 
   return bars;
+}
+
+function agentCommitMonthsFromSample(commits: Commit[]): AgentCommitSample[] {
+  const byMonth = new Map<string, Commit[]>();
+  for (const commit of commits) {
+    const month = commit.authoredAt.slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(month)) continue;
+    const existing = byMonth.get(month);
+    if (existing) {
+      existing.push(commit);
+    } else {
+      byMonth.set(month, [commit]);
+    }
+  }
+
+  return Array.from(byMonth.entries())
+    .map(([month, monthCommits]) => ({
+      month,
+      percent: buildStats(monthCommits).aiScore,
+    }))
+    .filter(sample => sample.percent > 0)
+    .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 function clampPercent(value: number): number {
@@ -1130,6 +1204,7 @@ async function getMonthlyHistoryCached(
       sampledArchetypeYears: results.map(r => r.year),
       visibleTimelineYears: results.map(r => r.year),
       yearlyArchetypes: results.map(r => ({
+        agentCommitMonths: [],
         agentCommitPercent: 0,
         archetypeId: r.archetypeId ?? ('drifter' as ArchetypeId),
         commits: r.commits,
@@ -1249,6 +1324,7 @@ async function getMonthlyHistoryCached(
     attemptedYears.add(year);
     if (r.status === 'fulfilled') {
       yearlyArchetypes.push({
+        agentCommitMonths: r.value.agentCommitMonths,
         agentCommitPercent: r.value.agentCommitPercent,
         archetypeId: r.value.archetypeId,
         commits: yearData.commits,

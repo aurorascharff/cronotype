@@ -258,7 +258,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
             {agentBars.length > 0 ? (
               <g opacity="0.82">
                 {agentBars.map(bar => (
-                  <g key={`agent-bar-${bar.year}`}>
+                  <g key={`agent-bar-${bar.period}`}>
                     <rect
                       x={bar.x}
                       y={bar.y}
