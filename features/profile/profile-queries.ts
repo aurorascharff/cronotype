@@ -16,6 +16,7 @@ const YEAR_ARCHETYPE_SAMPLE_SIZE = 50;
 const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 25;
 const VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 15;
 export const DEFAULT_HISTORY_ARCHETYPE_PAGE = 0;
+const FULL_HISTORY_ARCHETYPE_PAGE = -1;
 const HISTORY_ARCHETYPE_PAGE_SIZE = 5;
 const MAX_HISTORY_ARCHETYPE_WARM_YEARS = 5;
 const GITHUB_RATE_LIMIT_MESSAGE = 'GitHub rate limit hit. Try again in a minute.';
@@ -829,6 +830,10 @@ export async function getTimelineChart(
   };
 }
 
+export async function getTimelineExportChart(login: string, geometry: TimelineGeometry) {
+  return getTimelineChart(login, geometry, FULL_HISTORY_ARCHETYPE_PAGE, { scope: 'full' });
+}
+
 function smooth(values: number[], radius: number): number[] {
   if (radius <= 0) return values;
   const out: number[] = [];
@@ -1098,12 +1103,17 @@ async function getMonthlyHistoryCached(
     .map(y => y.year)
     .sort((a, b) => b - a);
   const maxPage = Math.max(0, Math.ceil((endYear - startYear + 1) / HISTORY_ARCHETYPE_PAGE_SIZE) - 1);
-  const resolvedPage = Number.isFinite(archetypeYearPage)
-    ? Math.max(0, Math.min(maxPage, Math.round(archetypeYearPage)))
-    : DEFAULT_HISTORY_ARCHETYPE_PAGE;
-  const visibleTimelineYears = timelineYearWindow(startYear, endYear, resolvedPage);
+  const fullHistory = archetypeYearPage === FULL_HISTORY_ARCHETYPE_PAGE;
+  const resolvedPage = fullHistory
+    ? FULL_HISTORY_ARCHETYPE_PAGE
+    : Number.isFinite(archetypeYearPage)
+      ? Math.max(0, Math.min(maxPage, Math.round(archetypeYearPage)))
+      : DEFAULT_HISTORY_ARCHETYPE_PAGE;
+  const visibleTimelineYears = fullHistory
+    ? timelineYearWindow(startYear, endYear, FULL_HISTORY_ARCHETYPE_PAGE)
+    : timelineYearWindow(startYear, endYear, resolvedPage);
   const visibleYearSet = new Set(visibleTimelineYears);
-  const sampledYears = yearsWithCommits.filter(year => visibleYearSet.has(year));
+  const sampledYears = fullHistory ? yearsWithCommits : yearsWithCommits.filter(year => visibleYearSet.has(year));
 
   const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
   for (const year of sampledYears) {
@@ -1146,8 +1156,8 @@ async function getMonthlyHistoryCached(
     archetypeYearRangeLabel: formatYearRange(visibleTimelineYears),
     failedArchetypeYears: [...failedArchetypeSet].sort((a, b) => b - a),
     failedMonthlyYears: [...failedMonthlySet].sort((a, b) => b - a),
-    hasNewerArchetypeYears: resolvedPage > 0,
-    hasOlderArchetypeYears: Math.min(...visibleTimelineYears) > startYear,
+    hasNewerArchetypeYears: fullHistory ? false : resolvedPage > 0,
+    hasOlderArchetypeYears: fullHistory ? false : Math.min(...visibleTimelineYears) > startYear,
     months,
     partial,
     sampledArchetypeYears: sampledYears,
@@ -1157,6 +1167,12 @@ async function getMonthlyHistoryCached(
 }
 
 function timelineYearWindow(startYear: number, endYear: number, page: number) {
+  if (page === FULL_HISTORY_ARCHETYPE_PAGE) {
+    const years: number[] = [];
+    for (let year = endYear; year >= startYear; year--) years.push(year);
+    return years;
+  }
+
   const newestWindowEnd = endYear - page * HISTORY_ARCHETYPE_PAGE_SIZE;
   const windowStart = Math.max(startYear, newestWindowEnd - HISTORY_ARCHETYPE_PAGE_SIZE + 1);
   const windowEnd = Math.min(endYear, windowStart + HISTORY_ARCHETYPE_PAGE_SIZE - 1);
