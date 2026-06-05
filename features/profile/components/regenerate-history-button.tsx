@@ -77,10 +77,11 @@ export function RegenerateHistoryButton({
   const retryPending = retrying || refreshing;
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-      <div className="justify-self-start">
+    <div className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <div className="order-2 justify-self-start sm:order-none">
         {hasOlderArchetypeYears ? (
           <Button
+            className="w-full sm:w-auto"
             type="button"
             disabled={busy}
             isPending={olderPending}
@@ -94,14 +95,15 @@ export function RegenerateHistoryButton({
           </Button>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-2 text-center">
+      <div className="order-1 col-span-2 flex min-w-0 flex-col items-center justify-center gap-2 text-center sm:order-none sm:col-span-1 sm:flex-row sm:flex-wrap">
         {archetypeYearRangeLabel ? (
-          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+          <span className="text-muted/70 dark:text-muted-dark/70 whitespace-nowrap text-[10.5px] tracking-wide uppercase">
             {archetypeYearRangeLabel}
           </span>
         ) : null}
         {canRetry ? (
           <Button
+            className="max-w-full sm:w-auto"
             type="button"
             disabled={busy}
             isPending={retryPending}
@@ -115,14 +117,15 @@ export function RegenerateHistoryButton({
           </Button>
         ) : null}
         {partial ? (
-          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
+          <span className="text-muted/70 dark:text-muted-dark/70 whitespace-nowrap text-[10.5px] tracking-wide uppercase">
             Partial · GitHub rate limit
           </span>
         ) : null}
       </div>
-      <div className="justify-self-end">
+      <div className="order-3 justify-self-end sm:order-none">
         {hasNewerArchetypeYears ? (
           <Button
+            className="w-full sm:w-auto"
             type="button"
             disabled={busy}
             isPending={newerPending}
@@ -137,7 +140,7 @@ export function RegenerateHistoryButton({
         ) : null}
       </div>
       {!canRetry && !partial && !hasOlderArchetypeYears && !hasNewerArchetypeYears ? (
-        <div className="col-span-3 justify-self-center">
+        <div className="order-4 col-span-2 justify-self-center sm:col-span-3">
           <Button
             type="button"
             disabled={busy}

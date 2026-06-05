@@ -31,7 +31,7 @@ const W = 1080;
 const H = 360;
 const PAD_TOP = 24;
 const PAD_BOT = 8;
-const AGENT_LINE_COLOR = '#f8fafc';
+const AGENT_LINE_COLOR = '#a3e635';
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
@@ -44,7 +44,18 @@ export async function GET(_req: Request, { params }: RouteContext) {
       width: W,
     });
 
-    const { agentBars, archetype, areaPath, eras, hasData, linePath, profile, totalCommits, yearMarkers } = chart;
+    const {
+      agentBars,
+      archetype,
+      areaPath,
+      eras,
+      hasData,
+      linePath,
+      profile,
+      totalCommits,
+      yearDividers,
+      yearMarkers,
+    } = chart;
 
     const fonts = await loadGeist();
 
@@ -119,6 +130,20 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
               </div>
             ))}
+          {agentBars.length > 0 ? (
+            <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+              <span
+                style={{
+                  background: AGENT_LINE_COLOR,
+                  borderRadius: 999,
+                  display: 'flex',
+                  height: 18,
+                  width: 4,
+                }}
+              />
+              <span style={{ color: AGENT_LINE_COLOR, fontWeight: 600 }}>Agent-attributed %</span>
+            </div>
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -152,6 +177,20 @@ export async function GET(_req: Request, { params }: RouteContext) {
               ),
             )}
 
+            {yearDividers.map(divider => (
+              <line
+                key={`year-divider-${divider.year}`}
+                x1={divider.x}
+                y1={PAD_TOP}
+                x2={divider.x}
+                y2={H - PAD_BOT}
+                stroke="#8b8d96"
+                strokeWidth="1"
+                strokeDasharray="4 8"
+                opacity="0.22"
+              />
+            ))}
+
             {eras.map((e, i) => (
               <path
                 key={`era-line-${i}`}
@@ -166,6 +205,34 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 clipPath={`url(#${fillId}-clip-${i})`}
               />
             ))}
+
+            {agentBars.length > 0 ? (
+              <g opacity="0.86">
+                {agentBars.map(bar => (
+                  <g key={`agent-bar-${bar.year}`}>
+                    <rect
+                      x={bar.x}
+                      y={bar.y}
+                      width={bar.width}
+                      height={bar.height}
+                      rx={bar.width / 2}
+                      fill={AGENT_LINE_COLOR}
+                    />
+                    <text
+                      x={bar.x + bar.width / 2}
+                      y={Math.max(PAD_TOP + 16, bar.y - 8)}
+                      fill={AGENT_LINE_COLOR}
+                      textAnchor="middle"
+                      fontSize="13"
+                      fontFamily="GeistMono, monospace"
+                      opacity="0.95"
+                    >
+                      {bar.percent}%
+                    </text>
+                  </g>
+                ))}
+              </g>
+            ) : null}
           </svg>
         </div>
 
@@ -176,36 +243,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
             <span key={yr.label}>{yr.label}</span>
           ))}
         </div>
-        {agentBars.length > 0 ? (
-          <div
-            style={{
-              color: '#8b8d96',
-              display: 'flex',
-              fontFamily: 'GeistMono, monospace',
-              fontSize: 12,
-              height: 18,
-              marginTop: 2,
-              position: 'relative',
-              width: '100%',
-            }}
-          >
-            {agentBars.map(bar => (
-              <span
-                key={`agent-year-${bar.year}`}
-                style={{
-                  color: AGENT_LINE_COLOR,
-                  display: 'flex',
-                  left: `${((bar.x + bar.width / 2) / W) * 100}%`,
-                  opacity: 0.68,
-                  position: 'absolute',
-                  transform: 'translateX(-50%)',
-                }}
-              >
-                {bar.percent}%
-              </span>
-            ))}
-          </div>
-        ) : null}
 
         <div
           style={{

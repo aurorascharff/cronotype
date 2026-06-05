@@ -86,9 +86,9 @@ export function PrivateHistoryStrip({ history }: Props) {
             </li>
           ) : null}
           {agentBars.length > 0 ? (
-            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+            <li className="text-muted dark:text-muted-dark flex shrink-0 items-center gap-1.5 whitespace-nowrap">
               <span
-                className="inline-block h-3 w-px rounded-full align-middle"
+                className="inline-block h-3 w-1 rounded-full align-middle"
                 style={{ background: AGENT_MARK_COLOR }}
                 aria-hidden
               />
@@ -181,7 +181,7 @@ export function PrivateHistoryStrip({ history }: Props) {
             />
           ))}
           {agentBars.length > 0 ? (
-            <g opacity="0.72">
+            <g opacity="0.82">
               {agentBars.map(bar => (
                 <g key={`private-agent-bar-${bar.year}`}>
                   <rect
@@ -198,7 +198,7 @@ export function PrivateHistoryStrip({ history }: Props) {
                     y={Math.max(PAD_TOP + 10, bar.y - 5)}
                     fill={AGENT_MARK_COLOR}
                     textAnchor="middle"
-                    fontSize="9"
+                    fontSize="10"
                     fontFamily="var(--font-mono)"
                     opacity="0.95"
                   >
@@ -317,7 +317,7 @@ function buildPrivateAgentCommitBars(
   });
 
   const maxBarHeight = H - PAD_TOP - PAD_BOT;
-  const barWidth = 2.5;
+  const barWidth = 4;
   const baseline = H - PAD_BOT;
   const bars: Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> = [];
 

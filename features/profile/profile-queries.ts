@@ -971,7 +971,7 @@ function buildAgentCommitBars(
   });
 
   const maxBarHeight = geometry.height - geometry.padTop - geometry.padBottom;
-  const barWidth = 2.5;
+  const barWidth = 4;
   const baseline = geometry.height - geometry.padBottom;
   const bars: AgentCommitBar[] = [];
 

@@ -91,7 +91,7 @@ function AgentCommitsBadge({ percent }: { percent: number }) {
 
   return (
     <div
-      className="border-muted/25 dark:border-muted-dark/25 text-ink dark:text-paper flex w-fit items-center gap-2 rounded-lg border px-2.5 py-1 font-mono text-[10px] tracking-wide uppercase"
+      className="border-muted/25 dark:border-muted-dark/25 text-ink dark:text-paper flex w-fit max-w-full items-center gap-2 rounded-lg border px-2.5 py-1 font-mono text-[10px] tracking-wide uppercase"
       style={active ? { borderColor: '#a3e63566' } : undefined}
     >
       <span
@@ -99,7 +99,8 @@ function AgentCommitsBadge({ percent }: { percent: number }) {
         style={active ? { color: '#a3e635' } : undefined}
         aria-hidden
       />
-      <span>Agent-attributed</span>
+      <span className="whitespace-nowrap sm:hidden">Agent</span>
+      <span className="hidden whitespace-nowrap sm:inline">Agent-attributed</span>
       <span className="tabular-nums">{percent}%</span>
     </div>
   );

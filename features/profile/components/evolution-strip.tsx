@@ -160,9 +160,9 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 </li>
               ))}
           {agentBars.length > 0 ? (
-            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+            <li className="text-muted dark:text-muted-dark flex shrink-0 items-center gap-1.5 whitespace-nowrap">
               <span
-                className="inline-block h-3 w-px rounded-full align-middle"
+                className="inline-block h-3 w-1 rounded-full align-middle"
                 style={{ background: AGENT_MARK_COLOR }}
                 aria-hidden
               />
@@ -256,7 +256,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
               />
             ))}
             {agentBars.length > 0 ? (
-              <g opacity="0.72">
+              <g opacity="0.82">
                 {agentBars.map(bar => (
                   <g key={`agent-bar-${bar.year}`}>
                     <rect
@@ -272,10 +272,10 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                       x={bar.x + bar.width / 2}
                       y={Math.max(PAD_TOP + 10, bar.y - 5)}
                       fill={AGENT_MARK_COLOR}
-                      textAnchor="middle"
-                      fontSize="9"
-                      fontFamily="var(--font-mono)"
-                      opacity="0.95"
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontFamily="var(--font-mono)"
+                    opacity="0.95"
                     >
                       {bar.percent}%
                     </text>
