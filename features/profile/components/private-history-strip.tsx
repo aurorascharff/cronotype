@@ -21,7 +21,6 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
-const AGENT_LINE_COLOR = '#f8fafc';
 
 export function PrivateHistoryStrip({ history }: Props) {
   if (!history) return null;
@@ -82,24 +81,6 @@ export function PrivateHistoryStrip({ history }: Props) {
                 }}
               />
               <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
-            </li>
-          ) : null}
-          {agentBars.length > 0 ? (
-            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
-              <span
-                className="flex h-3 w-5 items-end gap-0.5"
-                aria-hidden="true"
-                style={{
-                  color: AGENT_LINE_COLOR,
-                }}
-              >
-                <span className="h-1.5 w-px rounded-full bg-current" />
-                <span className="h-2.5 w-px rounded-full bg-current" />
-                <span className="h-2 w-px rounded-full bg-current" />
-              </span>
-              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
-                Agent-attributed %
-              </span>
             </li>
           ) : null}
         </ul>
@@ -201,22 +182,6 @@ export function PrivateHistoryStrip({ history }: Props) {
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          {agentBars.length > 0 ? (
-            <g opacity="0.82">
-              {agentBars.map((bar, index) => (
-                <rect
-                  key={`private-agent-bar-${index}`}
-                  x={bar.x}
-                  y={bar.y}
-                  width={bar.width}
-                  height={bar.height}
-                  rx={bar.width / 2}
-                  fill={AGENT_LINE_COLOR}
-                  vectorEffect="non-scaling-stroke"
-                />
-              ))}
-            </g>
-          ) : null}
         </svg>
 
         <div className="text-muted dark:text-muted-dark mt-2 flex justify-between text-[10px] tabular-nums sm:hidden">
@@ -231,6 +196,22 @@ export function PrivateHistoryStrip({ history }: Props) {
             </span>
           ))}
         </div>
+        {agentBars.length > 0 ? (
+          <div
+            className="text-muted/65 dark:text-muted-dark/65 relative mt-0.5 hidden h-4 font-mono text-[9px] tabular-nums sm:block"
+            aria-label="Agent-attributed percent by sampled year"
+          >
+            {agentBars.map(bar => (
+              <span
+                key={`private-agent-year-${bar.year}`}
+                className="absolute -translate-x-1/2 whitespace-nowrap"
+                style={{ left: `${((bar.x + bar.width / 2) / W) * 100}%` }}
+              >
+                {bar.percent}%
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
           <p className="text-muted dark:text-muted-dark text-[10px] font-medium tracking-wide uppercase">
@@ -308,7 +289,7 @@ function buildPrivateAgentCommitBars(
   months: MonthBucket[],
   history: PrivateHistoryResult,
   points: Array<{ x: number; y: number }>,
-): Array<{ height: number; percent: number; width: number; x: number; y: number }> {
+): Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> {
   if (months.length < 2) return [];
 
   const percentByYear = new Map(
@@ -329,7 +310,7 @@ function buildPrivateAgentCommitBars(
 
   const maxBarHeight = 28;
   const barWidth = 2.5;
-  const bars: Array<{ height: number; percent: number; width: number; x: number; y: number }> = [];
+  const bars: Array<{ height: number; percent: number; width: number; x: number; y: number; year: number }> = [];
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
@@ -345,6 +326,7 @@ function buildPrivateAgentCommitBars(
       width: barWidth,
       x: x - barWidth / 2,
       y,
+      year,
     });
   }
 

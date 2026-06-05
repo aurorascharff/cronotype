@@ -800,6 +800,7 @@ export async function getTimelineChart(
       totalCommits,
       yTicks: [],
       yearlyArchetypes,
+      yearDividers: [],
       yearMarkers: [],
     };
   }
@@ -819,6 +820,7 @@ export async function getTimelineChart(
   const linePath = buildSmoothPath(points);
   const areaPath = `${linePath} L${geometry.width},${geometry.height - geometry.padBottom} L0,${geometry.height - geometry.padBottom} Z`;
   const yearMarkers = computeYearMarkers(chartMonths, geometry.width);
+  const yearDividers = computeYearDividers(chartMonths, geometry.width);
   const marks = buildYearMarks(
     chartMonths,
     yearlyArchetypes,
@@ -835,7 +837,6 @@ export async function getTimelineChart(
     stats.aiScore,
     fullScope || visibleTimelineYears.includes(currentHistoryYear),
     geometry,
-    points,
   );
   const yTicks = [max, max / 2].map(value => ({
     value: Math.round(value),
@@ -860,6 +861,7 @@ export async function getTimelineChart(
     profile,
     yTicks,
     totalCommits,
+    yearDividers,
     yearMarkers,
     yearlyArchetypes,
   };
@@ -922,6 +924,22 @@ function computeYearMarkers(months: MonthBucket[], width: number): Array<{ label
   }));
 }
 
+function computeYearDividers(months: MonthBucket[], width: number): Array<{ year: number; x: number }> {
+  const out: Array<{ year: number; x: number }> = [];
+  let previousYear: number | null = null;
+  months.forEach((month, index) => {
+    const year = Number(month.month.slice(0, 4));
+    if (previousYear !== null && year !== previousYear) {
+      out.push({
+        year,
+        x: (index / (months.length - 1)) * width,
+      });
+    }
+    previousYear = year;
+  });
+  return out;
+}
+
 function buildAgentCommitBars(
   months: MonthBucket[],
   yearly: YearArchetypeBucket[],
@@ -929,7 +947,6 @@ function buildAgentCommitBars(
   currentAgentCommitPercent: number,
   includeCurrentYear: boolean,
   geometry: TimelineGeometry,
-  points: Array<{ x: number; y: number }>,
 ): AgentCommitBar[] {
   if (months.length < 2) return [];
 
@@ -953,24 +970,23 @@ function buildAgentCommitBars(
     }
   });
 
-  const maxBarHeight = 28;
+  const maxBarHeight = geometry.height - geometry.padTop - geometry.padBottom;
   const barWidth = 2.5;
+  const baseline = geometry.height - geometry.padBottom;
   const bars: AgentCommitBar[] = [];
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
     if (percent == null || percent <= 0) continue;
     const midpoint = Math.round((span.first + span.last) / 2);
-    const baseline = points[midpoint]?.y ?? geometry.padTop;
-    const requestedHeight = Math.max(2, (percent / 100) * maxBarHeight);
-    const y = Math.max(geometry.padTop, baseline - requestedHeight);
+    const height = Math.max(3, (percent / 100) * maxBarHeight);
     const x = (midpoint / (months.length - 1)) * geometry.width;
     bars.push({
-      height: baseline - y,
+      height,
       percent,
       width: barWidth,
       x: x - barWidth / 2,
-      y,
+      y: baseline - height,
       year,
     });
   }

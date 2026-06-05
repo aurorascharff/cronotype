@@ -20,6 +20,7 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
+const AGENT_MARK_COLOR = '#a3e635';
 
 export async function EvolutionStrip({ handle, historyYearPage }: Props) {
   return CachedEvolutionStrip({ handle, historyYearPage });
@@ -82,6 +83,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     partial,
     totalCommits,
     yTicks,
+    yearDividers,
     yearMarkers,
   } = chart;
 
@@ -157,6 +159,18 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                   <span className="text-[10.5px] tabular-nums">{e.yearLabel}</span>
                 </li>
               ))}
+          {agentBars.length > 0 ? (
+            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+              <span
+                className="inline-block h-3 w-px rounded-full align-middle"
+                style={{ background: AGENT_MARK_COLOR }}
+                aria-hidden
+              />
+              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_MARK_COLOR }}>
+                Agent-attributed %
+              </span>
+            </li>
+          ) : null}
         </ul>
 
         <div className="relative">
@@ -223,24 +237,20 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
               ),
             )}
 
-            {eras.map((e, i) => {
-              if (i === 0) return null;
-              const x = (e.startPct / 100) * W;
-              return (
-                <line
-                  key={`era-divider-${i}`}
-                  x1={x}
-                  y1={PAD_TOP}
-                  x2={x}
-                  y2={H - PAD_BOT}
-                  stroke={e.color}
-                  strokeWidth="1"
-                  strokeDasharray="2 3"
-                  opacity="0.35"
-                  vectorEffect="non-scaling-stroke"
-                />
-              );
-            })}
+            {yearDividers.map(divider => (
+              <line
+                key={`year-divider-${divider.year}`}
+                x1={divider.x}
+                y1={PAD_TOP}
+                x2={divider.x}
+                y2={H - PAD_BOT}
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeDasharray="2 4"
+                opacity="0.2"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
 
             {eras.map((e, i) => (
               <path
@@ -257,6 +267,22 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 vectorEffect="non-scaling-stroke"
               />
             ))}
+            {agentBars.length > 0 ? (
+              <g opacity="0.72">
+                {agentBars.map(bar => (
+                  <rect
+                    key={`agent-bar-${bar.year}`}
+                    x={bar.x}
+                    y={bar.y}
+                    width={bar.width}
+                    height={bar.height}
+                    rx={bar.width / 2}
+                    fill={AGENT_MARK_COLOR}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+              </g>
+            ) : null}
           </svg>
         </div>
 
@@ -272,23 +298,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
             </span>
           ))}
         </div>
-        {agentBars.length > 0 ? (
-          <div
-            className="text-muted/65 dark:text-muted-dark/65 relative mt-0.5 hidden h-4 font-mono text-[9px] tabular-nums sm:block"
-            aria-label="Agent-attributed percent by sampled year"
-          >
-            {agentBars.map(bar => (
-              <span
-                key={`agent-year-${bar.year}`}
-                className="absolute -translate-x-1/2 whitespace-nowrap"
-                style={{ left: `${((bar.x + bar.width / 2) / W) * 100}%` }}
-              >
-                {bar.percent}%
-              </span>
-            ))}
-          </div>
-        ) : null}
-
         <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-black/10 pt-4 dark:border-white/10">
           <div>
             <p className="text-muted dark:text-muted-dark text-[10px] font-medium tracking-wide uppercase">

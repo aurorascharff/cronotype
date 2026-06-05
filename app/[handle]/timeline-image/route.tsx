@@ -119,16 +119,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
               </div>
             ))}
-          {agentBars.length > 0 ? (
-            <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-              <span style={{ alignItems: 'flex-end', color: AGENT_LINE_COLOR, display: 'flex', gap: 2, height: 13, width: 22 }}>
-                <span style={{ background: 'currentColor', borderRadius: 999, display: 'flex', height: 6, width: 2 }} />
-                <span style={{ background: 'currentColor', borderRadius: 999, display: 'flex', height: 11, width: 2 }} />
-                <span style={{ background: 'currentColor', borderRadius: 999, display: 'flex', height: 8, width: 2 }} />
-              </span>
-              <span style={{ color: AGENT_LINE_COLOR, fontWeight: 600 }}>Agent-attributed %</span>
-            </div>
-          ) : null}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -176,21 +166,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 clipPath={`url(#${fillId}-clip-${i})`}
               />
             ))}
-            {agentBars.length > 0 ? (
-              <g opacity="0.82">
-                {agentBars.map((bar, index) => (
-                  <rect
-                    key={`agent-bar-${index}`}
-                    x={bar.x}
-                    y={bar.y}
-                    width={bar.width}
-                    height={bar.height}
-                    rx={bar.width / 2}
-                    fill={AGENT_LINE_COLOR}
-                  />
-                ))}
-              </g>
-            ) : null}
           </svg>
         </div>
 
@@ -201,6 +176,36 @@ export async function GET(_req: Request, { params }: RouteContext) {
             <span key={yr.label}>{yr.label}</span>
           ))}
         </div>
+        {agentBars.length > 0 ? (
+          <div
+            style={{
+              color: '#8b8d96',
+              display: 'flex',
+              fontFamily: 'GeistMono, monospace',
+              fontSize: 12,
+              height: 18,
+              marginTop: 2,
+              position: 'relative',
+              width: '100%',
+            }}
+          >
+            {agentBars.map(bar => (
+              <span
+                key={`agent-year-${bar.year}`}
+                style={{
+                  color: AGENT_LINE_COLOR,
+                  display: 'flex',
+                  left: `${((bar.x + bar.width / 2) / W) * 100}%`,
+                  opacity: 0.68,
+                  position: 'absolute',
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                {bar.percent}%
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         <div
           style={{

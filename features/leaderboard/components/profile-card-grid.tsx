@@ -81,13 +81,24 @@ function CardMeta({
         <span className="tabular-nums">{formatFollowers(profile.followers)}</span>
       </div>
       {cronotype ? (
-        <div
-          className="truncate text-xs font-medium"
-          style={{
-            color: cronotype.stats.total === 0 ? QUIET_THEME.accent : cronotype.archetype.theme.accent,
-          }}
-        >
-          {cronotype.stats.total === 0 ? 'Quiet lately' : cronotype.archetype.name}
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <span
+            className="truncate text-xs font-medium"
+            style={{
+              color: cronotype.stats.total === 0 ? QUIET_THEME.accent : cronotype.archetype.theme.accent,
+            }}
+          >
+            {cronotype.stats.total === 0 ? 'Quiet lately' : cronotype.archetype.name}
+          </span>
+          {cronotype.stats.aiScore > 0 ? (
+            <span
+              className="text-ink dark:text-paper shrink-0 rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[9px] leading-none tabular-nums"
+              title="Agent-attributed commits"
+              aria-label={`${cronotype.stats.aiScore}% agent-attributed commits`}
+            >
+              {cronotype.stats.aiScore}%
+            </span>
+          ) : null}
         </div>
       ) : (
         <span className="text-muted/40 dark:text-muted-dark/40 truncate text-xs">—</span>
