@@ -54,9 +54,9 @@ const DETAILS: Record<ArchetypeId, Detail> = {
   },
   'touch-grass': {
     meaning: 'You are either touching grass, building somewhere private, or letting the graph wonder where you went.',
-    percentile: 'Inverse: fewer signal commits means a higher score. The quietest non-empty graphs score highest.',
+    percentile: 'Inverse: fewer signal commits means a higher score. The quietest matching graphs score highest.',
     signal:
-      'Between 1 and 24 signal commits in the last 90 days. If the filtered sample is empty, the profile shows Quiet lately instead.',
+      'Sparse public signal with no clear time-of-day shape. Low commit count alone is not enough for this to win.',
   },
   vampire: {
     meaning: 'You do your sharpest work when notifications are asleep and the world stops asking questions.',
@@ -162,8 +162,8 @@ export default function TypesPage() {
             <strong className="font-semibold">Classifier.</strong>{' '}
             <span className="text-muted dark:text-muted-dark">
               A short cascade of rules in priority order. Empty signal samples become Quiet lately. Otherwise the first
-              matching rhythm wins: Grass Toucher, Insomniac Maintainer, Vampire, Sunrise Sniper, Lunch Bandit, Weekend
-              Warrior, Last Call Shipper, Nine-to-Fiver, then Drifter.
+              matching rhythm wins: Insomniac Maintainer, Vampire, Sunrise Sniper, Lunch Bandit, Weekend Warrior, Last
+              Call Shipper, Nine-to-Fiver, Grass Toucher, then Drifter.
             </span>
           </li>
           <li>

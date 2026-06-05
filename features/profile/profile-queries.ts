@@ -12,9 +12,8 @@ const API = 'https://api.github.com';
 const MOCK = process.env.MOCK_PROFILE === '1';
 const HIGH_YEAR_COMMIT_THRESHOLD = 1000;
 const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
-const YEAR_ARCHETYPE_SAMPLE_SIZE = 35;
-const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 15;
-const YEAR_ARCHETYPE_SAMPLE_PAGES = 3;
+const YEAR_ARCHETYPE_SAMPLE_SIZE = 25;
+const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 10;
 const GITHUB_RATE_LIMIT_MESSAGE = 'GitHub rate limit hit. Try again in a minute.';
 // TODO(nextjs): remove once failed `use cache: remote` fills/revalidations no longer escape
 // as unhandled rejections and terminate the Vercel function.
@@ -639,13 +638,12 @@ async function getYearArchetypeCached(
         : commitCount > HIGH_YEAR_COMMIT_THRESHOLD
           ? YEAR_ARCHETYPE_SAMPLE_SIZE
           : 100;
-    const maxPages = commitCount > HIGH_YEAR_COMMIT_THRESHOLD ? YEAR_ARCHETYPE_SAMPLE_PAGES : 1;
     const sampleCommits = await fetchCommitsInRange(
       login,
       `${year}-01-01`,
       `${year}-12-31`,
       0,
-      maxPages,
+      1,
       perPage,
       githubHistoryToken(),
     );

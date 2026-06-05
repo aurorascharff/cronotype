@@ -153,6 +153,12 @@ function isLateDayRhythm(s: HourStats) {
   return (afternoonSkew || eveningSkew) && s.pctNocturnal < 35 + margin;
 }
 
+function isTouchGrassRhythm(s: HourStats) {
+  if (s.total >= 25) return false;
+  const margin = stabilityMargin(s);
+  return s.hourlyVariance < 7 + margin / 2 && s.pctNocturnal < 20 + margin && s.pctWeekend < 25 + margin;
+}
+
 function stabilityMargin(s: HourStats) {
   if (s.total < 50) return 5;
   if (s.total < 100) return 3;
@@ -160,8 +166,6 @@ function stabilityMargin(s: HourStats) {
 }
 
 export function classify(stats: HourStats): Archetype {
-  if (stats.total < 25) return ARCHETYPES['touch-grass'];
-
   if (stats.total >= 35 && stats.isBimodal) return ARCHETYPES['insomniac-maintainer'];
   if (isVampireRhythm(stats)) return ARCHETYPES.vampire;
   if (isSunriseRhythm(stats)) return ARCHETYPES['sunrise-sniper'];
@@ -169,6 +173,7 @@ export function classify(stats: HourStats): Archetype {
   if (stats.pctWeekend > 40 + stabilityMargin(stats)) return ARCHETYPES['weekend-warrior'];
   if (isLateDayRhythm(stats)) return ARCHETYPES['last-call-shipper'];
   if (isWorkdayRhythm(stats)) return ARCHETYPES['nine-to-fiver'];
+  if (isTouchGrassRhythm(stats)) return ARCHETYPES['touch-grass'];
 
   return ARCHETYPES.drifter;
 }
