@@ -117,6 +117,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
           <RegenerateHistoryButton
             archetypeYearPage={archetypeYearPage}
             archetypeYearRangeLabel={archetypeYearRangeLabel}
+            canRetry={failedArchetypeYears.length > 0 || failedMonthlyYears.length > 0}
             failedArchetypeYears={failedArchetypeYears}
             failedMonthlyYears={failedMonthlyYears}
             handle={handle}

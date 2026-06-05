@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { RegenerateFromParamsButton } from '@/features/profile/components/regenerate-button';
-import { RouteStateCard } from './route-state-card';
+import { RouteStateCard } from '@/features/profile/components/route-state-card';
 
 type Props = {
   error: Error & { digest?: string };

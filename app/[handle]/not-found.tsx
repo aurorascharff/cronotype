@@ -1,5 +1,5 @@
 import { UsernameForm } from '@/components/username-form';
-import { RouteStateCard } from './route-state-card';
+import { RouteStateCard } from '@/features/profile/components/route-state-card';
 
 export default function NotFound() {
   return (

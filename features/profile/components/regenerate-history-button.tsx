@@ -11,6 +11,7 @@ import type { Route } from 'next';
 type Props = {
   archetypeYearPage: number;
   archetypeYearRangeLabel: string | null;
+  canRetry: boolean;
   failedArchetypeYears: number[];
   failedMonthlyYears: number[];
   handle: string;
@@ -22,6 +23,7 @@ type Props = {
 export function RegenerateHistoryButton({
   archetypeYearPage,
   archetypeYearRangeLabel,
+  canRetry,
   failedArchetypeYears,
   failedMonthlyYears,
   handle,
@@ -98,7 +100,7 @@ export function RegenerateHistoryButton({
             {archetypeYearRangeLabel}
           </span>
         ) : null}
-        {partial ? (
+        {canRetry ? (
           <Button
             type="button"
             disabled={busy}
@@ -134,7 +136,7 @@ export function RegenerateHistoryButton({
           </Button>
         ) : null}
       </div>
-      {!partial && !hasOlderArchetypeYears && !hasNewerArchetypeYears ? (
+      {!canRetry && !partial && !hasOlderArchetypeYears && !hasNewerArchetypeYears ? (
         <div className="col-span-3 justify-self-center">
           <Button
             type="button"

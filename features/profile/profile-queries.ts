@@ -745,7 +745,10 @@ export async function getTimelineChart(
     { archetype, profile },
   ] = await Promise.all([getMonthlyHistory(lower, archetypeYearPage), computeCronotype(lower, '90d')]);
 
-  if (months.length < 2) {
+  const chartMonths = selectTimelineMonths(months, sampledArchetypeYears, resolvedArchetypeYearPage);
+  const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
+
+  if (chartMonths.length < 2) {
     return {
       archetype,
       archetypeYearPage: resolvedArchetypeYearPage,
@@ -756,10 +759,10 @@ export async function getTimelineChart(
       hasNewerArchetypeYears,
       hasOlderArchetypeYears,
       hasData: false,
-      months,
+      months: chartMonths,
       partial,
       profile,
-      totalCommits: 0,
+      totalCommits,
       yTicks: [],
       yearlyArchetypes,
       yearMarkers: [],
@@ -767,7 +770,7 @@ export async function getTimelineChart(
   }
 
   const smoothed = smooth(
-    months.map(m => m.count),
+    chartMonths.map(m => m.count),
     2,
   );
   const max = Math.max(1, ...smoothed);
@@ -780,10 +783,15 @@ export async function getTimelineChart(
 
   const linePath = buildSmoothPath(points);
   const areaPath = `${linePath} L${geometry.width},${geometry.height - geometry.padBottom} L0,${geometry.height - geometry.padBottom} Z`;
-  const yearMarkers = computeYearMarkers(months, geometry.width);
-  const marks = buildYearMarks(months, yearlyArchetypes, archetype.id, sampledArchetypeYears);
+  const yearMarkers = computeYearMarkers(chartMonths, geometry.width);
+  const marks = buildYearMarks(
+    chartMonths,
+    yearlyArchetypes,
+    archetype.id,
+    sampledArchetypeYears,
+    resolvedArchetypeYearPage === DEFAULT_HISTORY_ARCHETYPE_PAGE || sampledArchetypeYears.length === 0,
+  );
   const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
-  const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const yTicks = [max, max / 2].map(value => ({
     value: Math.round(value),
     y: geometry.padTop + usableH - (value / max) * usableH,
@@ -801,7 +809,7 @@ export async function getTimelineChart(
     hasNewerArchetypeYears,
     hasOlderArchetypeYears,
     linePath,
-    months,
+    months: chartMonths,
     partial,
     profile,
     yTicks,
@@ -869,6 +877,7 @@ function buildYearMarks(
   yearly: YearArchetypeBucket[],
   currentId: ArchetypeId,
   sampledYears: number[],
+  includeCurrentYear: boolean,
 ): TimelineMark[] {
   const archetypeByYear = new Map<number, ArchetypeId | null>();
   for (const y of yearly) {
@@ -876,9 +885,11 @@ function buildYearMarks(
   }
   const sampledYearSet = new Set(sampledYears);
 
-  const lastYear = months.length > 0 ? Number(months[months.length - 1].month.slice(0, 4)) : 2026;
-  archetypeByYear.set(lastYear, currentId);
-  sampledYearSet.add(lastYear);
+  if (includeCurrentYear) {
+    const lastYear = months.length > 0 ? Number(months[months.length - 1].month.slice(0, 4)) : 2026;
+    archetypeByYear.set(lastYear, currentId);
+    sampledYearSet.add(lastYear);
+  }
 
   const commitsByYear = new Map<number, number>();
   const firstIdxByYear = new Map<number, number>();
@@ -903,12 +914,32 @@ function buildYearMarks(
         color: noSignal ? '#9ca3af' : (archetype?.theme.accent ?? null),
         commits: commitsByYear.get(year) ?? 0,
         idx,
-        label: skipped ? 'Not shown' : noSignal ? 'No signal' : (archetype?.name ?? null),
+        label: skipped ? null : noSignal ? 'No signal' : (archetype?.name ?? null),
         missing: !hasClassification,
         skipped,
         year,
       };
     });
+}
+
+function selectTimelineMonths(months: MonthBucket[], sampledYears: number[], archetypeYearPage: number) {
+  if (months.length === 0) return months;
+
+  const visibleYears = new Set(sampledYears);
+  const lastYear = Number(months[months.length - 1].month.slice(0, 4));
+  if (archetypeYearPage === DEFAULT_HISTORY_ARCHETYPE_PAGE || visibleYears.size === 0) {
+    visibleYears.add(lastYear);
+  }
+
+  if (visibleYears.size === 0) return months;
+  const sorted = [...visibleYears].sort((a, b) => a - b);
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+
+  return months.filter(month => {
+    const year = Number(month.month.slice(0, 4));
+    return year >= first && year <= last;
+  });
 }
 
 function buildEras(marks: TimelineMark[], pointCount: number, fallback: string): TimelineEra[] {
