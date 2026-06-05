@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ViewTransition } from 'react';
 import { HaloChart } from '@/features/profile/components/halo-chart';
-import { cn } from '@/lib/cn';
 import { formatCount, formatDateKey, formatFollowers, formatHour } from '@/lib/format';
 import type { Archetype, HourStats, ProfileSummary } from '@/types/cronotype';
 
@@ -19,10 +18,6 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
 
   return (
     <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] sm:min-h-0 dark:border-white/10">
-      <div className="absolute top-3 left-3 z-10 sm:top-6 sm:left-6">
-        <AgentCommitsBadge percent={stats.aiScore} />
-      </div>
-
       <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 sm:top-6 sm:right-6">
         <span className="text-ink/70 dark:text-paper/80 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm dark:border-white/20 dark:bg-white/[0.10]">
           Last 90 days
@@ -85,29 +80,6 @@ export function HeroCard({ profile, archetype, stats, percentile }: Props) {
         </ViewTransition>
       </div>
     </article>
-  );
-}
-
-function AgentCommitsBadge({ className, percent }: { className?: string; percent: number }) {
-  const active = percent > 0;
-
-  return (
-    <div
-      className={cn(
-        'border-muted/25 dark:border-muted-dark/25 text-ink dark:text-paper flex w-fit max-w-full items-center gap-2 rounded-lg border bg-white/95 px-2.5 py-1 font-mono text-[10px] tracking-wide uppercase backdrop-blur-sm dark:bg-white/[0.10]',
-        className,
-      )}
-      style={active ? { borderColor: '#a3e63566' } : undefined}
-    >
-      <span
-        className="h-1.5 w-1.5 rounded-full bg-current opacity-80"
-        style={active ? { color: '#a3e635' } : undefined}
-        aria-hidden
-      />
-      <span className="whitespace-nowrap sm:hidden">Agent</span>
-      <span className="hidden whitespace-nowrap sm:inline">Agent-attributed</span>
-      <span className="tabular-nums">{percent}%</span>
-    </div>
   );
 }
 

@@ -152,9 +152,6 @@ export function CronotypeProfileSkeleton() {
   return (
     <div className="relative" aria-hidden>
       <div className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] sm:min-h-0 dark:border-white/10">
-        <div className="absolute top-3 left-3 z-10 rounded-lg border border-lime-400/35 bg-white/95 px-2.5 py-1 font-mono text-[10px] tracking-wide text-transparent uppercase backdrop-blur-sm sm:top-6 sm:left-6 dark:bg-white/[0.10]">
-          Agent-attributed 0%
-        </div>
         <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 sm:top-6 sm:right-6">
           <div className="rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider text-transparent uppercase backdrop-blur-sm dark:border-white/20 dark:bg-white/[0.10]">
             Last 90 days

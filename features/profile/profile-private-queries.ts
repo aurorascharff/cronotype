@@ -193,10 +193,6 @@ async function fetchPrivateCommits(
       if (!authoredAt) continue;
       commits.push({
         authoredAt,
-        authorLogin: item.author?.login ?? null,
-        authorType: item.author?.type ?? null,
-        committerLogin: item.committer?.login ?? null,
-        committerType: item.committer?.type ?? null,
         message: item.commit.message ?? '',
         parentCount: item.parents?.length ?? 1,
         repo: item.repository?.full_name ?? 'unknown',

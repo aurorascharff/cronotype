@@ -31,7 +31,6 @@ const W = 1080;
 const H = 360;
 const PAD_TOP = 24;
 const PAD_BOT = 8;
-const AGENT_LINE_COLOR = '#a3e635';
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
@@ -45,7 +44,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
     });
 
     const {
-      agentBars,
       archetype,
       areaPath,
       eras,
@@ -130,20 +128,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
               </div>
             ))}
-          {agentBars.length > 0 ? (
-            <div style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-              <span
-                style={{
-                  background: AGENT_LINE_COLOR,
-                  borderRadius: 999,
-                  display: 'flex',
-                  height: 18,
-                  width: 4,
-                }}
-              />
-              <span style={{ color: AGENT_LINE_COLOR, fontWeight: 600 }}>Agent-attributed %</span>
-            </div>
-          ) : null}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, position: 'relative' }}>
@@ -206,46 +190,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
               />
             ))}
 
-            {agentBars.length > 0 ? (
-              <g opacity="0.86">
-                {agentBars.map(bar => (
-                  <g key={`agent-bar-${bar.period}`}>
-                    <rect
-                      x={bar.x}
-                      y={bar.y}
-                      width={bar.width}
-                      height={bar.height}
-                      rx={bar.width / 2}
-                      fill={AGENT_LINE_COLOR}
-                      opacity={bar.percent > 0 ? 0.95 : 0.14}
-                    />
-                  </g>
-                ))}
-              </g>
-            ) : null}
           </svg>
-          {agentBars.length > 0
-            ? agentBars
-                .filter(bar => bar.percent > 0)
-                .map(bar => (
-                <div
-                  key={`agent-label-${bar.period}`}
-                  style={{
-                    color: AGENT_LINE_COLOR,
-                    display: 'flex',
-                    fontFamily: 'GeistMono, monospace',
-                    fontSize: 13,
-                    left: `${((bar.x + bar.width / 2) / W) * 100}%`,
-                    opacity: 0.95,
-                    position: 'absolute',
-                    top: `${(Math.max(PAD_TOP + 16, bar.y - 8) / H) * 100}%`,
-                    transform: 'translateX(-50%)',
-                  }}
-                >
-                  {bar.percent}%
-                </div>
-              ))
-            : null}
         </div>
 
         <div
