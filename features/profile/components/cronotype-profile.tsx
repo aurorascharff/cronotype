@@ -59,16 +59,15 @@ function NoRecentProfileCard({ profile, stats }: { profile: ProfileSummary; stat
 
   return (
     <article className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] sm:min-h-0 dark:border-white/10">
-      {generatedAt ? (
-        <span className="text-muted dark:text-muted-dark absolute top-3 left-3 z-10 font-mono text-[9px] tracking-wider uppercase sm:top-6 sm:left-6">
-          Generated {generatedAt}
-        </span>
-      ) : null}
-
-      <div className="absolute top-3 right-3 z-10 sm:top-6 sm:right-6">
+      <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 sm:top-6 sm:right-6">
         <span className="text-ink/70 dark:text-paper/80 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider uppercase backdrop-blur-sm dark:border-white/20 dark:bg-white/[0.10]">
           No 90d signal
         </span>
+        {generatedAt ? (
+          <span className="text-muted dark:text-muted-dark font-mono text-[9px] tracking-wider uppercase">
+            Generated {generatedAt}
+          </span>
+        ) : null}
       </div>
 
       <div className="grid h-full min-h-[600px] grid-cols-1 items-center gap-4 p-5 pt-12 sm:min-h-0 sm:grid-cols-[auto_1fr] sm:gap-14 sm:p-8 lg:gap-16">
@@ -153,9 +152,14 @@ export function CronotypeProfileSkeleton() {
   return (
     <div className="relative" aria-hidden>
       <div className="dark:bg-ink-2 relative min-h-[600px] w-full overflow-hidden rounded-xl border border-black/10 bg-white sm:[aspect-ratio:1200/630] sm:min-h-0 dark:border-white/10">
-        <div className="skeleton absolute top-3 left-3 z-10 h-3 w-28 rounded sm:top-6 sm:left-6" />
-        <div className="absolute top-3 right-3 z-10 rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider text-transparent uppercase backdrop-blur-sm sm:top-6 sm:right-6 dark:border-white/20 dark:bg-white/[0.10]">
-          Last 90 days
+        <div className="absolute top-3 left-3 z-10 rounded-lg border border-lime-400/35 bg-white/95 px-2.5 py-1 font-mono text-[10px] tracking-wide text-transparent uppercase backdrop-blur-sm sm:top-6 sm:left-6 dark:bg-white/[0.10]">
+          Agent-attributed 0%
+        </div>
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 sm:top-6 sm:right-6">
+          <div className="rounded-lg border border-black/15 bg-white/95 px-2 py-1 font-mono text-[10px] tracking-wider text-transparent uppercase backdrop-blur-sm dark:border-white/20 dark:bg-white/[0.10]">
+            Last 90 days
+          </div>
+          <div className="skeleton h-3 w-28 rounded" />
         </div>
 
         <div className="grid h-full min-h-[600px] grid-cols-1 items-center gap-4 p-5 pt-12 sm:min-h-0 sm:grid-cols-[auto_1fr] sm:gap-14 sm:p-8 lg:gap-16">
