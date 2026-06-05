@@ -77,7 +77,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     hasNewerArchetypeYears,
     hasOlderArchetypeYears,
     hasData,
-    agentLinePath,
+    agentBars,
     linePath,
     months,
     partial,
@@ -158,14 +158,19 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                   <span className="text-[10.5px] tabular-nums">{e.yearLabel}</span>
                 </li>
               ))}
-          {agentLinePath ? (
+          {agentBars.length > 0 ? (
             <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
               <span
-                className="inline-block h-px w-5 align-middle"
+                className="flex h-3 w-5 items-end gap-0.5"
+                aria-hidden="true"
                 style={{
-                  backgroundImage: `repeating-linear-gradient(to right, ${AGENT_LINE_COLOR} 0 5px, transparent 5px 10px)`,
+                  color: AGENT_LINE_COLOR,
                 }}
-              />
+              >
+                <span className="h-1.5 w-px rounded-full bg-current" />
+                <span className="h-2.5 w-px rounded-full bg-current" />
+                <span className="h-2 w-px rounded-full bg-current" />
+              </span>
               <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
                 Agent commits %
               </span>
@@ -271,18 +276,21 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 vectorEffect="non-scaling-stroke"
               />
             ))}
-            {agentLinePath ? (
-              <path
-                d={agentLinePath}
-                fill="none"
-                stroke={AGENT_LINE_COLOR}
-                strokeWidth="1.8"
-                strokeDasharray="6 5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity="0.82"
-                vectorEffect="non-scaling-stroke"
-              />
+            {agentBars.length > 0 ? (
+              <g opacity="0.82">
+                {agentBars.map((bar, index) => (
+                  <rect
+                    key={`agent-bar-${index}`}
+                    x={bar.x}
+                    y={bar.y}
+                    width={bar.width}
+                    height={bar.height}
+                    rx={bar.width / 2}
+                    fill={AGENT_LINE_COLOR}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+              </g>
             ) : null}
           </svg>
         </div>

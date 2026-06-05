@@ -552,6 +552,8 @@ export type TimelineGeometry = {
   padBottom: number;
 };
 
+export type AgentCommitBar = { height: number; percent: number; width: number; x: number; y: number };
+
 type TimelineChartOptions = {
   scope?: 'window' | 'full';
 };
@@ -791,7 +793,7 @@ export async function getTimelineChart(
       hasNewerArchetypeYears,
       hasOlderArchetypeYears,
       hasData: false,
-      agentLinePath: null,
+      agentBars: [],
       months: chartMonths,
       partial,
       profile,
@@ -826,7 +828,7 @@ export async function getTimelineChart(
     fullScope ? 'carry' : 'unknown',
   );
   const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
-  const agentLinePath = buildAgentCommitLinePath(
+  const agentBars = buildAgentCommitBars(
     chartMonths,
     yearlyArchetypes,
     currentHistoryYear,
@@ -850,7 +852,7 @@ export async function getTimelineChart(
     hasData: true,
     hasNewerArchetypeYears,
     hasOlderArchetypeYears,
-    agentLinePath,
+    agentBars,
     linePath,
     months: chartMonths,
     partial,
@@ -919,15 +921,15 @@ function computeYearMarkers(months: MonthBucket[], width: number): Array<{ label
   }));
 }
 
-function buildAgentCommitLinePath(
+function buildAgentCommitBars(
   months: MonthBucket[],
   yearly: YearArchetypeBucket[],
   currentYear: number,
   currentAgentCommitPercent: number,
   includeCurrentYear: boolean,
   geometry: TimelineGeometry,
-): string | null {
-  if (months.length < 2) return null;
+): AgentCommitBar[] {
+  if (months.length < 2) return [];
 
   const percentByYear = new Map<number, number>();
   for (const bucket of yearly) {
@@ -936,7 +938,7 @@ function buildAgentCommitLinePath(
   if (includeCurrentYear && Number.isFinite(currentYear)) {
     percentByYear.set(currentYear, clampPercent(currentAgentCommitPercent));
   }
-  if (percentByYear.size === 0) return null;
+  if (percentByYear.size === 0) return [];
 
   const spans = new Map<number, { first: number; last: number }>();
   months.forEach((month, index) => {
@@ -949,31 +951,26 @@ function buildAgentCommitLinePath(
     }
   });
 
-  const usableH = geometry.height - geometry.padTop - geometry.padBottom;
-  const pointFor = (idx: number, percent: number) => ({
-    x: (idx / (months.length - 1)) * geometry.width,
-    y: geometry.padTop + usableH - (percent / 100) * usableH,
-  });
-
-  const segments: string[] = [];
-  let points: Array<{ x: number; y: number }> = [];
-  const flush = () => {
-    if (points.length > 1) segments.push(buildSmoothPath(points));
-    points = [];
-  };
+  const maxBarHeight = Math.max(18, Math.min(42, (geometry.height - geometry.padTop - geometry.padBottom) * 0.24));
+  const barWidth = Math.max(2, Math.min(5, geometry.width / Math.max(260, months.length * 8)));
+  const yBase = geometry.padTop + maxBarHeight + 2;
+  const bars: AgentCommitBar[] = [];
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
-    if (percent == null) {
-      flush();
-      continue;
-    }
-    points.push(pointFor(span.first, percent));
-    if (span.last !== span.first) points.push(pointFor(span.last, percent));
+    if (percent == null || percent <= 0) continue;
+    const height = Math.max(3, (percent / 100) * maxBarHeight);
+    const x = ((span.first + span.last) / 2 / (months.length - 1)) * geometry.width;
+    bars.push({
+      height,
+      percent,
+      width: barWidth,
+      x: x - barWidth / 2,
+      y: yBase - height,
+    });
   }
-  flush();
 
-  return segments.length > 0 ? segments.join(' ') : null;
+  return bars;
 }
 
 function clampPercent(value: number): number {

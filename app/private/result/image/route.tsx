@@ -299,7 +299,7 @@ export async function GET() {
             textTransform: 'uppercase',
           }}
         >
-          AI STAMP {aiScore}
+          Agent commits {aiScore}
         </div>
       </div>
 

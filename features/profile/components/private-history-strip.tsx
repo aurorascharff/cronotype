@@ -48,7 +48,7 @@ export function PrivateHistoryStrip({ history }: Props) {
   const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const fillId = `private-evolution-fill-${history.generatedAt.replace(/\W/g, '')}`;
   const hasUnknown = eras.some(era => era.unknown);
-  const agentLinePath = buildPrivateAgentCommitLinePath(months, history);
+  const agentBars = buildPrivateAgentCommitBars(months, history);
 
   return (
     <section className="space-y-4">
@@ -84,14 +84,19 @@ export function PrivateHistoryStrip({ history }: Props) {
               <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
             </li>
           ) : null}
-          {agentLinePath ? (
+          {agentBars.length > 0 ? (
             <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
               <span
-                className="inline-block h-px w-5 align-middle"
+                className="flex h-3 w-5 items-end gap-0.5"
+                aria-hidden="true"
                 style={{
-                  backgroundImage: `repeating-linear-gradient(to right, ${AGENT_LINE_COLOR} 0 5px, transparent 5px 10px)`,
+                  color: AGENT_LINE_COLOR,
                 }}
-              />
+              >
+                <span className="h-1.5 w-px rounded-full bg-current" />
+                <span className="h-2.5 w-px rounded-full bg-current" />
+                <span className="h-2 w-px rounded-full bg-current" />
+              </span>
               <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
                 Agent commits %
               </span>
@@ -196,18 +201,21 @@ export function PrivateHistoryStrip({ history }: Props) {
               vectorEffect="non-scaling-stroke"
             />
           ))}
-          {agentLinePath ? (
-            <path
-              d={agentLinePath}
-              fill="none"
-              stroke={AGENT_LINE_COLOR}
-              strokeWidth="1.8"
-              strokeDasharray="6 5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.82"
-              vectorEffect="non-scaling-stroke"
-            />
+          {agentBars.length > 0 ? (
+            <g opacity="0.82">
+              {agentBars.map((bar, index) => (
+                <rect
+                  key={`private-agent-bar-${index}`}
+                  x={bar.x}
+                  y={bar.y}
+                  width={bar.width}
+                  height={bar.height}
+                  rx={bar.width / 2}
+                  fill={AGENT_LINE_COLOR}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+            </g>
           ) : null}
         </svg>
 
@@ -296,13 +304,16 @@ function buildPrivateEras(months: MonthBucket[], history: PrivateHistoryResult, 
     : [{ color: QUIET_THEME.accent, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
 }
 
-function buildPrivateAgentCommitLinePath(months: MonthBucket[], history: PrivateHistoryResult): string | null {
-  if (months.length < 2) return null;
+function buildPrivateAgentCommitBars(
+  months: MonthBucket[],
+  history: PrivateHistoryResult,
+): Array<{ height: number; percent: number; width: number; x: number; y: number }> {
+  if (months.length < 2) return [];
 
   const percentByYear = new Map(
     history.archetypes.map(([year, , commits, percent]) => [year, commits > 0 ? clampPercent(percent) : 0]),
   );
-  if (percentByYear.size === 0) return null;
+  if (percentByYear.size === 0) return [];
 
   const spans = new Map<number, { first: number; last: number }>();
   months.forEach((month, index) => {
@@ -315,31 +326,26 @@ function buildPrivateAgentCommitLinePath(months: MonthBucket[], history: Private
     }
   });
 
-  const usableH = H - PAD_TOP - PAD_BOT;
-  const pointFor = (index: number, percent: number) => ({
-    x: (index / (months.length - 1)) * W,
-    y: PAD_TOP + usableH - (percent / 100) * usableH,
-  });
-
-  const segments: string[] = [];
-  let points: Array<{ x: number; y: number }> = [];
-  const flush = () => {
-    if (points.length > 1) segments.push(buildSmoothPath(points));
-    points = [];
-  };
+  const maxBarHeight = Math.max(18, Math.min(42, (H - PAD_TOP - PAD_BOT) * 0.24));
+  const barWidth = Math.max(2, Math.min(5, W / Math.max(260, months.length * 8)));
+  const yBase = PAD_TOP + maxBarHeight + 2;
+  const bars: Array<{ height: number; percent: number; width: number; x: number; y: number }> = [];
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
-    if (percent == null) {
-      flush();
-      continue;
-    }
-    points.push(pointFor(span.first, percent));
-    if (span.last !== span.first) points.push(pointFor(span.last, percent));
+    if (percent == null || percent <= 0) continue;
+    const height = Math.max(3, (percent / 100) * maxBarHeight);
+    const x = ((span.first + span.last) / 2 / (months.length - 1)) * W;
+    bars.push({
+      height,
+      percent,
+      width: barWidth,
+      x: x - barWidth / 2,
+      y: yBase - height,
+    });
   }
-  flush();
 
-  return segments.length > 0 ? segments.join(' ') : null;
+  return bars;
 }
 
 function clampPercent(value: number): number {
