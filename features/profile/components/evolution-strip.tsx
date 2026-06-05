@@ -266,19 +266,22 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                       height={bar.height}
                       rx={bar.width / 2}
                       fill={AGENT_MARK_COLOR}
+                      opacity={bar.percent > 0 ? 1 : 0.28}
                       vectorEffect="non-scaling-stroke"
                     />
-                    <text
-                      x={bar.x + bar.width / 2}
-                      y={Math.max(PAD_TOP + 10, bar.y - 5)}
-                      fill={AGENT_MARK_COLOR}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontFamily="var(--font-mono)"
-                    opacity="0.95"
-                    >
-                      {bar.percent}%
-                    </text>
+                    {bar.percent > 0 ? (
+                      <text
+                        x={bar.x + bar.width / 2}
+                        y={Math.max(PAD_TOP + 10, bar.y - 5)}
+                        fill={AGENT_MARK_COLOR}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fontFamily="var(--font-mono)"
+                        opacity="0.95"
+                      >
+                        {bar.percent}%
+                      </text>
+                    ) : null}
                   </g>
                 ))}
               </g>

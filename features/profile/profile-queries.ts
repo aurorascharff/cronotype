@@ -1010,20 +1010,21 @@ function buildAgentCommitBars(
   const baseline = geometry.height - geometry.padBottom;
   const bars: AgentCommitBar[] = [];
 
-  for (const [index, month] of months.entries()) {
-    const percent = percentByMonth.get(month.month);
-    if (percent == null || percent <= 0) continue;
-    const height = Math.max(3, (percent / 100) * maxBarHeight);
-    const x = (index / (months.length - 1)) * geometry.width;
-    bars.push({
-      height,
-      percent,
-      period: month.month,
-      width: barWidth,
-      x: x - barWidth / 2,
-      y: baseline - height,
-      year: Number(month.month.slice(0, 4)),
-    });
+  if (percentByMonth.size > 0) {
+    for (const [index, month] of months.entries()) {
+      const percent = percentByMonth.get(month.month) ?? 0;
+      const height = percent > 0 ? Math.max(3, (percent / 100) * maxBarHeight) : 3;
+      const x = (index / (months.length - 1)) * geometry.width;
+      bars.push({
+        height,
+        percent,
+        period: month.month,
+        width: barWidth,
+        x: x - barWidth / 2,
+        y: baseline - height,
+        year: Number(month.month.slice(0, 4)),
+      });
+    }
   }
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
@@ -1064,7 +1065,6 @@ function agentCommitMonthsFromSample(commits: Commit[]): AgentCommitSample[] {
       month,
       percent: buildStats(monthCommits).aiScore,
     }))
-    .filter(sample => sample.percent > 0)
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 

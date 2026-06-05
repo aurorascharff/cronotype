@@ -217,6 +217,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
                       height={bar.height}
                       rx={bar.width / 2}
                       fill={AGENT_LINE_COLOR}
+                      opacity={bar.percent > 0 ? 1 : 0.28}
                     />
                   </g>
                 ))}
@@ -224,7 +225,9 @@ export async function GET(_req: Request, { params }: RouteContext) {
             ) : null}
           </svg>
           {agentBars.length > 0
-            ? agentBars.map(bar => (
+            ? agentBars
+                .filter(bar => bar.percent > 0)
+                .map(bar => (
                 <div
                   key={`agent-label-${bar.period}`}
                   style={{
