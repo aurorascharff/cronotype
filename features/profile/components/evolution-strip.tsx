@@ -20,7 +20,6 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
-const AGENT_LINE_COLOR = '#f8fafc';
 
 export async function EvolutionStrip({ handle, historyYearPage }: Props) {
   return CachedEvolutionStrip({ handle, historyYearPage });
@@ -158,24 +157,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                   <span className="text-[10.5px] tabular-nums">{e.yearLabel}</span>
                 </li>
               ))}
-          {agentBars.length > 0 ? (
-            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
-              <span
-                className="flex h-3 w-5 items-end gap-0.5"
-                aria-hidden="true"
-                style={{
-                  color: AGENT_LINE_COLOR,
-                }}
-              >
-                <span className="h-1.5 w-px rounded-full bg-current" />
-                <span className="h-2.5 w-px rounded-full bg-current" />
-                <span className="h-2 w-px rounded-full bg-current" />
-              </span>
-              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
-                Agent-attributed %
-              </span>
-            </li>
-          ) : null}
         </ul>
 
         <div className="relative">
@@ -276,22 +257,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 vectorEffect="non-scaling-stroke"
               />
             ))}
-            {agentBars.length > 0 ? (
-              <g opacity="0.82">
-                {agentBars.map((bar, index) => (
-                  <rect
-                    key={`agent-bar-${index}`}
-                    x={bar.x}
-                    y={bar.y}
-                    width={bar.width}
-                    height={bar.height}
-                    rx={bar.width / 2}
-                    fill={AGENT_LINE_COLOR}
-                    vectorEffect="non-scaling-stroke"
-                  />
-                ))}
-              </g>
-            ) : null}
           </svg>
         </div>
 
@@ -307,6 +272,22 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
             </span>
           ))}
         </div>
+        {agentBars.length > 0 ? (
+          <div
+            className="text-muted/65 dark:text-muted-dark/65 relative mt-0.5 hidden h-4 font-mono text-[9px] tabular-nums sm:block"
+            aria-label="Agent-attributed percent by sampled year"
+          >
+            {agentBars.map(bar => (
+              <span
+                key={`agent-year-${bar.year}`}
+                className="absolute -translate-x-1/2 whitespace-nowrap"
+                style={{ left: `${((bar.x + bar.width / 2) / W) * 100}%` }}
+              >
+                {bar.percent}%
+              </span>
+            ))}
+          </div>
+        ) : null}
 
         <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-black/10 pt-4 dark:border-white/10">
           <div>

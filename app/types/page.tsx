@@ -134,10 +134,10 @@ export default function TypesPage() {
 
       <section className="dark:bg-ink-2 space-y-3 rounded-xl border border-black/10 bg-white p-5 sm:p-6 dark:border-white/10">
         <h2 className="text-muted dark:text-muted-dark text-[11px] font-medium tracking-[0.14em] uppercase">
-          Agent commits
+          Agent-attributed
         </h2>
         <p className="text-muted dark:text-muted-dark text-sm">
-          Agent commits is a separate percentage, not a cronotype. It counts signal commits with visible agent
+          Agent-attributed is a separate percentage, not a cronotype. It counts signal commits with visible agent
           attribution, such as agent accounts or commit trailers mentioning Copilot, Claude, Codex, Cursor, Devin, or
           similar tools.
         </p>

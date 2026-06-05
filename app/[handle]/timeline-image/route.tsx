@@ -126,7 +126,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 <span style={{ background: 'currentColor', borderRadius: 999, display: 'flex', height: 11, width: 2 }} />
                 <span style={{ background: 'currentColor', borderRadius: 999, display: 'flex', height: 8, width: 2 }} />
               </span>
-              <span style={{ color: AGENT_LINE_COLOR, fontWeight: 600 }}>Agent commits %</span>
+              <span style={{ color: AGENT_LINE_COLOR, fontWeight: 600 }}>Agent-attributed %</span>
             </div>
           ) : null}
         </div>

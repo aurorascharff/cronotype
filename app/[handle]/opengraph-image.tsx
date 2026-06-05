@@ -326,7 +326,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<Param
               width: 8,
             }}
           />
-          <span>Agent commits</span>
+          <span>Agent-attributed</span>
           <span style={{ color: COLORS.paper }}>{aiScore}</span>
         </div>
       </div>

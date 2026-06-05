@@ -552,7 +552,7 @@ export type TimelineGeometry = {
   padBottom: number;
 };
 
-export type AgentCommitBar = { height: number; percent: number; width: number; x: number; y: number };
+export type AgentCommitBar = { height: number; percent: number; width: number; x: number; y: number; year: number };
 
 type TimelineChartOptions = {
   scope?: 'window' | 'full';
@@ -971,6 +971,7 @@ function buildAgentCommitBars(
       width: barWidth,
       x: x - barWidth / 2,
       y,
+      year,
     });
   }
 
