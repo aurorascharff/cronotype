@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { LoaderCircle } from 'lucide-react';
 import { DownloadTimeline } from '@/features/profile/components/download-timeline';
 import { RegenerateHistoryButton } from '@/features/profile/components/regenerate-history-button';
+import { TimelineLoadingCard } from '@/features/profile/components/timeline-loading-card';
 import {
   getTimelineChart,
   isGitHubHistoryUnavailableError,
@@ -111,19 +111,12 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     <>
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-        <div className="flex items-center gap-2">
-          {archetypeYearRangeLabel ? (
-            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
-              {archetypeYearRangeLabel}
-            </span>
-          ) : null}
-          {partial && (
-            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide uppercase">
-              Partial · GitHub rate limit
-            </span>
-          )}
+      </header>
+      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10">
+        <div className="mb-4">
           <RegenerateHistoryButton
             archetypeYearPage={archetypeYearPage}
+            archetypeYearRangeLabel={archetypeYearRangeLabel}
             failedArchetypeYears={failedArchetypeYears}
             failedMonthlyYears={failedMonthlyYears}
             handle={handle}
@@ -131,10 +124,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
             hasOlderArchetypeYears={hasOlderArchetypeYears}
             partial={partial}
           />
-          <DownloadTimeline handle={handle} />
         </div>
-      </header>
-      <div className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10">
         <ul className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 sm:gap-x-4">
           {eras
             .filter(e => e.label)
@@ -281,13 +271,16 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
           ))}
         </div>
 
-        <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
-          <p className="text-muted dark:text-muted-dark text-[10px] font-medium tracking-wide uppercase">
-            Total contributions
-          </p>
-          <p className="text-ink dark:text-paper mt-1 text-2xl leading-none font-semibold tracking-tight tabular-nums">
-            {formatCount(totalCommits)}
-          </p>
+        <div className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t border-black/10 pt-4 dark:border-white/10">
+          <div>
+            <p className="text-muted dark:text-muted-dark text-[10px] font-medium tracking-wide uppercase">
+              Total contributions
+            </p>
+            <p className="text-ink dark:text-paper mt-1 text-2xl leading-none font-semibold tracking-tight tabular-nums">
+              {formatCount(totalCommits)}
+            </p>
+          </div>
+          <DownloadTimeline handle={handle} />
         </div>
       </div>
     </>
@@ -295,48 +288,5 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
 }
 
 export function EvolutionStripSkeleton() {
-  return (
-    <>
-      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h2 className="text-lg font-semibold tracking-tight">How you got here</h2>
-        <div className="flex items-center gap-2">
-          <div className="skeleton h-3 w-28 rounded" />
-          <div className="skeleton h-5 w-24 rounded-md" />
-        </div>
-      </header>
-      <div
-        className="dark:bg-ink-2 rounded-xl border border-black/10 bg-white p-4 sm:p-8 dark:border-white/10"
-        aria-hidden
-      >
-        <ul className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 sm:gap-x-4">
-          <li className="flex items-center gap-1.5">
-            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
-            <span className="skeleton h-3 w-20" />
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
-            <span className="skeleton h-3 w-16" />
-          </li>
-          <li className="flex items-center gap-1.5">
-            <span className="bg-muted/30 dark:bg-muted-dark/30 h-2 w-2 rounded-full" />
-            <span className="skeleton h-3 w-24" />
-          </li>
-        </ul>
-
-        <div className="relative h-32 sm:h-40">
-          <div className="text-muted/60 dark:text-muted-dark/60 absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <LoaderCircle className="text-muted/40 dark:text-muted-dark/40 h-5 w-5 animate-spin" aria-hidden />
-            <span className="text-[11px] font-medium tracking-wide uppercase">Crunching your history</span>
-          </div>
-        </div>
-
-        <div className="text-muted/60 dark:text-muted-dark/60 mt-2 flex justify-between text-[10px] tabular-nums">
-          <span className="skeleton h-2.5 w-8" />
-          <span className="skeleton h-2.5 w-8" />
-          <span className="skeleton h-2.5 w-8" />
-          <span className="skeleton h-2.5 w-8" />
-        </div>
-      </div>
-    </>
-  );
+  return <TimelineLoadingCard />;
 }

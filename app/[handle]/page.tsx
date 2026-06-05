@@ -82,11 +82,14 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
       <Suspense fallback={<ProfileHistorySectionSkeleton />}>
         <Crossfade>
           {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
+            const historyYearPage = parseHistoryPage(query.historyPage);
+            const showTimeline = query.history === '1';
             return (
               <ProfileHistorySection
+                key={`${handle}-${showTimeline ? `history-${historyYearPage}` : 'prompt'}`}
                 handle={handle}
-                historyYearPage={parseHistoryPage(query.historyPage)}
-                showTimeline={query.history === '1'}
+                historyYearPage={historyYearPage}
+                showTimeline={showTimeline}
               />
             );
           })}
