@@ -29,7 +29,8 @@ type ProfileCacheResult =
   | { status: 'missing' }
   | { status: 'rate-limited' };
 
-type YearArchetypeCacheResult = { status: 'ok'; archetypeId: ArchetypeId | null } | { status: 'rate-limited' };
+type YearArchetypeResult = { agentCommitPercent: number; archetypeId: ArchetypeId | null };
+type YearArchetypeCacheResult = ({ status: 'ok' } & YearArchetypeResult) | { status: 'rate-limited' };
 
 export function yearArchetypeSampleSizeForCommitCount(commitCount: number) {
   if (commitCount > VERY_HIGH_YEAR_COMMIT_THRESHOLD) return VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE;
@@ -522,7 +523,12 @@ async function getSignalCommitsForCached(
 }
 
 export type MonthBucket = { month: string; count: number };
-export type YearArchetypeBucket = { year: number; archetypeId: ArchetypeId | null; commits: number };
+export type YearArchetypeBucket = {
+  agentCommitPercent: number;
+  archetypeId: ArchetypeId | null;
+  commits: number;
+  year: number;
+};
 export type MonthlyHistory = {
   months: MonthBucket[];
   yearlyArchetypes: YearArchetypeBucket[];
@@ -642,10 +648,10 @@ async function getYearMonthlyCached(login: string, year: number): Promise<YearMo
   }
 }
 
-async function getYearArchetype(login: string, year: number, commitCount: number): Promise<ArchetypeId | null> {
+async function getYearArchetype(login: string, year: number, commitCount: number): Promise<YearArchetypeResult> {
   const result = await getYearArchetypeCached(login, year, commitCount);
   if (result.status === 'rate-limited') throw gitHubRateLimitError();
-  return result.archetypeId;
+  return { agentCommitPercent: result.agentCommitPercent, archetypeId: result.archetypeId };
 }
 
 async function getYearArchetypeCached(
@@ -657,7 +663,7 @@ async function getYearArchetypeCached(
   cacheTag(`year-archetype-${login.toLowerCase()}-${year}`);
   cacheLife('cronotype');
 
-  if (MOCK) return { archetypeId: mockArchetypeFor(`${login}-${year}`), status: 'ok' };
+  if (MOCK) return { agentCommitPercent: 0, archetypeId: mockArchetypeFor(`${login}-${year}`), status: 'ok' };
 
   try {
     const perPage = yearArchetypeSampleSizeForCommitCount(commitCount);
@@ -672,9 +678,18 @@ async function getYearArchetypeCached(
     );
     const signal = signalCommits(sampleCommits);
     if (signal.length === 0) {
-      return { archetypeId: sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null, status: 'ok' };
+      return {
+        agentCommitPercent: 0,
+        archetypeId: sampleCommits.length > 0 ? ARCHETYPES.drifter.id : null,
+        status: 'ok',
+      };
     }
-    return { archetypeId: classify({ ...buildStats(signal), total: commitCount }).id, status: 'ok' };
+    const stats = buildStats(signal);
+    return {
+      agentCommitPercent: stats.aiScore,
+      archetypeId: classify({ ...stats, total: commitCount }).id,
+      status: 'ok',
+    };
   } catch (err) {
     if (isGitHubRateLimitError(err)) {
       // TODO(nextjs): short-cache the sentinel until cache revalidation errors stop escaping.
@@ -757,7 +772,7 @@ export async function getTimelineChart(
       yearlyArchetypes,
       partial,
     },
-    { archetype, profile },
+    { archetype, profile, stats },
   ] = await Promise.all([getMonthlyHistory(lower, archetypeYearPage), computeCronotype(lower, '90d')]);
 
   const fullScope = options.scope === 'full';
@@ -776,6 +791,7 @@ export async function getTimelineChart(
       hasNewerArchetypeYears,
       hasOlderArchetypeYears,
       hasData: false,
+      agentLinePath: null,
       months: chartMonths,
       partial,
       profile,
@@ -810,6 +826,14 @@ export async function getTimelineChart(
     fullScope ? 'carry' : 'unknown',
   );
   const eras = buildEras(marks, smoothed.length, archetype.theme.accent);
+  const agentLinePath = buildAgentCommitLinePath(
+    chartMonths,
+    yearlyArchetypes,
+    currentHistoryYear,
+    stats.aiScore,
+    fullScope || visibleTimelineYears.includes(currentHistoryYear),
+    geometry,
+  );
   const yTicks = [max, max / 2].map(value => ({
     value: Math.round(value),
     y: geometry.padTop + usableH - (value / max) * usableH,
@@ -826,6 +850,7 @@ export async function getTimelineChart(
     hasData: true,
     hasNewerArchetypeYears,
     hasOlderArchetypeYears,
+    agentLinePath,
     linePath,
     months: chartMonths,
     partial,
@@ -892,6 +917,68 @@ function computeYearMarkers(months: MonthBucket[], width: number): Array<{ label
     label: String(year),
     x: (idx / (months.length - 1)) * width,
   }));
+}
+
+function buildAgentCommitLinePath(
+  months: MonthBucket[],
+  yearly: YearArchetypeBucket[],
+  currentYear: number,
+  currentAgentCommitPercent: number,
+  includeCurrentYear: boolean,
+  geometry: TimelineGeometry,
+): string | null {
+  if (months.length < 2) return null;
+
+  const percentByYear = new Map<number, number>();
+  for (const bucket of yearly) {
+    if (bucket.commits > 0) percentByYear.set(bucket.year, clampPercent(bucket.agentCommitPercent));
+  }
+  if (includeCurrentYear && Number.isFinite(currentYear)) {
+    percentByYear.set(currentYear, clampPercent(currentAgentCommitPercent));
+  }
+  if (percentByYear.size === 0) return null;
+
+  const spans = new Map<number, { first: number; last: number }>();
+  months.forEach((month, index) => {
+    const year = Number(month.month.slice(0, 4));
+    const existing = spans.get(year);
+    if (existing) {
+      existing.last = index;
+    } else {
+      spans.set(year, { first: index, last: index });
+    }
+  });
+
+  const usableH = geometry.height - geometry.padTop - geometry.padBottom;
+  const pointFor = (idx: number, percent: number) => ({
+    x: (idx / (months.length - 1)) * geometry.width,
+    y: geometry.padTop + usableH - (percent / 100) * usableH,
+  });
+
+  const segments: string[] = [];
+  let points: Array<{ x: number; y: number }> = [];
+  const flush = () => {
+    if (points.length > 1) segments.push(buildSmoothPath(points));
+    points = [];
+  };
+
+  for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
+    const percent = percentByYear.get(year);
+    if (percent == null) {
+      flush();
+      continue;
+    }
+    points.push(pointFor(span.first, percent));
+    if (span.last !== span.first) points.push(pointFor(span.last, percent));
+  }
+  flush();
+
+  return segments.length > 0 ? segments.join(' ') : null;
+}
+
+function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function buildYearMarks(
@@ -1025,6 +1112,7 @@ async function getMonthlyHistoryCached(
       sampledArchetypeYears: results.map(r => r.year),
       visibleTimelineYears: results.map(r => r.year),
       yearlyArchetypes: results.map(r => ({
+        agentCommitPercent: 0,
         archetypeId: r.archetypeId ?? ('drifter' as ArchetypeId),
         commits: r.commits,
         year: r.year,
@@ -1122,7 +1210,7 @@ async function getMonthlyHistoryCached(
   const visibleYearSet = new Set(visibleTimelineYears);
   const sampledYears = fullHistory ? yearsWithCommits : yearsWithCommits.filter(year => visibleYearSet.has(year));
 
-  const archetypeResults: Array<PromiseSettledResult<ArchetypeId | null>> = [];
+  const archetypeResults: Array<PromiseSettledResult<YearArchetypeResult>> = [];
   for (const year of sampledYears) {
     try {
       const yearData = byYear.find(y => y.year === year);
@@ -1142,7 +1230,12 @@ async function getMonthlyHistoryCached(
     if (!yearData) return;
     attemptedYears.add(year);
     if (r.status === 'fulfilled') {
-      yearlyArchetypes.push({ archetypeId: r.value, commits: yearData.commits, year });
+      yearlyArchetypes.push({
+        agentCommitPercent: r.value.agentCommitPercent,
+        archetypeId: r.value.archetypeId,
+        commits: yearData.commits,
+        year,
+      });
     } else {
       failedArchetypeSet.add(year);
     }

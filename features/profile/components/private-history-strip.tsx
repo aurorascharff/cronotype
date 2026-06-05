@@ -21,6 +21,7 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
+const AGENT_LINE_COLOR = '#f8fafc';
 
 export function PrivateHistoryStrip({ history }: Props) {
   if (!history) return null;
@@ -47,6 +48,7 @@ export function PrivateHistoryStrip({ history }: Props) {
   const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const fillId = `private-evolution-fill-${history.generatedAt.replace(/\W/g, '')}`;
   const hasUnknown = eras.some(era => era.unknown);
+  const agentLinePath = buildPrivateAgentCommitLinePath(months, history);
 
   return (
     <section className="space-y-4">
@@ -80,6 +82,19 @@ export function PrivateHistoryStrip({ history }: Props) {
                 }}
               />
               <span className="text-[11px] font-semibold tracking-tight">Missing data</span>
+            </li>
+          ) : null}
+          {agentLinePath ? (
+            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+              <span
+                className="inline-block h-px w-5 align-middle"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(to right, ${AGENT_LINE_COLOR} 0 5px, transparent 5px 10px)`,
+                }}
+              />
+              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
+                Agent commits %
+              </span>
             </li>
           ) : null}
         </ul>
@@ -181,6 +196,19 @@ export function PrivateHistoryStrip({ history }: Props) {
               vectorEffect="non-scaling-stroke"
             />
           ))}
+          {agentLinePath ? (
+            <path
+              d={agentLinePath}
+              fill="none"
+              stroke={AGENT_LINE_COLOR}
+              strokeWidth="1.8"
+              strokeDasharray="6 5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.82"
+              vectorEffect="non-scaling-stroke"
+            />
+          ) : null}
         </svg>
 
         <div className="text-muted dark:text-muted-dark mt-2 flex justify-between text-[10px] tabular-nums sm:hidden">
@@ -266,6 +294,57 @@ function buildPrivateEras(months: MonthBucket[], history: PrivateHistoryResult, 
   return eras.length > 0
     ? eras
     : [{ color: QUIET_THEME.accent, endPct: 100, label: null, startPct: 0, unknown: true, yearLabel: '' }];
+}
+
+function buildPrivateAgentCommitLinePath(months: MonthBucket[], history: PrivateHistoryResult): string | null {
+  if (months.length < 2) return null;
+
+  const percentByYear = new Map(
+    history.archetypes.map(([year, , commits, percent]) => [year, commits > 0 ? clampPercent(percent) : 0]),
+  );
+  if (percentByYear.size === 0) return null;
+
+  const spans = new Map<number, { first: number; last: number }>();
+  months.forEach((month, index) => {
+    const year = Number(month.month.slice(0, 4));
+    const existing = spans.get(year);
+    if (existing) {
+      existing.last = index;
+    } else {
+      spans.set(year, { first: index, last: index });
+    }
+  });
+
+  const usableH = H - PAD_TOP - PAD_BOT;
+  const pointFor = (index: number, percent: number) => ({
+    x: (index / (months.length - 1)) * W,
+    y: PAD_TOP + usableH - (percent / 100) * usableH,
+  });
+
+  const segments: string[] = [];
+  let points: Array<{ x: number; y: number }> = [];
+  const flush = () => {
+    if (points.length > 1) segments.push(buildSmoothPath(points));
+    points = [];
+  };
+
+  for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
+    const percent = percentByYear.get(year);
+    if (percent == null) {
+      flush();
+      continue;
+    }
+    points.push(pointFor(span.first, percent));
+    if (span.last !== span.first) points.push(pointFor(span.last, percent));
+  }
+  flush();
+
+  return segments.length > 0 ? segments.join(' ') : null;
+}
+
+function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function computeYearMarkers(months: MonthBucket[]) {

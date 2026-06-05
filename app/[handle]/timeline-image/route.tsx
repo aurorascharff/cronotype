@@ -36,15 +36,12 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const { handle } = await params;
 
   try {
-    const chart = await getTimelineExportChart(
-      handle,
-      {
-        height: H,
-        padBottom: PAD_BOT,
-        padTop: PAD_TOP,
-        width: W,
-      },
-    );
+    const chart = await getTimelineExportChart(handle, {
+      height: H,
+      padBottom: PAD_BOT,
+      padTop: PAD_TOP,
+      width: W,
+    });
 
     const { archetype, areaPath, eras, hasData, linePath, profile, totalCommits, yearMarkers } = chart;
 
@@ -100,25 +97,27 @@ export async function GET(_req: Request, { params }: RouteContext) {
         </div>
 
         <div style={{ color: '#8b8d96', display: 'flex', flexWrap: 'wrap', fontSize: 16, gap: 12, marginBottom: 14 }}>
-          {eras.filter(e => e.label || e.unknown).map((e, i) => (
-            <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
-              {e.unknown ? (
-                <span
-                  style={{
-                    background: 'linear-gradient(90deg, currentColor 0 45%, transparent 45% 70%, currentColor 70%)',
-                    color: '#94a3b8',
-                    display: 'flex',
-                    height: 2,
-                    width: 16,
-                  }}
-                />
-              ) : (
-                <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 9, width: 9 }} />
-              )}
-              <span style={{ color: e.color, fontWeight: 600 }}>{e.label ?? 'Missing data'}</span>
-              <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
-            </div>
-          ))}
+          {eras
+            .filter(e => e.label || e.unknown)
+            .map((e, i) => (
+              <div key={i} style={{ alignItems: 'center', display: 'flex', gap: 6 }}>
+                {e.unknown ? (
+                  <span
+                    style={{
+                      background: 'linear-gradient(90deg, currentColor 0 45%, transparent 45% 70%, currentColor 70%)',
+                      color: '#94a3b8',
+                      display: 'flex',
+                      height: 2,
+                      width: 16,
+                    }}
+                  />
+                ) : (
+                  <span style={{ background: e.color, borderRadius: 999, display: 'flex', height: 9, width: 9 }} />
+                )}
+                <span style={{ color: e.color, fontWeight: 600 }}>{e.label ?? 'Missing data'}</span>
+                <span style={{ color: '#8b8d96', fontSize: 14 }}>{e.yearLabel}</span>
+              </div>
+            ))}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>

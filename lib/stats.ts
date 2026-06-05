@@ -99,22 +99,20 @@ export function buildStats(commits: Commit[]): HourStats {
 }
 
 function isAiStampedCommit(commit: Commit): boolean {
-  const identity = [
-    commit.authorLogin,
-    commit.committerLogin,
-    commit.authorType,
-    commit.committerType,
-    commit.message,
-  ]
+  const identity = [commit.authorLogin, commit.committerLogin, commit.authorType, commit.committerType, commit.message]
     .filter(Boolean)
     .join('\n')
     .toLowerCase();
 
   if (!identity) return false;
-  if (/\bco-authored-by:\s*[^<\n]*(copilot|claude|cursor|codex|openai|devin|windsurf|anthropic|aider)\b/i.test(identity)) {
+  if (
+    /\bco-authored-by:\s*[^<\n]*(copilot|claude|cursor|codex|openai|devin|windsurf|anthropic|aider)\b/i.test(identity)
+  ) {
     return true;
   }
-  if (/\b(github-copilot|copilot-swe-agent|openai-codex|codex|claude-code|devin-ai|cursor-agent|aider)\b/i.test(identity)) {
+  if (
+    /\b(github-copilot|copilot-swe-agent|openai-codex|codex|claude-code|devin-ai|cursor-agent|aider)\b/i.test(identity)
+  ) {
     return true;
   }
   if (/\b(generated|implemented|authored)\s+(by|with)\s+(copilot|claude|codex|cursor|devin|aider)\b/i.test(identity)) {

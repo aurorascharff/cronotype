@@ -53,7 +53,7 @@ export type PrivateCronotypeResult = {
 };
 
 export type PrivateHistoryResult = {
-  archetypes: Array<[year: number, archetypeId: ArchetypeId | null, commits: number]>;
+  archetypes: Array<[year: number, archetypeId: ArchetypeId | null, commits: number, agentCommitPercent: number]>;
   failedYears: number[];
   generatedAt: string;
   includes: 'public-and-private-visible';
@@ -258,8 +258,8 @@ async function computePrivateHistory(
   const yearlyArchetypes: PrivateHistoryResult['archetypes'] = [];
   for (const yearData of yearly.filter(y => y.commits > 0).sort((a, b) => b.year - a.year)) {
     try {
-      const archetypeId = await getPrivateYearArchetype(token, login, yearData.year, yearData.commits);
-      yearlyArchetypes.push([yearData.year, archetypeId, yearData.commits]);
+      const archetype = await getPrivateYearArchetype(token, login, yearData.year, yearData.commits);
+      yearlyArchetypes.push([yearData.year, archetype.archetypeId, yearData.commits, archetype.agentCommitPercent]);
     } catch (err) {
       if (isGitHubRateLimitError(err)) {
         failedYears.push(yearData.year);
@@ -325,23 +325,32 @@ async function fetchPrivateContributionCalendar(
       }
     }
   `;
-  const res = await githubFetch(token, `${API}/graphql`, {
-    Accept: 'application/vnd.github+json',
-    'Content-Type': 'application/json',
-  }, JSON.stringify({ query, variables: { from, login, to } }));
+  const res = await githubFetch(
+    token,
+    `${API}/graphql`,
+    {
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    JSON.stringify({ query, variables: { from, login, to } }),
+  );
   if (!res.ok) throw new Error(`Could not read private contribution history (${res.status}).`);
   const json = (await res.json()) as {
     data?: {
       user?: {
         contributionsCollection?: {
-          contributionCalendar?: { weeks: Array<{ contributionDays: Array<{ contributionCount: number; date: string }> }> };
+          contributionCalendar?: {
+            weeks: Array<{ contributionDays: Array<{ contributionCount: number; date: string }> }>;
+          };
         };
       };
     };
     errors?: Array<{ message: string }>;
   };
   if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data?.user?.contributionsCollection?.contributionCalendar?.weeks.flatMap(week => week.contributionDays) ?? [];
+  return (
+    json.data?.user?.contributionsCollection?.contributionCalendar?.weeks.flatMap(week => week.contributionDays) ?? []
+  );
 }
 
 async function getPrivateYearArchetype(
@@ -349,7 +358,7 @@ async function getPrivateYearArchetype(
   login: string,
   year: number,
   commitCount: number,
-): Promise<ArchetypeId | null> {
+): Promise<{ agentCommitPercent: number; archetypeId: ArchetypeId | null }> {
   const sampleCommits = signalCommits(
     await fetchPrivateCommits(
       token,
@@ -360,8 +369,12 @@ async function getPrivateYearArchetype(
       yearArchetypeSampleSizeForCommitCount(commitCount),
     ),
   );
-  if (sampleCommits.length === 0) return null;
-  return classify({ ...buildStats(sampleCommits), total: commitCount }).id;
+  if (sampleCommits.length === 0) return { agentCommitPercent: 0, archetypeId: null };
+  const stats = buildStats(sampleCommits);
+  return {
+    agentCommitPercent: stats.aiScore,
+    archetypeId: classify({ ...stats, total: commitCount }).id,
+  };
 }
 
 function githubFetch(token: string, url: string, extraHeaders: Record<string, string> = {}, body?: string) {

@@ -36,15 +36,7 @@ export function TeamContent({
   );
 }
 
-function TeamGallery({
-  handles,
-  invalid,
-  name,
-}: {
-  handles: string[];
-  invalid: string[];
-  name: string;
-}) {
+function TeamGallery({ handles, invalid, name }: { handles: string[]; invalid: string[]; name: string }) {
   if (handles.length === 0) {
     return (
       <section className="space-y-4">

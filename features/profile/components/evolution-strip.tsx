@@ -20,6 +20,7 @@ const W = 1000;
 const H = 200;
 const PAD_TOP = 12;
 const PAD_BOT = 4;
+const AGENT_LINE_COLOR = '#f8fafc';
 
 export async function EvolutionStrip({ handle, historyYearPage }: Props) {
   return CachedEvolutionStrip({ handle, historyYearPage });
@@ -76,6 +77,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     hasNewerArchetypeYears,
     hasOlderArchetypeYears,
     hasData,
+    agentLinePath,
     linePath,
     months,
     partial,
@@ -156,6 +158,19 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                   <span className="text-[10.5px] tabular-nums">{e.yearLabel}</span>
                 </li>
               ))}
+          {agentLinePath ? (
+            <li className="text-muted dark:text-muted-dark flex items-center gap-1.5 whitespace-nowrap">
+              <span
+                className="inline-block h-px w-5 align-middle"
+                style={{
+                  backgroundImage: `repeating-linear-gradient(to right, ${AGENT_LINE_COLOR} 0 5px, transparent 5px 10px)`,
+                }}
+              />
+              <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
+                Agent commits %
+              </span>
+            </li>
+          ) : null}
         </ul>
 
         <div className="relative">
@@ -256,6 +271,19 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 vectorEffect="non-scaling-stroke"
               />
             ))}
+            {agentLinePath ? (
+              <path
+                d={agentLinePath}
+                fill="none"
+                stroke={AGENT_LINE_COLOR}
+                strokeWidth="1.8"
+                strokeDasharray="6 5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.82"
+                vectorEffect="non-scaling-stroke"
+              />
+            ) : null}
           </svg>
         </div>
 
