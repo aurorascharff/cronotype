@@ -1,5 +1,9 @@
 import { ImageResponse } from 'next/og';
-import { getTimelineChart, isGitHubNotFoundError, isGitHubRateLimitError } from '@/features/profile/profile-queries';
+import {
+  DEFAULT_HISTORY_ARCHETYPE_PAGE,
+  getTimelineChart,
+  isGitHubNotFoundError,
+} from '@/features/profile/profile-queries';
 
 const size = { width: 1200, height: 630 };
 
@@ -32,16 +36,21 @@ const H = 360;
 const PAD_TOP = 24;
 const PAD_BOT = 8;
 
-export async function GET(_req: Request, { params }: RouteContext) {
+export async function GET(req: Request, { params }: RouteContext) {
   const { handle } = await params;
+  const historyYearPage = parseHistoryPage(new URL(req.url).searchParams.get('historyPage'));
 
   try {
-    const chart = await getTimelineChart(handle, {
-      height: H,
-      padBottom: PAD_BOT,
-      padTop: PAD_TOP,
-      width: W,
-    });
+    const chart = await getTimelineChart(
+      handle,
+      {
+        height: H,
+        padBottom: PAD_BOT,
+        padTop: PAD_TOP,
+        width: W,
+      },
+      historyYearPage,
+    );
 
     const { archetype, areaPath, eras, hasData, linePath, profile, totalCommits, yearMarkers } = chart;
 
@@ -216,4 +225,10 @@ function timelineUnavailableImage() {
     </div>,
     size,
   );
+}
+
+function parseHistoryPage(value: string | null): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_HISTORY_ARCHETYPE_PAGE;
+  return Math.max(DEFAULT_HISTORY_ARCHETYPE_PAGE, Math.min(80, Math.round(parsed)));
 }

@@ -281,7 +281,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
               {formatCount(totalCommits)}
             </p>
           </div>
-          <DownloadTimeline handle={handle} />
+          <DownloadTimeline handle={handle} historyYearPage={archetypeYearPage} />
         </div>
       </div>
     </>

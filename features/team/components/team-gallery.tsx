@@ -1,5 +1,11 @@
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
-import { parseTeamHandles, parseTeamName, serializeTeamHandles, teamImageUrl, teamUrl } from '@/features/team/team-handles';
+import {
+  parseTeamHandles,
+  parseTeamName,
+  serializeTeamHandles,
+  teamImageUrl,
+  teamUrl,
+} from '@/features/team/team-handles';
 import { redirect } from 'next/navigation';
 import type { Route } from 'next';
 import { TeamRecentSaver } from './team-recents';
@@ -25,7 +31,7 @@ export function TeamContent({
   return (
     <>
       <TeamRecentSaver current={current} />
-      <TeamGallery handles={handles} invalid={invalid} name={name} serialized={serialized} />
+      <TeamGallery handles={handles} invalid={invalid} name={name} />
     </>
   );
 }
@@ -34,12 +40,10 @@ function TeamGallery({
   handles,
   invalid,
   name,
-  serialized,
 }: {
   handles: string[];
   invalid: string[];
   name: string;
-  serialized: string;
 }) {
   if (handles.length === 0) {
     return (
