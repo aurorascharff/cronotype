@@ -48,7 +48,7 @@ export function PrivateHistoryStrip({ history }: Props) {
   const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
   const fillId = `private-evolution-fill-${history.generatedAt.replace(/\W/g, '')}`;
   const hasUnknown = eras.some(era => era.unknown);
-  const agentBars = buildPrivateAgentCommitBars(months, history);
+  const agentBars = buildPrivateAgentCommitBars(months, history, points);
 
   return (
     <section className="space-y-4">
@@ -98,7 +98,7 @@ export function PrivateHistoryStrip({ history }: Props) {
                 <span className="h-2 w-px rounded-full bg-current" />
               </span>
               <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
-                Agent commits %
+                Agent-attributed %
               </span>
             </li>
           ) : null}
@@ -307,6 +307,7 @@ function buildPrivateEras(months: MonthBucket[], history: PrivateHistoryResult, 
 function buildPrivateAgentCommitBars(
   months: MonthBucket[],
   history: PrivateHistoryResult,
+  points: Array<{ x: number; y: number }>,
 ): Array<{ height: number; percent: number; width: number; x: number; y: number }> {
   if (months.length < 2) return [];
 
@@ -326,22 +327,24 @@ function buildPrivateAgentCommitBars(
     }
   });
 
-  const maxBarHeight = Math.max(18, Math.min(42, (H - PAD_TOP - PAD_BOT) * 0.24));
-  const barWidth = Math.max(2, Math.min(5, W / Math.max(260, months.length * 8)));
-  const yBase = PAD_TOP + maxBarHeight + 2;
+  const maxBarHeight = 28;
+  const barWidth = 2.5;
   const bars: Array<{ height: number; percent: number; width: number; x: number; y: number }> = [];
 
   for (const [year, span] of Array.from(spans.entries()).sort((a, b) => a[0] - b[0])) {
     const percent = percentByYear.get(year);
     if (percent == null || percent <= 0) continue;
-    const height = Math.max(3, (percent / 100) * maxBarHeight);
-    const x = ((span.first + span.last) / 2 / (months.length - 1)) * W;
+    const midpoint = Math.round((span.first + span.last) / 2);
+    const baseline = points[midpoint]?.y ?? PAD_TOP;
+    const requestedHeight = Math.max(2, (percent / 100) * maxBarHeight);
+    const y = Math.max(PAD_TOP, baseline - requestedHeight);
+    const x = (midpoint / (months.length - 1)) * W;
     bars.push({
-      height,
+      height: baseline - y,
       percent,
       width: barWidth,
       x: x - barWidth / 2,
-      y: yBase - height,
+      y,
     });
   }
 

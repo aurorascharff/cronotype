@@ -172,7 +172,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
                 <span className="h-2 w-px rounded-full bg-current" />
               </span>
               <span className="text-[11px] font-semibold tracking-tight" style={{ color: AGENT_LINE_COLOR }}>
-                Agent commits %
+                Agent-attributed %
               </span>
             </li>
           ) : null}
