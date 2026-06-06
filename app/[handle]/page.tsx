@@ -5,9 +5,14 @@ import {
   ProfileHistorySection,
   ProfileHistorySectionSkeleton,
 } from '@/features/profile/components/profile-history-section';
+import {
+  MoreWithTypeSection,
+  MoreWithTypeSectionSkeleton,
+} from '@/features/profile/components/more-with-type-section';
 import { computeCronotype, DEFAULT_HISTORY_ARCHETYPE_PAGE } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
+import type { Route } from 'next';
 
 export const unstable_prefetch = 'force-runtime';
 
@@ -79,6 +84,19 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
           })}
         </Crossfade>
       </Suspense>
+      <Suspense fallback={<MoreWithTypeSectionSkeleton />}>
+        <Crossfade>
+          {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
+            return (
+              <MoreWithTypeSection
+                handle={handle}
+                href={moreWithTypeHref(handle, query)}
+                load={query.moreWithType === '1'}
+              />
+            );
+          })}
+        </Crossfade>
+      </Suspense>
       <Suspense fallback={<ProfileHistorySectionSkeleton />}>
         <Crossfade>
           {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
@@ -104,4 +122,22 @@ function parseHistoryPage(value: string | string[] | undefined): number {
   const parsed = Number(raw);
   if (!Number.isFinite(parsed)) return DEFAULT_HISTORY_ARCHETYPE_PAGE;
   return Math.max(DEFAULT_HISTORY_ARCHETYPE_PAGE, Math.min(80, Math.round(parsed)));
+}
+
+function moreWithTypeHref(handle: string, query: Awaited<PageProps<'/[handle]'>['searchParams']>): Route {
+  const params = new URLSearchParams();
+  appendSearchParam(params, 'history', query.history);
+  appendSearchParam(params, 'historyPage', query.historyPage);
+  params.set('moreWithType', '1');
+  return `/${handle}?${params.toString()}` as Route;
+}
+
+function appendSearchParam(params: URLSearchParams, key: string, value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (item) params.append(key, item);
+    }
+    return;
+  }
+  if (value) params.set(key, value);
 }
