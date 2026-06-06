@@ -16,6 +16,8 @@ const VERY_HIGH_YEAR_COMMIT_THRESHOLD = 5000;
 const YEAR_ARCHETYPE_SAMPLE_SIZE = 100;
 const HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 25;
 const VERY_HIGH_YEAR_ARCHETYPE_SAMPLE_SIZE = 5;
+const RECENT_STATS_MAX_PAGES = 5;
+const MIN_RECENT_SIGNAL_FOR_STABLE_LOW_TYPE = 25;
 export const DEFAULT_HISTORY_ARCHETYPE_PAGE = 0;
 const FULL_HISTORY_ARCHETYPE_PAGE = -1;
 const HISTORY_ARCHETYPE_PAGE_SIZE = 5;
@@ -299,6 +301,7 @@ async function fetchCommitsInRange(
   maxPages = 10,
   perPage = 100,
   token = process.env.GITHUB_TOKEN,
+  minSignalCommits = 0,
 ): Promise<Commit[]> {
   const q = `author:${login} author-date:${fromISO}..${toISO}`;
   const commits: Commit[] = [];
@@ -312,7 +315,7 @@ async function fetchCommitsInRange(
       break;
     }
     const j = (await res.json()) as { total_count: number; incomplete_results: boolean; items: SearchCommitItem[] };
-    if (j.total_count > 1000 && depth < 3 && maxPages > 1) truncated = true;
+    if (minSignalCommits === 0 && j.total_count > 1000 && depth < 3 && maxPages > 1) truncated = true;
     for (const item of j.items ?? []) {
       const iso = item.commit.author?.date ?? item.commit.committer?.date;
       if (!iso) continue;
@@ -325,6 +328,7 @@ async function fetchCommitsInRange(
         tzOffsetMinutes: tz,
       });
     }
+    if (minSignalCommits > 0 && signalCommits(commits).length >= minSignalCommits) break;
     if (!j.items || j.items.length < perPage) break;
   }
 
@@ -468,7 +472,16 @@ async function getSignalCommitsForCached(
   }
 
   try {
-    const commits = await fetchCommitsInRange(login, fromISO, toISO, 0, 1);
+    const commits = await fetchCommitsInRange(
+      login,
+      fromISO,
+      toISO,
+      0,
+      RECENT_STATS_MAX_PAGES,
+      100,
+      process.env.GITHUB_TOKEN,
+      MIN_RECENT_SIGNAL_FOR_STABLE_LOW_TYPE,
+    );
     return signalCommits(commits);
   } catch (err) {
     if (isGitHubRateLimitError(err)) {
