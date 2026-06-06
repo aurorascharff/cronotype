@@ -43,17 +43,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
       width: W,
     });
 
-    const {
-      archetype,
-      areaPath,
-      eras,
-      hasData,
-      linePath,
-      profile,
-      totalCommits,
-      yearDividers,
-      yearMarkers,
-    } = chart;
+    const { archetype, areaPath, eras, hasData, linePath, profile, totalCommits, yearDividers, yearMarkers } = chart;
 
     const fonts = await loadGeist();
 
@@ -189,7 +179,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 clipPath={`url(#${fillId}-clip-${i})`}
               />
             ))}
-
           </svg>
         </div>
 

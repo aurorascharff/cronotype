@@ -97,7 +97,7 @@ export function RegenerateHistoryButton({
       </div>
       <div className="order-1 col-span-2 flex min-w-0 flex-col items-center justify-center gap-2 text-center sm:order-none sm:col-span-1 sm:flex-row sm:flex-wrap">
         {archetypeYearRangeLabel ? (
-          <span className="text-muted/70 dark:text-muted-dark/70 whitespace-nowrap text-[10.5px] tracking-wide uppercase">
+          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide whitespace-nowrap uppercase">
             {archetypeYearRangeLabel}
           </span>
         ) : null}
@@ -117,7 +117,7 @@ export function RegenerateHistoryButton({
           </Button>
         ) : null}
         {partial ? (
-          <span className="text-muted/70 dark:text-muted-dark/70 whitespace-nowrap text-[10.5px] tracking-wide uppercase">
+          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide whitespace-nowrap uppercase">
             Partial · GitHub rate limit
           </span>
         ) : null}

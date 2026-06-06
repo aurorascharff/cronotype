@@ -3,9 +3,10 @@
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 
-export function LoadMore({ href }: { href: Route }) {
+export function LoadMore({ children = 'Load more', href }: { children?: ReactNode; href: Route }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -21,7 +22,7 @@ export function LoadMore({ href }: { href: Route }) {
       }}
       variant="secondary"
     >
-      Load more
+      {children}
     </Button>
   );
 }

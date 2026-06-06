@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { LoadMore } from '@/components/ui/load-more';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { getFeaturedHandlesByType } from '@/features/leaderboard/leaderboard-queries';
 import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
@@ -18,12 +18,7 @@ export async function MoreWithTypeSection({ handle: rawHandle, load, href }: Pro
     return (
       <section className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold tracking-tight">More with this type</h2>
-        <Link
-          href={href}
-          className="dark:bg-ink-2 text-muted dark:text-muted-dark hover:text-ink dark:hover:text-paper rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm font-medium transition-colors hover:border-black/30 dark:border-white/10 dark:hover:border-white/30"
-        >
-          Load matches
-        </Link>
+        <LoadMore href={href}>Load matches</LoadMore>
       </section>
     );
   }

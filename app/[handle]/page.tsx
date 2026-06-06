@@ -5,10 +5,7 @@ import {
   ProfileHistorySection,
   ProfileHistorySectionSkeleton,
 } from '@/features/profile/components/profile-history-section';
-import {
-  MoreWithTypeSection,
-  MoreWithTypeSectionSkeleton,
-} from '@/features/profile/components/more-with-type-section';
+import { MoreWithTypeSection, MoreWithTypeSectionSkeleton } from '@/features/profile/components/more-with-type-section';
 import { computeCronotype, DEFAULT_HISTORY_ARCHETYPE_PAGE } from '@/features/profile/profile-queries';
 import { isValidGitHubHandle } from '@/lib/github-handle';
 import type { Metadata } from 'next';
@@ -84,19 +81,6 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
           })}
         </Crossfade>
       </Suspense>
-      <Suspense fallback={<MoreWithTypeSectionSkeleton />}>
-        <Crossfade>
-          {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
-            return (
-              <MoreWithTypeSection
-                handle={handle}
-                href={moreWithTypeHref(handle, query)}
-                load={query.moreWithType === '1'}
-              />
-            );
-          })}
-        </Crossfade>
-      </Suspense>
       <Suspense fallback={<ProfileHistorySectionSkeleton />}>
         <Crossfade>
           {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
@@ -108,6 +92,19 @@ export default function ProfilePage({ params, searchParams }: PageProps<'/[handl
                 handle={handle}
                 historyYearPage={historyYearPage}
                 showTimeline={showTimeline}
+              />
+            );
+          })}
+        </Crossfade>
+      </Suspense>
+      <Suspense fallback={<MoreWithTypeSectionSkeleton />}>
+        <Crossfade>
+          {Promise.all([params, searchParams]).then(async ([{ handle }, query]) => {
+            return (
+              <MoreWithTypeSection
+                handle={handle}
+                href={moreWithTypeHref(handle, query)}
+                load={query.moreWithType === '1'}
               />
             );
           })}
