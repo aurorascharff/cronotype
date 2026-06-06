@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { regenerateHistory } from '@/features/profile/profile-actions';
+import { formatCount } from '@/lib/format';
 import type { Route } from 'next';
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
   hasNewerArchetypeYears: boolean;
   hasOlderArchetypeYears: boolean;
   partial: boolean;
+  shownCommits: number;
 };
 
 export function RegenerateHistoryButton({
@@ -30,6 +32,7 @@ export function RegenerateHistoryButton({
   hasNewerArchetypeYears,
   hasOlderArchetypeYears,
   partial,
+  shownCommits,
 }: Props) {
   const router = useRouter();
   const [paging, startPaging] = useTransition();
@@ -97,9 +100,14 @@ export function RegenerateHistoryButton({
       </div>
       <div className="order-1 col-span-2 flex min-w-0 flex-col items-center justify-center gap-2 text-center sm:order-none sm:col-span-1 sm:flex-row sm:flex-wrap">
         {archetypeYearRangeLabel ? (
-          <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide whitespace-nowrap uppercase">
-            {archetypeYearRangeLabel}
-          </span>
+          <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
+            <span className="text-muted/70 dark:text-muted-dark/70 text-[10.5px] tracking-wide whitespace-nowrap uppercase">
+              {archetypeYearRangeLabel}
+            </span>
+            <span className="text-muted dark:text-muted-dark text-[10.5px] tracking-wide whitespace-nowrap uppercase">
+              {formatCount(shownCommits)} contributions shown
+            </span>
+          </div>
         ) : null}
         {canRetry ? (
           <Button

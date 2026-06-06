@@ -753,6 +753,7 @@ export async function getTimelineChart(
   const fullScope = options.scope === 'full';
   const chartMonths = fullScope ? months : selectTimelineMonths(months, visibleTimelineYears);
   const totalCommits = months.reduce((sum, month) => sum + month.count, 0);
+  const shownCommits = chartMonths.reduce((sum, month) => sum + month.count, 0);
   const currentHistoryYear = Number(months[months.length - 1]?.month.slice(0, 4));
 
   if (chartMonths.length < 2) {
@@ -769,6 +770,7 @@ export async function getTimelineChart(
       months: chartMonths,
       partial,
       profile,
+      shownCommits,
       totalCommits,
       yTicks: [],
       yearlyArchetypes,
@@ -781,7 +783,11 @@ export async function getTimelineChart(
     chartMonths.map(m => m.count),
     2,
   );
-  const max = Math.max(1, ...smoothed);
+  const globalSmoothed = smooth(
+    months.map(m => m.count),
+    2,
+  );
+  const max = Math.max(1, ...globalSmoothed);
   const usableH = geometry.height - geometry.padTop - geometry.padBottom;
 
   const points = smoothed.map((v, i) => ({
@@ -822,6 +828,7 @@ export async function getTimelineChart(
     months: chartMonths,
     partial,
     profile,
+    shownCommits,
     yTicks,
     totalCommits,
     yearDividers,

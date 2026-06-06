@@ -79,6 +79,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     linePath,
     months,
     partial,
+    shownCommits,
     totalCommits,
     yTicks,
     yearDividers,
@@ -125,6 +126,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
             hasNewerArchetypeYears={hasNewerArchetypeYears}
             hasOlderArchetypeYears={hasOlderArchetypeYears}
             partial={partial}
+            shownCommits={shownCommits}
           />
         </div>
         <ul className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 sm:gap-x-4">
@@ -159,7 +161,7 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
               ))}
         </ul>
 
-        <div className="relative">
+        <div className="relative pr-6 sm:pr-8">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             preserveAspectRatio="none"
@@ -242,6 +244,17 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
               />
             ))}
           </svg>
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-7 sm:block">
+            {yTicks.map((tick, index) => (
+              <span
+                key={`y-label-${index}-${tick.value}`}
+                className="text-muted/70 dark:text-muted-dark/70 absolute right-0 -translate-y-1/2 text-[9px] tabular-nums"
+                style={{ top: `${(tick.y / H) * 100}%` }}
+              >
+                {formatCount(tick.value)}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="text-muted dark:text-muted-dark mt-2 flex justify-between text-[10px] tabular-nums sm:hidden">
