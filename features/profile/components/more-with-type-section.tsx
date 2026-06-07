@@ -3,6 +3,7 @@ import { LoadMore } from '@/components/ui/load-more';
 import { ProfileCardSkeleton, ProfileCardSlot } from '@/features/leaderboard/components/profile-card-grid';
 import { getFeaturedHandlesByType } from '@/features/leaderboard/leaderboard-queries';
 import { computeCronotype, isGitHubNotFoundError } from '@/features/profile/profile-queries';
+import type { ArchetypeId } from '@/types/cronotype';
 import type { Route } from 'next';
 
 type Props = {
@@ -47,7 +48,7 @@ export async function MoreWithTypeSection({ handle: rawHandle, load, href }: Pro
   return (
     <section className="space-y-3">
       <header>
-        <h2 className="text-lg font-semibold tracking-tight">More {result.archetype.name}</h2>
+        <h2 className="text-lg font-semibold tracking-tight">More {TYPE_PLURALS[result.archetype.id]}</h2>
       </header>
       <ul className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-4">
         {handles.map(handle => (
@@ -59,6 +60,18 @@ export async function MoreWithTypeSection({ handle: rawHandle, load, href }: Pro
     </section>
   );
 }
+
+const TYPE_PLURALS: Record<ArchetypeId, string> = {
+  drifter: 'Drifters',
+  'insomniac-maintainer': 'Insomniac Maintainers',
+  'last-call-shipper': 'Last Call Shippers',
+  'lunch-bandit': 'Lunch Bandits',
+  'nine-to-fiver': 'Nine-to-Fivers',
+  'sunrise-sniper': 'Sunrise Snipers',
+  'touch-grass': 'Grass Touchers',
+  vampire: 'Vampires',
+  'weekend-warrior': 'Weekend Warriors',
+};
 
 export function MoreWithTypeSectionSkeleton() {
   return (
