@@ -103,8 +103,9 @@ function pctRange(s: HourStats, from: number, to: number) {
 function hasLunchSpike(s: HourStats) {
   const margin = stabilityMargin(s);
   const lunchSpike = midday(s);
+  const lunchPeak = s.peakHour >= 11 && s.peakHour <= 14;
   const neighborAvg = (((s.hourly[11] ?? 0) + (s.hourly[13] ?? 0)) / 2 / (s.total || 1)) * 100;
-  return lunchSpike > 8 + margin / 2 && lunchSpike > neighborAvg * (1.6 + margin / 20);
+  return lunchPeak && lunchSpike > 8 + margin / 2 && lunchSpike > neighborAvg * (1.6 + margin / 20);
 }
 
 function isVampireRhythm(s: HourStats) {

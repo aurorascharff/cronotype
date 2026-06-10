@@ -33,7 +33,6 @@ export function buildStats(commits: Commit[]): HourStats {
   let weekendCount = 0;
 
   const tzVotes = new Map<number, number>();
-  const dayHourCounts = new Map<string, number>();
 
   for (const c of commits) {
     const parsed = parseIsoMinute(c.authoredAt);
@@ -47,9 +46,6 @@ export function buildStats(commits: Commit[]): HourStats {
     hourly[hour]++;
     weekday[wday]++;
     if (wday === 0 || wday === 6) weekendCount++;
-    const dayHourKey = `${local.dayNumber}:${hour}`;
-    dayHourCounts.set(dayHourKey, (dayHourCounts.get(dayHourKey) ?? 0) + 1);
-
     if (c.tzOffsetMinutes != null) {
       const hours = c.tzOffsetMinutes / 60;
       tzVotes.set(hours, (tzVotes.get(hours) ?? 0) + 1);
@@ -58,7 +54,7 @@ export function buildStats(commits: Commit[]): HourStats {
 
   const total = commits.length || 1;
 
-  const peakHour = representativePeakHour(hourly, dayHourCounts);
+  const peakHour = peakHourFromHourly(hourly);
   const pctNocturnal = (sumRange(hourly, 0, 4) / total) * 100;
   const pctSunrise = (sumRange(hourly, 5, 8) / total) * 100;
   const pctBusiness = (sumRange(hourly, 9, 18) / total) * 100;
@@ -127,25 +123,19 @@ function offsetDateTime(value: IsoMinute, offsetMinutes: number) {
   };
 }
 
-function representativePeakHour(hourly: number[], dayHourCounts: Map<string, number>): number {
-  const activeDayScores = new Array<number>(24).fill(0);
-
-  for (const [key] of dayHourCounts) {
-    const hour = Number(key.split(':')[1]);
-    if (Number.isFinite(hour) && hour >= 0 && hour < 24) {
-      activeDayScores[hour]++;
-    }
-  }
-
-  if (activeDayScores.every(score => score === 0)) return hourly.indexOf(Math.max(...hourly));
-
+function peakHourFromHourly(hourly: number[]): number {
+  if (hourly.every(count => count === 0)) return 0;
   let bestHour = 0;
   let bestScore = -1;
+
   for (let hour = 0; hour < 24; hour++) {
-    const left = activeDayScores[(hour + 23) % 24] ?? 0;
-    const center = activeDayScores[hour] ?? 0;
-    const right = activeDayScores[(hour + 1) % 24] ?? 0;
-    const score = center + (left + right) * 0.35;
+    const center = hourly[hour] ?? 0;
+    const left = hourly[(hour + 23) % 24] ?? 0;
+    const right = hourly[(hour + 1) % 24] ?? 0;
+    const farLeft = hourly[(hour + 22) % 24] ?? 0;
+    const farRight = hourly[(hour + 2) % 24] ?? 0;
+    const score = center + (left + right) * 0.45 + (farLeft + farRight) * 0.15;
+
     if (score > bestScore || (score === bestScore && (hourly[hour] ?? 0) > (hourly[bestHour] ?? 0))) {
       bestHour = hour;
       bestScore = score;
