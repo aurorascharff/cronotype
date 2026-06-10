@@ -12,6 +12,8 @@ const THEMES: Record<ArchetypeId, ArchetypeTheme> = {
   'weekend-warrior': { accent: '#10b981', accent2: '#34d399', bgDark: '#08090b', bgLight: '#fafafa' },
 };
 
+const TOUCH_GRASS_MAX_SIGNAL = 12;
+
 export const QUIET_THEME: ArchetypeTheme = {
   accent: '#9ca3af',
   accent2: '#d1d5db',
@@ -154,7 +156,7 @@ function isLateDayRhythm(s: HourStats) {
 }
 
 function isTouchGrassRhythm(s: HourStats) {
-  if (s.total >= 25) return false;
+  if (s.total > TOUCH_GRASS_MAX_SIGNAL) return false;
   const margin = stabilityMargin(s);
   return s.hourlyVariance < 7 + margin / 2 && s.pctNocturnal < 20 + margin && s.pctWeekend < 25 + margin;
 }
@@ -195,7 +197,7 @@ export function percentileFor(archetype: Archetype, stats: HourStats): number {
     case 'insomniac-maintainer':
       return clampPct(50 + stats.pctNocturnal);
     case 'touch-grass':
-      return clampPct(100 - stats.total);
+      return clampPct(100 - (stats.total / TOUCH_GRASS_MAX_SIGNAL) * 40);
     default:
       return 50;
   }

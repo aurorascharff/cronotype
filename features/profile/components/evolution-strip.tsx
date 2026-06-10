@@ -79,7 +79,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
     linePath,
     months,
     partial,
-    shownCommits,
     totalCommits,
     yTicks,
     yearDividers,
@@ -126,7 +125,6 @@ async function CachedEvolutionStrip({ handle, historyYearPage }: Props) {
             hasNewerArchetypeYears={hasNewerArchetypeYears}
             hasOlderArchetypeYears={hasOlderArchetypeYears}
             partial={partial}
-            shownCommits={shownCommits}
           />
         </div>
         <ul className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 sm:gap-x-4">
